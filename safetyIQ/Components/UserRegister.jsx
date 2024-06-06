@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -6,9 +7,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useState } from "react";
 import { useFonts } from "@expo-google-fonts/inter";
 import { Ionicons } from "@expo/vector-icons";
+import { Formik } from "formik";
+import * as Yup from "yup";
+import axios from "axios";
 
 const UserRegister = () => {
   const [fontsLoaded, fontError] = useFonts({
@@ -17,7 +20,8 @@ const UserRegister = () => {
     "Kanit-Italic": require("./../assets/fonts/Kanit-Italic.ttf"),
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
-  const backendUrl = "http://localhost:8000/"
+
+  const backendUrl = "http://192.168.0.101:8000/signup";
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
@@ -26,124 +30,229 @@ const UserRegister = () => {
     return null;
   }
 
+  const SignupSchema = Yup.object().shape({
+    callUpNo: Yup.string().required("Call Up No. is required"),
+    lastName: Yup.string(),
+    firstName: Yup.string(),
+    middleName: Yup.string(),
+    telephoneNo: Yup.string().required("Telephone No. is required"),
+    email: Yup.string().email("Invalid email").required("Email is required"),
+    password: Yup.string()
+      .min(6, "Password is too short - should be 6 chars minimum.")
+      .required("Password is required"),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref("password"), null], "Passwords must match")
+      .required("Confirm Password is required"),
+  });
+
+  const handleSignup = (values) => {
+    axios
+      .post(backendUrl, values)
+      .then((response) => {
+        console.log("Signup successful:", response.data);
+      })
+      .catch((error) => {
+        console.error("Signup failed:", error);
+      });
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Registration</Text>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.labelContainer}>
-          <Text style={styles.label}>Call Up No.</Text>
-          <Text style={styles.asterisk}>*</Text>
-        </View>
-        <TextInput
-          placeholder="Enter your call up No."
-          style={styles.input}
-          placeholderTextColor={"#A2A4A3"}
-          cursorColor={"#000"}
-        />
-
-        <View style={styles.labelContainer}>
-          <Text style={styles.label}>Last Name</Text>
-        </View>
-        <TextInput
-          placeholder="Enter your Last Name"
-          style={styles.input}
-          placeholderTextColor={"#A2A4A3"}
-          cursorColor={"#000"}
-        />
-
-        <View style={styles.labelContainer}>
-          <Text style={styles.label}>First Name</Text>
-        </View>
-        <TextInput
-          placeholder="Enter your First Name"
-          style={styles.input}
-          placeholderTextColor={"#A2A4A3"}
-          cursorColor={"#000"}
-        />
-
-        <View style={styles.labelContainer}>
-          <Text style={styles.label}>Middle Name</Text>
-        </View>
-        <TextInput
-          placeholder="Enter your Middle Name"
-          style={styles.input}
-          placeholderTextColor={"#A2A4A3"}
-          cursorColor={"#000"}
-        />
-
-        <View style={styles.labelContainer}>
-          <Text style={styles.label}>Telephone No.</Text>
-          <Text style={styles.asterisk}>*</Text>
-        </View>
-        <TextInput
-          placeholder="Enter your Telephone No."
-          style={styles.input}
-          placeholderTextColor={"#A2A4A3"}
-          cursorColor={"#000"}
-        />
-
-        <View style={styles.labelContainer}>
-          <Text style={styles.label}>Email</Text>
-          <Text style={styles.asterisk}>*</Text>
-        </View>
-        <TextInput
-          placeholder="Enter your Email"
-          style={styles.input}
-          placeholderTextColor={"#A2A4A3"}
-          cursorColor={"#000"}
-        />
-
-        <View style={styles.labelContainer}>
-          <Text style={styles.label}>Password</Text>
-          <Text style={styles.asterisk}>*</Text>
-        </View>
-        <View style={styles.passwordContainer}>
-          <TextInput
-            placeholder="********"
-            style={[styles.input2, styles.passwordInput]}
-            placeholderTextColor={"#A2A4A3"}
-            cursorColor={"#000"}
-            secureTextEntry={!passwordVisible}
-          />
-          <TouchableOpacity
-            onPress={() => setPasswordVisible(!passwordVisible)}
-          >
-            <Ionicons
-              name={passwordVisible ? "eye-off" : "eye"}
-              size={20}
-              color="gray"
-            />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.labelContainer}>
-          <Text style={styles.label}>Confirm Password</Text>
-          <Text style={styles.asterisk}>*</Text>
-        </View>
-        <View style={styles.passwordContainer}>
-          <TextInput
-            placeholder="********"
-            style={[styles.input2, styles.passwordInput]}
-            placeholderTextColor={"#A2A4A3"}
-            cursorColor={"#000"}
-            secureTextEntry={!confirmPasswordVisible}
-          />
-          <TouchableOpacity
-            onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
-          >
-            <Ionicons
-              name={confirmPasswordVisible ? "eye-off" : "eye"}
-              size={20}
-              color="gray"
-            />
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity
-          style={{ marginVertical: 10, marginBottom: 100, width: "100%" }}
+        <Formik
+          initialValues={{
+            callUpNo: "",
+            lastName: "",
+            firstName: "",
+            middleName: "",
+            telephoneNo: "",
+            email: "",
+            password: "",
+            confirmPassword: "",
+          }}
+          validationSchema={SignupSchema}
+          onSubmit={handleSignup}
         >
-          <Text style={styles.signupbtn}>Submit</Text>
-        </TouchableOpacity>
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+          }) => (
+            <>
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>Call Up No.</Text>
+                <Text style={styles.asterisk}>*</Text>
+              </View>
+              <TextInput
+                placeholder="Enter your call up No."
+                style={styles.input}
+                placeholderTextColor={"#A2A4A3"}
+                cursorColor={"#000"}
+                onChangeText={handleChange("callUpNo")}
+                onBlur={handleBlur("callUpNo")}
+                value={values.callUpNo}
+                keyboardType="number-pad"
+              />
+              {errors.callUpNo && touched.callUpNo && (
+                <Text style={styles.errorText}>{errors.callUpNo}</Text>
+              )}
+
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>Last Name</Text>
+              </View>
+              <TextInput
+                placeholder="Enter your Last Name"
+                style={styles.input}
+                placeholderTextColor={"#A2A4A3"}
+                cursorColor={"#000"}
+                onChangeText={handleChange("lastName")}
+                onBlur={handleBlur("lastName")}
+                value={values.lastName}
+              />
+              {errors.lastName && touched.lastName && (
+                <Text style={styles.errorText}>{errors.lastName}</Text>
+              )}
+
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>First Name</Text>
+              </View>
+              <TextInput
+                placeholder="Enter your First Name"
+                style={styles.input}
+                placeholderTextColor={"#A2A4A3"}
+                cursorColor={"#000"}
+                onChangeText={handleChange("firstName")}
+                onBlur={handleBlur("firstName")}
+                value={values.firstName}
+              />
+              {errors.firstName && touched.firstName && (
+                <Text style={styles.errorText}>{errors.firstName}</Text>
+              )}
+
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>Middle Name</Text>
+              </View>
+              <TextInput
+                placeholder="Enter your Middle Name"
+                style={styles.input}
+                placeholderTextColor={"#A2A4A3"}
+                cursorColor={"#000"}
+                onChangeText={handleChange("middleName")}
+                onBlur={handleBlur("middleName")}
+                value={values.middleName}
+              />
+              {errors.middleName && touched.middleName && (
+                <Text style={styles.errorText}>{errors.middleName}</Text>
+              )}
+
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>Telephone No.</Text>
+                <Text style={styles.asterisk}>*</Text>
+              </View>
+              <TextInput
+                placeholder="Enter your Telephone No."
+                style={styles.input}
+                placeholderTextColor={"#A2A4A3"}
+                cursorColor={"#000"}
+                onChangeText={handleChange("telephoneNo")}
+                onBlur={handleBlur("telephoneNo")}
+                keyboardType="phone -pad"
+                value={values.telephoneNo}
+              />
+              {errors.telephoneNo && touched.telephoneNo && (
+                <Text style={styles.errorText}>{errors.telephoneNo}</Text>
+              )}
+
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>Email</Text>
+                <Text style={styles.asterisk}>*</Text>
+              </View>
+              <TextInput
+                placeholder="Enter your Email"
+                style={styles.input}
+                placeholderTextColor={"#A2A4A3"}
+                cursorColor={"#000"}
+                onChangeText={handleChange("email")}
+                onBlur={handleBlur("email")}
+                value={values.email}
+              />
+              {errors.email && touched.email && (
+                <Text style={styles.errorText}>{errors.email}</Text>
+              )}
+
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>Password</Text>
+                <Text style={styles.asterisk}>*</Text>
+              </View>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  placeholder="********"
+                  style={[styles.input2, styles.passwordInput]}
+                  placeholderTextColor={"#A2A4A3"}
+                  cursorColor={"#000"}
+                  secureTextEntry={!passwordVisible}
+                  onChangeText={handleChange("password")}
+                  onBlur={handleBlur("password")}
+                  value={values.password}
+                />
+                <TouchableOpacity
+                  onPress={() => setPasswordVisible(!passwordVisible)}
+                >
+                  <Ionicons
+                    name={passwordVisible ? "eye-off" : "eye"}
+                    size={20}
+                    color="gray"
+                  />
+                </TouchableOpacity>
+              </View>
+              {errors.password && touched.password && (
+                <Text style={styles.errorText}>{errors.password}</Text>
+              )}
+
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>Confirm Password</Text>
+                <Text style={styles.asterisk}>*</Text>
+              </View>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  placeholder="********"
+                  style={[styles.input2, styles.passwordInput]}
+                  placeholderTextColor={"#A2A4A3"}
+                  cursorColor={"#000"}
+                  secureTextEntry={!confirmPasswordVisible}
+                  onChangeText={handleChange("confirmPassword")}
+                  onBlur={handleBlur("confirmPassword")}
+                  value={values.confirmPassword}
+                />
+                <TouchableOpacity
+                  onPress={() =>
+                    setConfirmPasswordVisible(!confirmPasswordVisible)
+                  }
+                >
+                  <Ionicons
+                    name={confirmPasswordVisible ? "eye-off" : "eye"}
+                    size={20}
+                    color="gray"
+                  />
+                </TouchableOpacity>
+              </View>
+              {errors.confirmPassword && touched.confirmPassword && (
+                <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+              )}
+
+              <TouchableOpacity
+                style={{ marginVertical: 10, marginBottom: 100, width: "100%" }}
+                onPress={handleSubmit}
+              >
+                <Text style={styles.signupbtn}>Submit</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </Formik>
       </ScrollView>
     </View>
   );
@@ -203,12 +312,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#EBEBEB",
     borderRadius: 10,
-    // marginBottom: 8,
     paddingHorizontal: 17,
   },
   passwordInput: {
     flex: 1,
-    // padding: 10,
   },
   signupbtn: {
     fontFamily: "Kanit-Regular",
@@ -221,4 +328,10 @@ const styles = StyleSheet.create({
     marginTop: 20,
     width: "100%",
   },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 10,
+  },
 });
+                     
