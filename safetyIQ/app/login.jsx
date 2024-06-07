@@ -1,15 +1,16 @@
 import { Platform, StatusBar, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
+import UserLogin from '../Components/UserLogin'
 
-const signin = () => {
+const login = () => {
   return (
     <View style={styles.container}>
-      <Text>signin</Text>
+      <UserLogin/>
     </View>
   )
 }
 
-export default signin
+export default login
 
 const styles = StyleSheet.create({
   container: {

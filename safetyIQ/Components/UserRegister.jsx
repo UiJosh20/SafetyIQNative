@@ -48,7 +48,12 @@ const UserRegister = () => {
   const handleSignup = (values) => {
     axios.post(backendUrl, values)
       .then((response) => {
-        console.log(response.status);
+  
+        if(response.status === 201){
+            router.push("login");
+        }else{
+            router.push("signin");
+        }
       })
       .catch((error) => {
         console.error(error.message);
