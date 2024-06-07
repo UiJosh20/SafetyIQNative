@@ -21,7 +21,7 @@ const UserRegister = () => {
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
 
-  const backendUrl = "http://192.168.0.101:8000/signup";
+  const backendUrl = "http://192.168.0.100:8000/signup";
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
@@ -46,13 +46,13 @@ const UserRegister = () => {
   });
 
   const handleSignup = (values) => {
-    axios
-      .post(backendUrl, values)
+    // console.log(values)
+    axios.post(backendUrl, values)
       .then((response) => {
-        console.log("Signup successful:", response.data);
+        console.log(response.status);
       })
       .catch((error) => {
-        console.error("Signup failed:", error);
+        console.error(error);
       });
   };
 
@@ -160,7 +160,7 @@ const UserRegister = () => {
                 cursorColor={"#000"}
                 onChangeText={handleChange("telephoneNo")}
                 onBlur={handleBlur("telephoneNo")}
-                keyboardType="phone -pad"
+                keyboardType="phone-pad"
                 value={values.telephoneNo}
               />
               {errors.telephoneNo && touched.telephoneNo && (
