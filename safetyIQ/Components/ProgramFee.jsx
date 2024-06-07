@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View, Modal, TextComponent } from "react-native";
 import { useFonts } from "expo-font";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -13,6 +13,7 @@ const ProgramFee = () => {
 
   const [courseName, setCourseName] = useState("");
   const [coursePrice, setCoursePrice] = useState("");
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem("courseName")
@@ -37,6 +38,24 @@ const ProgramFee = () => {
     return null;
   }
 
+  const handleBankTransfer = () => {
+    setModalVisible(true);
+  };
+
+  const handleDone = () => {
+   
+    Alert.alert(
+      "Transfer Verification",
+      "Bank transfer verification is not implemented."
+    );
+    setModalVisible(false);
+  };
+
+
+  const debitpay = () => {
+    Alert.alert("Service is not available at this time");
+  }
+
   return (
     <View>
       <Text style={styles.title}>Program Fee</Text>
@@ -52,13 +71,36 @@ const ProgramFee = () => {
       </View>
 
       <View style={styles.paymentbtn}>
-        <TouchableOpacity style={styles.paybtn}>
+        <TouchableOpacity style={styles.paybtn} onPress={handleBankTransfer}>
           <Text style={styles.paybtntext}>Bank Transfer</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.paybtn]}>
+        <TouchableOpacity style={[styles.paybtn]} onPress={debitpay}>
           <Text style={styles.paybtntext}>Debit Card</Text>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.modalView}>
+          <Text style={styles.title}>Payment</Text>
+          <Text style={styles.courseDetail3}>
+            Pay access fee and receive log in details
+          </Text>
+          <Text style={styles.modalText}>First Bank</Text>
+          <Text style={styles.modalText1}>FRP Training</Text>
+          <Text style={styles.modalText2}>234567800</Text>
+          <Text style={{fontFamily: "Kanit-Light", fontSize: 12, color: "#C30000"}}>Click on Done after making transfer</Text>
+          <TouchableOpacity style={styles.paybtn1} onPress={handleDone}>
+            <Text style={styles.paybtntext1}>Done</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -70,7 +112,7 @@ const styles = StyleSheet.create({
     fontFamily: "Kanit-Bold",
     fontSize: 24,
     textAlign: "center",
-    marginVertical: 20,
+    marginVertical: 15,
   },
   courseDetail: {
     fontFamily: "Kanit-Light",
@@ -83,6 +125,14 @@ const styles = StyleSheet.create({
     color: "#6A6A6A",
     marginVertical: 10,
   },
+  courseDetail3: {
+    fontFamily: "Kanit-Light",
+    fontSize: 14,
+    color: "#6A6A6A",
+    textAlign: "center",
+    marginTop: 5,
+    marginBottom: 40,
+  },
   coursecon: {
     marginTop: 10,
     paddingHorizontal: 17,
@@ -93,7 +143,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: "center",
   },
-  paymentbtn:{
+
+  paybtntext1: {
+    color: "#fff",
+    fontFamily: "Kanit-Bold",
+    fontSize: 18,
+    textAlign: "center",
+  },
+  paymentbtn: {
     paddingHorizontal: 17,
     marginTop: 30,
   },
@@ -101,15 +158,59 @@ const styles = StyleSheet.create({
     width: "100%",
     padding: 10,
     marginVertical: 7,
-    backgroundColor: "#fff", 
-    borderRadius: 5, 
+    backgroundColor: "#fff",
+    borderRadius: 5,
     shadowColor: "#000",
     shadowOffset: {
-      width: 0, 
-      height: 2, 
+      width: 0,
+      height: 2,
     },
-    shadowOpacity: 0.5, 
-    shadowRadius: 7, 
+    shadowOpacity: 0.5,
+    shadowRadius: 7,
     elevation: 7,
+  },
+
+  paybtn1: {
+    width: "100%",
+    padding: 10,
+    marginTop: 30,
+    backgroundColor: "#C30000",
+    borderRadius: 5,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 7,
+    elevation: 7,
+  },
+
+  modalView: {
+    backgroundColor: "white",
+    height: "100%",
+    paddingHorizontal: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalText: {
+    fontFamily: "Kanit-Regular",
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalText1: {
+    fontFamily: "Kanit-Regular",
+    fontSize: 20,
+  },
+  modalText2: {
+    fontFamily: "Kanit-Bold",
+    fontSize: 32,
+    marginBottom: 5,
   },
 });
