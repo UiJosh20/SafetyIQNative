@@ -1,10 +1,12 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { Button, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
+import { router } from 'expo-router'
 
 const UserLogin = () => {
   return (
     <View style={styles.container}>
       <Text>UserLogin</Text>
+      <Button title="Go to Home" onPress={() => router.push('course')} />
     </View>
   )
 }
