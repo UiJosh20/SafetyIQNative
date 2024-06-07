@@ -10,6 +10,7 @@ const Rootlayout = () => {
       <Stack.Screen name="enroll" options={{ headerShown: false }} />
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="signin" options={{ headerShown: false }} />
+      <Stack.Screen name="fee" options={{ headerShown: false }} />
     </Stack>
   );
 }

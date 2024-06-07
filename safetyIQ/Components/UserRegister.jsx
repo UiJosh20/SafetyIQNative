@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
+import { router } from "expo-router";
 
 const UserRegister = () => {
   const [fontsLoaded, fontError] = useFonts({
@@ -21,7 +22,7 @@ const UserRegister = () => {
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
 
-  const backendUrl = "http://192.168.0.100:8000/signup";
+  const backendUrl = "http://192.168.0.101:8000/signup";
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
@@ -48,15 +49,15 @@ const UserRegister = () => {
   const handleSignup = (values) => {
     axios.post(backendUrl, values)
       .then((response) => {
-  
         if(response.status === 201){
-            router.push("login");
+            router.push("fee");
         }else{
             router.push("signin");
         }
       })
       .catch((error) => {
-        console.error(error.message);
+        console.error(error);
+       
       });
   };
 

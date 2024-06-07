@@ -1,7 +1,9 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from "react-native";
 import { useFonts } from "@expo-google-fonts/inter";
-import { router } from "expo-router";
+import { router} from "expo-router";
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const CourseDetail = () => {
   const [fontsLoaded, fontError] = useFonts({
     "Kanit-Bold": require("./../assets/fonts/Kanit-Bold.ttf"),
@@ -15,9 +17,16 @@ const CourseDetail = () => {
   }
 
 
-  const userEnroll = () =>{
-    router.push("/enroll")
 
+  const userEnroll = (packageName, packagePrice) =>{
+  AsyncStorage.setItem("courseName", packageName)
+    .then(() => AsyncStorage.setItem("coursePrice", packagePrice))
+    .then(() => {
+      router.push("enroll", { packageName, packagePrice });
+    })
+    .catch((error) => {
+      console.error("Failed to save the course details:", error);
+    });
   }
 
   return (
@@ -37,7 +46,9 @@ const CourseDetail = () => {
               Program for corps members. Learn the essentials for success for
               ₦2,000.
             </Text>
-            <TouchableOpacity style={styles.holdbtn} onPress={userEnroll}>
+            <TouchableOpacity style={styles.holdbtn} onPress={()=>{
+              userEnroll("Corpers’ Basic FRP", "₦2,000 (Two thousand naira only)")
+            }}>
               <Text style={styles.holdbtntext1}>Enroll Now</Text>
             </TouchableOpacity>
           </View>
@@ -55,7 +66,9 @@ const CourseDetail = () => {
               Build a strong FRP foundation with this beginner program. Gain
               confidence for ₦20,000.
             </Text>
-            <TouchableOpacity style={styles.holdbtn1} onPress={userEnroll}>
+            <TouchableOpacity style={styles.holdbtn1} onPress={()=>{
+              userEnroll("General Basic FRP", "₦20,000 (Twenty thousand naira only)")
+            }}>
               <Text style={styles.holdbtntext2}>Enroll Now</Text>
             </TouchableOpacity>
           </View>
@@ -73,7 +86,9 @@ const CourseDetail = () => {
               Advance your FRP skills with this expert program. Master
               techniques for ₦50,000.
             </Text>
-            <TouchableOpacity style={styles.holdbtn3} onPress={userEnroll}>
+            <TouchableOpacity style={styles.holdbtn3} onPress={()=>{
+              userEnroll("Advanced FRP", "₦50,000 (Fifty Thousand naira only)")
+            }}>
               <Text style={styles.holdbtntext4}>Enroll Now</Text>
             </TouchableOpacity>
           </View>
@@ -91,7 +106,9 @@ const CourseDetail = () => {
               Stay current on FRP practices. Renew qualifications or refresh
               knowledge for ₦15,000.
             </Text>
-            <TouchableOpacity style={styles.holdbtn2} onPress={userEnroll}>
+            <TouchableOpacity style={styles.holdbtn2} onPress={()=>{
+              userEnroll("Continuous/Refresher", "₦15,000 (Fifteen thousand naira only)")
+            }}>
               <Text style={styles.holdbtntext3}>Enroll Now</Text>
             </TouchableOpacity>
           </View>
