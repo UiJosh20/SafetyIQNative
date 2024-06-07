@@ -46,13 +46,12 @@ const UserRegister = () => {
   });
 
   const handleSignup = (values) => {
-    // console.log(values)
     axios.post(backendUrl, values)
       .then((response) => {
         console.log(response.status);
       })
       .catch((error) => {
-        console.error(error);
+        console.error(error.message);
       });
   };
 
