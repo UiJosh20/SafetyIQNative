@@ -2,7 +2,7 @@ import { Platform, StatusBar, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import UserLogin from '../Components/UserLogin'
 
-const login = () => {
+const index = () => {
   return (
     <View style={styles.container}>
       <UserLogin/>
@@ -10,7 +10,7 @@ const login = () => {
   )
 }
 
-export default login
+export default index
 
 const styles = StyleSheet.create({
   container: {

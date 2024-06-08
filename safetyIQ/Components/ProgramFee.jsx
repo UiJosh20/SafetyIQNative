@@ -12,6 +12,7 @@ import {
 import { useFonts } from "expo-font";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { router } from "expo-router";
 
 const ProgramFee = () => {
   const [fontsLoaded, fontError] = useFonts({
@@ -24,9 +25,10 @@ const ProgramFee = () => {
   const [courseName, setCourseName] = useState("");
   const [coursePrice, setCoursePrice] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
+  const [userReference, setReference] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [userAmount, setUserAmount] = useState("");
-  const [paymentInitiated, setPaymentInitiated] = useState(false); // Track payment initiation
+  const [paymentInitiated, setPaymentInitiated] = useState(false);
   const payInit = "http://192.168.0.101:8000/paystackinit";
   const verifyPay = "http://192.168.0.101:8000/paystackverify";
 
@@ -60,6 +62,8 @@ const ProgramFee = () => {
   };
 
   const handlePayment = () => {
+    setUserAmount("")
+    setUserEmail("");
     axios
       .post(payInit, {
         amount: userAmount * 100,
@@ -71,8 +75,9 @@ const ProgramFee = () => {
           response.data.data &&
           response.data.data.authorization_url
         ) {
-          const { authorization_url } = response.data.data;
+          const { authorization_url, reference } = response.data.data;
           Linking.openURL(authorization_url);
+          setReference(reference);
           setPaymentInitiated(true);
         } else {
           Alert.alert("Error", "Failed to get authorization URL.");
@@ -81,22 +86,36 @@ const ProgramFee = () => {
       .catch((error) => {
         Alert.alert(
           "Error",
-          "An error occurred while initializing the transfer."
+          "An error occurred while initializing the payment."
         );
-        console.error("Error initializing transfer:", error);
+        console.error("Error initializing payment:", error);
       });
   };
 
   const handleVerifyPayment = () => {
-    axios.get(verifyPay, {
-      params: {
-        reference: userAmount,
-      },
-    })
-  };
-
-  const debitpay = () => {
-    Alert.alert("Service is not available at this time");
+    axios
+      .get(verifyPay, {
+        params: {
+          reference: userReference,
+        },
+      })
+      .then((verifyResponse) => {
+        console.log(verifyResponse.data);
+        if (verifyResponse.data.status) {
+          Alert.alert("Success", "Payment verified successfully.");
+          setModalVisible(false);
+          setPaymentInitiated(false);
+          router.push("/");
+        } else {
+          Alert.alert("Error", "Payment verification failed.");
+          setPaymentInitiated(false);
+        }
+      })
+      .catch((error) => {
+        Alert.alert("Error", "An error occurred while verifying the payment.");
+        console.error("Error verifying payment:", error);
+        setPaymentInitiated(false); 
+      });
   };
 
   return (
@@ -117,7 +136,7 @@ const ProgramFee = () => {
         <TouchableOpacity style={styles.paybtn} onPress={handleBankTransfer}>
           <Text style={styles.paybtntext}>Bank Transfer</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.paybtn]} onPress={debitpay}>
+        <TouchableOpacity style={[styles.paybtn]} onPress={handleBankTransfer}>
           <Text style={styles.paybtntext}>Debit Card</Text>
         </TouchableOpacity>
       </View>
