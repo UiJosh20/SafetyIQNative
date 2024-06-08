@@ -12,6 +12,7 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use("/", userRouter);
 
+
 app.listen(PORT,()=>{
 console.log("The server running on port", PORT)
 })

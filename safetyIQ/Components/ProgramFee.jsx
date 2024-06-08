@@ -1,7 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View, Modal, TextComponent } from "react-native";
+import {
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Modal,
+  TextInput,
+  Linking,
+} from "react-native";
 import { useFonts } from "expo-font";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
 const ProgramFee = () => {
   const [fontsLoaded, fontError] = useFonts({
@@ -14,6 +24,11 @@ const ProgramFee = () => {
   const [courseName, setCourseName] = useState("");
   const [coursePrice, setCoursePrice] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [userAmount, setUserAmount] = useState("");
+  const [paymentInitiated, setPaymentInitiated] = useState(false); // Track payment initiation
+  const payInit = "http://192.168.0.101:8000/paystackinit";
+  const verifyPay = "http://192.168.0.101:8000/paystackverify";
 
   useEffect(() => {
     AsyncStorage.getItem("courseName")
@@ -33,8 +48,10 @@ const ProgramFee = () => {
       });
   }, []);
 
-  if (!fontsLoaded && fontError) {
-    console.log(fontError);
+  if (!fontsLoaded) {
+    if (fontError) {
+      console.log(fontError);
+    }
     return null;
   }
 
@@ -42,19 +59,45 @@ const ProgramFee = () => {
     setModalVisible(true);
   };
 
-  const handleDone = () => {
-   
-    Alert.alert(
-      "Transfer Verification",
-      "Bank transfer verification is not implemented."
-    );
-    setModalVisible(false);
+  const handlePayment = () => {
+    axios
+      .post(payInit, {
+        amount: userAmount * 100,
+        email: userEmail,
+      })
+      .then((response) => {
+        if (
+          response.data &&
+          response.data.data &&
+          response.data.data.authorization_url
+        ) {
+          const { authorization_url } = response.data.data;
+          Linking.openURL(authorization_url);
+          setPaymentInitiated(true);
+        } else {
+          Alert.alert("Error", "Failed to get authorization URL.");
+        }
+      })
+      .catch((error) => {
+        Alert.alert(
+          "Error",
+          "An error occurred while initializing the transfer."
+        );
+        console.error("Error initializing transfer:", error);
+      });
   };
 
+  const handleVerifyPayment = () => {
+    axios.get(verifyPay, {
+      params: {
+        reference: userAmount,
+      },
+    })
+  };
 
   const debitpay = () => {
     Alert.alert("Service is not available at this time");
-  }
+  };
 
   return (
     <View>
@@ -62,8 +105,8 @@ const ProgramFee = () => {
 
       <View style={styles.coursecon}>
         <Text style={styles.courseDetail}>
-          Your program fee is {coursePrice} Your login details will forwarded
-          after payment.
+          Your program fee is {coursePrice}. Your login details will be
+          forwarded after payment.
         </Text>
         <Text style={styles.courseDetail2}>
           You can pay through any of the payment options below:
@@ -90,15 +133,43 @@ const ProgramFee = () => {
         <View style={styles.modalView}>
           <Text style={styles.title}>Payment</Text>
           <Text style={styles.courseDetail3}>
-            Pay access fee and receive log in details
+            Pay access fee and receive login details
           </Text>
-          <Text style={styles.modalText}>First Bank</Text>
-          <Text style={styles.modalText1}>FRP Training</Text>
-          <Text style={styles.modalText2}>234567800</Text>
-          <Text style={{fontFamily: "Kanit-Light", fontSize: 12, color: "#C30000"}}>Click on Done after making transfer</Text>
-          <TouchableOpacity style={styles.paybtn1} onPress={handleDone}>
-            <Text style={styles.paybtntext1}>Done</Text>
-          </TouchableOpacity>
+          <TextInput
+            placeholder="Email Address"
+            keyboardType="email-address"
+            value={userEmail}
+            onChangeText={setUserEmail}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="Amount to be paid"
+            keyboardType="number-pad"
+            value={userAmount}
+            onChangeText={setUserAmount}
+            style={styles.input}
+          />
+          <Text
+            style={{
+              fontFamily: "Kanit-Light",
+              fontSize: 12,
+              color: "#C30000",
+            }}
+          >
+            Click on Done after making transfer
+          </Text>
+          {paymentInitiated ? (
+            <TouchableOpacity
+              style={styles.paybtn1}
+              onPress={handleVerifyPayment}
+            >
+              <Text style={styles.paybtntext1}>Verify Payment</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.paybtn1} onPress={handlePayment}>
+              <Text style={styles.paybtntext1}>Pay</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </Modal>
     </View>
@@ -143,7 +214,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: "center",
   },
-
   paybtntext1: {
     color: "#fff",
     fontFamily: "Kanit-Bold",
@@ -169,7 +239,6 @@ const styles = StyleSheet.create({
     shadowRadius: 7,
     elevation: 7,
   },
-
   paybtn1: {
     width: "100%",
     padding: 10,
@@ -185,7 +254,6 @@ const styles = StyleSheet.create({
     shadowRadius: 7,
     elevation: 7,
   },
-
   modalView: {
     backgroundColor: "white",
     height: "100%",
@@ -199,18 +267,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  modalText: {
+  input: {
     fontFamily: "Kanit-Regular",
     fontSize: 16,
-    marginBottom: 5,
-  },
-  modalText1: {
-    fontFamily: "Kanit-Regular",
-    fontSize: 20,
-  },
-  modalText2: {
-    fontFamily: "Kanit-Bold",
-    fontSize: 32,
-    marginBottom: 5,
+    borderBottomWidth: 1,
+    borderColor: "#6A6A6A",
+    marginBottom: 15,
+    padding: 10,
   },
 });
