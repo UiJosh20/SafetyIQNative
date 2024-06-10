@@ -184,17 +184,42 @@ const paystackVerify = (req, res) => {
 };
 
 const login = (req, res) => {
-  const { , password } = req.body;
+  
+  const { identifier, password } = req.body;
 
-  const query = `SELECT * FROM safetyiq_table WHERE email = ?`;
+  const sqlSelect = `SELECT * FROM safetyiq_table WHERE callup_num = ? OR frpnum = ?`;
+  db.query(sqlSelect, [identifier, identifier], (err, results) => {
+    if (err) {
+      console.error("Error selecting data:", err);
+      return res.status(500).send("An error occurred while logging in.");
+    }
 
-  db.query(query, [email], (err, results) => {
+    if (results.length === 0) {
+      return res.status(404).send("User not found.");
+    }
 
+    const user = results[0];
+
+    bcrypt
+      .compare(password, user.password)
+      .then((match) => {
+        if (!match) {
+          return res.status(401).send("Incorrect password.");
+        }
+
+        res.send({message: "Login successful", status : 200});
+      })
+      .catch((error) => {
+        console.error("Error comparing passwords:", error);
+        res.status(500).send("An error occurred while logging in.");
+      });
   });
 };
+
 
 module.exports = {
   signup,
   paystackInit,
   paystackVerify,
+  login,
 };
