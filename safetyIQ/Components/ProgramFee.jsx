@@ -181,7 +181,7 @@ const ProgramFee = () => {
               color: "#C30000",
             }}
           >
-            Click on Done after making transfer
+            Click on verify after making payment
           </Text>
           {paymentInitiated ? (
             <TouchableOpacity

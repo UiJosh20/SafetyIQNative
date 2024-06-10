@@ -15,6 +15,7 @@ import { Formik } from "formik";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import { useFonts } from "expo-font";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const UserLogin = () => {
   const [fontsLoaded] = useFonts({
@@ -28,6 +29,7 @@ const UserLogin = () => {
   const backendUrl = "http://192.168.0.101:8000/login";
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSwitchOn, setIsSwitchOn] = useState(false);
+  const [userId, setuserId] = useState('')
 
   if (!fontsLoaded) {
     return null;
@@ -40,21 +42,28 @@ const UserLogin = () => {
       .required("Password is required"),
   });
 
-  const handleLogin = (values) => {
-    axios
-      .post(backendUrl, values)
-      .then((response) => {
-        console.log(response.data);
-        if (response.status === 200) {
-          router.push("dashbaord");
-        } else {
-          router.push("signin");
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  };
+const handleLogin = (values) => {
+  axios
+    .post(backendUrl, values)
+    .then((response) => {
+      if (response.status === 200) {
+        const userId = response.data.user.user_id;
+        // console.log(userId);
+        AsyncStorage.setItem("userId", userId.toString())
+          .then(() => {
+            router.push("dashbaord");
+          })
+          .catch((error) => {
+            console.error("Failed to store user ID", error);
+          });
+      } else {
+        router.push("signin");
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+};
 
   const toggleSwitch = () => setIsSwitchOn((previousState) => !previousState);
 

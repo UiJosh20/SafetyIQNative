@@ -207,7 +207,7 @@ const login = (req, res) => {
           return res.status(401).send("Incorrect password.");
         }
 
-        res.send({message: "Login successful", status : 200});
+        res.send({message: "Login successful", status : 200, user: user});
       })
       .catch((error) => {
         console.error("Error comparing passwords:", error);
