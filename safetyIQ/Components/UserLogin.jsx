@@ -1,146 +1,191 @@
-import { Button, ScrollView, StyleSheet, Text, View, TextInput, TouchableOpacity } from 'react-native'
-import React, { useState } from 'react'
-import { router } from 'expo-router'
-import { useFonts } from '@expo-google-fonts/inter';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  Switch,
+  Pressable,
+} from "react-native";
+import React, { useState } from "react";
+import { router } from "expo-router";
 import * as Yup from "yup";
-import { Formik } from 'formik';
+import { Formik } from "formik";
 import { Ionicons } from "@expo/vector-icons";
-import axios from 'axios';
+import axios from "axios";
+import { useFonts } from "expo-font";
 
 const UserLogin = () => {
- const [fontsLoaded, fontError] = useFonts({
-   "Kanit-Bold": require("./../assets/fonts/Kanit-Bold.ttf"),
-   "Kanit-Regular": require("./../assets/fonts/Kanit-Regular.ttf"),
-   "Kanit-Italic": require("./../assets/fonts/Kanit-Italic.ttf"),
-   "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
- });
+  const [fontsLoaded] = useFonts({
+    "Kanit-Bold": require("./../assets/fonts/Kanit-Bold.ttf"),
+    "Kanit-Regular": require("./../assets/fonts/Kanit-Regular.ttf"),
+    "Kanit-Italic": require("./../assets/fonts/Kanit-Italic.ttf"),
+    "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
+  });
 
- const backendUrl = "http://192.168.0.101:8000/signup";
- const [passwordVisible, setPasswordVisible] = useState(false);
- const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const backendUrl = "http://192.168.0.101:8000/signup";
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [isSwitchOn, setIsSwitchOn] = useState(false);
 
- if (!fontsLoaded && fontError) {
-   console.log(fontError);
-   return null;
- }
+  if (!fontsLoaded) {
+    return null;
+  }
 
- const SignupSchema = Yup.object().shape({
-   callUpNo: Yup.string().required("Call Up No. is required"),
-   lastName: Yup.string(),
-   firstName: Yup.string(),
-   middleName: Yup.string(),
-   telephoneNo: Yup.string().required("Telephone No. is required"),
-   email: Yup.string().email("Invalid email").required("Email is required"),
-   password: Yup.string()
-     .min(6, "Password is too short - should be 6 chars minimum.")
-     .required("Password is required"),
-   confirmPassword: Yup.string()
-     .oneOf([Yup.ref("password"), null], "Passwords must match")
-     .required("Confirm Password is required"),
- });
+  const SignupSchema = Yup.object().shape({
+    callUpNo: Yup.string().required("Call Up No. is required"),
+    password: Yup.string()
+      .min(6, "Password is too short - should be 6 chars minimum.")
+      .required("Password is required"),
+  });
 
- const handleSignup = (values) => {
-   axios  
-     .post(backendUrl, values)
-     .then((response) => {
-       if (response.status === 201) {
-         router.push("fee");
-       } else {
-         router.push("signin");
-       }
-     })
-     .catch((error) => {
-       console.error(error);
-     });
- };
+  const handleSignup = (values) => {
+    axios
+      .post(backendUrl, values)
+      .then((response) => {
+        if (response.status === 201) {
+          router.push("fee");
+        } else {
+          router.push("signin");
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
 
- return (
-   <View style={styles.container}>
-     <Text style={styles.title}>Sign in to your account</Text>
-     <ScrollView showsVerticalScrollIndicator={false}>
-       <Formik
-         initialValues={{
-           callUpNo: "",
-           password: "",
-       
-         }}
-         validationSchema={SignupSchema}
-         onSubmit={handleSignup}
-       >
-         {({
-           handleChange,
-           handleBlur,
-           handleSubmit,
-           values,
-           errors,
-           touched,
-         }) => (
-           <>
-             <View style={styles.labelContainer}>
-               <Text style={styles.label}>Call Up No.</Text>
-               <Text style={styles.asterisk}>*</Text>
-             </View>
-             <TextInput
-               placeholder="Enter your call up No."
-               style={styles.input}
-               placeholderTextColor={"#A2A4A3"}
-               cursorColor={"#000"}
-               onChangeText={handleChange("callUpNo")}
-               onBlur={handleBlur("callUpNo")}
-               value={values.callUpNo}
-               keyboardType="number-pad"
-             />
-             {errors.callUpNo && touched.callUpNo && (
-               <Text style={styles.errorText}>{errors.callUpNo}</Text>
-             )}
+  const toggleSwitch = () => setIsSwitchOn((previousState) => !previousState);
 
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Sign in to your account</Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Formik
+          initialValues={{
+            callUpNo: "",
+            password: "",
+          }}
+          validationSchema={SignupSchema}
+          onSubmit={handleSignup}
+        >
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+          }) => (
+            <>
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>Call Up No/FRP No</Text>
+                <Text style={styles.asterisk}>*</Text>
+              </View>
+              <TextInput
+                placeholder="Enter your Call Up No/FRP No."
+                style={styles.input}
+                placeholderTextColor={"#A2A4A3"}
+                cursorColor={"#000"}
+                onChangeText={handleChange("callUpNo")}
+                onBlur={handleBlur("callUpNo")}
+                value={values.callUpNo}
+                keyboardType="number-pad"
+              />
+              {errors.callUpNo && touched.callUpNo && (
+                <Text style={styles.errorText}>{errors.callUpNo}</Text>
+              )}
 
+              <View style={styles.labelContainer1}>
+                <Text style={styles.label}>Password</Text>
+                <Text style={styles.asterisk}>*</Text>
+              </View>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  placeholder="********"
+                  style={[styles.input2, styles.passwordInput]}
+                  placeholderTextColor={"#A2A4A3"}
+                  cursorColor={"#000"}
+                  secureTextEntry={!passwordVisible}
+                  onChangeText={handleChange("password")}
+                  onBlur={handleBlur("password")}
+                  value={values.password}
+                />
+                <TouchableOpacity
+                  onPress={() => setPasswordVisible(!passwordVisible)}
+                >
+                  <Ionicons
+                    name={passwordVisible ? "eye" : "eye-off"}
+                    size={20}
+                    color="gray"
+                  />
+                </TouchableOpacity>
+              </View>
+              {errors.password && touched.password && (
+                <Text style={styles.errorText}>{errors.password}</Text>
+              )}
 
-             <View style={styles.labelContainer}>
-               <Text style={styles.label}>Password</Text>
-               <Text style={styles.asterisk}>*</Text>
-             </View>
-             <View style={styles.passwordContainer}>
-               <TextInput
-                 placeholder="********"
-                 style={[styles.input2, styles.passwordInput]}
-                 placeholderTextColor={"#A2A4A3"}
-                 cursorColor={"#000"}
-                 secureTextEntry={!passwordVisible}
-                 onChangeText={handleChange("password")}
-                 onBlur={handleBlur("password")}
-                 value={values.password}
-               />
-               <TouchableOpacity
-                 onPress={() => setPasswordVisible(!passwordVisible)}
-               >
-                 <Ionicons
-                   name={passwordVisible ? "eye-off" : "eye"}
-                   size={20}
-                   color="gray"
-                 />
-               </TouchableOpacity>
-             </View>
-             {errors.password && touched.password && (
-               <Text style={styles.errorText}>{errors.password}</Text>
-             )}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  marginTop: 10,
+                  marginRight: 100,
+                }}
+              >
+                <Switch
+                  onValueChange={toggleSwitch}
+                  value={isSwitchOn}
+                  trackColor={{ false: "#ebebeb", true: "#02A652" }}
+                  thumbColor={isSwitchOn ? "#ffff" : "grey"}
+                  ios_backgroundColor="#3e3e3e"
+                  style={{ marginTop: 10, marginBottom: 10 }}
+                />
+                <Text style={{ fontFamily: "Kanit-Regular", fontSize: 14 }}>
+                  Remember me
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={{ marginBottom: 10, width: "100%" }}
+                onPress={handleSubmit}
+              >
+                <Text style={styles.signupbtn}>Sign in</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </Formik>
+        <Pressable>
+          <Text
+            style={{
+              color: "#F6432C",
+              textAlign: "center",
+              fontSize: 16,
+              fontFamily: "Kanit-Regular",
+              marginTop: 20,
+            }}
+          >
+            Forgot the password?
+          </Text>
+        </Pressable>
+        <Pressable onPress={()=>{router.push('course')}} style={{ marginTop: 20 }}>
+          <Text
+            style={{
+              textAlign: "center",
+              fontSize: 16,
+              fontFamily: "Kanit-Regular",
+              color: "#222222",
+            }}
+          >
+            Don’t have an account?{" "}
+            <Text style={{ color: "#02A652", fontFamily: 'Kanit-Bold' }}>Sign up</Text>
+          </Text>
+        </Pressable>
+      </ScrollView>
+    </View>
+  );
+};
 
-
-             <TouchableOpacity
-               style={{ marginVertical: 10, marginBottom: 100, width: "100%" }}
-               onPress={handleSubmit}
-             >
-               <Text style={styles.signupbtn}>Sign in</Text>
-             </TouchableOpacity>
-           </>
-         )}
-       </Formik>
-     </ScrollView>
-   </View>
- );
-}
-
-export default UserLogin
+export default UserLogin;
 
 const styles = StyleSheet.create({
   container: {
@@ -157,10 +202,16 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: "Kanit-Regular",
     fontSize: 14,
-    marginVertical: 10,
+    marginVertical: 5,
     color: "#222222",
   },
   labelContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 10,
+    marginTop: 20,
+  },
+  labelContainer1: {
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 10,
@@ -169,6 +220,7 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 14,
     marginLeft: 5,
+    fontWeight: "bold",
   },
   input: {
     backgroundColor: "#EBEBEB",
@@ -216,4 +268,3 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 });
-          

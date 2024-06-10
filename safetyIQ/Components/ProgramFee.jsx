@@ -29,6 +29,7 @@ const ProgramFee = () => {
   const [userEmail, setUserEmail] = useState("");
   const [userAmount, setUserAmount] = useState("");
   const [paymentInitiated, setPaymentInitiated] = useState(false);
+  const [verificationNumber, setVerificationNumber] = useState(""); // New state for verification number
   const payInit = "http://192.168.0.101:8000/paystackinit";
   const verifyPay = "http://192.168.0.101:8000/paystackverify";
 
@@ -62,8 +63,6 @@ const ProgramFee = () => {
   };
 
   const handlePayment = () => {
-    setUserAmount("")
-    setUserEmail("");
     axios
       .post(payInit, {
         amount: userAmount * 100,
@@ -100,9 +99,16 @@ const ProgramFee = () => {
         },
       })
       .then((verifyResponse) => {
-        console.log(verifyResponse.data);
-        if (verifyResponse.data.status) {
-          Alert.alert("Success", "Payment verified successfully.");
+        if (
+          verifyResponse.data
+        ) {
+          const verificationNumber =
+            verifyResponse.data.frpnum;
+          setVerificationNumber(verificationNumber); 
+          Alert.alert(
+            "Success",
+            `Payment verified successfully.`
+          );
           setModalVisible(false);
           setPaymentInitiated(false);
           router.push("/");
@@ -114,7 +120,7 @@ const ProgramFee = () => {
       .catch((error) => {
         Alert.alert("Error", "An error occurred while verifying the payment.");
         console.error("Error verifying payment:", error);
-        setPaymentInitiated(false); 
+        setPaymentInitiated(false);
       });
   };
 
