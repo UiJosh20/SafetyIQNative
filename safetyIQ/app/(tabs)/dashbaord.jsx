@@ -1,6 +1,6 @@
 import { Platform, StatusBar, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
-import Userdashboard from '../Components/Userdashboard'
+import Userdashboard from '../../Components/Userdashboard'
 
 const dashbaord = () => {
   return (

@@ -22,7 +22,7 @@ const UserRegister = () => {
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
 
-  const backendUrl = "http://192.168.0.101:8000/signup";
+  const backendUrl = "http://192.168.0.100:8000/signup";
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 

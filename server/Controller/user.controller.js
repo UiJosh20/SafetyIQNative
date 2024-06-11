@@ -216,10 +216,35 @@ const login = (req, res) => {
   });
 };
 
+const dashboard = (req, res) => {
+  const { id } = req.body;
+
+  if (!id) {
+    return res.status(400).send("User ID is required.");
+  }
+
+  const sqlSelect = `SELECT * FROM safetyiq_table WHERE user_id = ?`;
+  db.query(sqlSelect, [id], (err, results) => {
+    if (err) {
+      console.error("Error selecting data:", err);
+      return res
+        .status(500)
+        .send("An error occurred while fetching user data.");
+    }
+
+    if (results.length === 0) {
+      return res.status(404).send("User not found.");
+    }
+
+    res.send({ user: results[0] });
+  });
+};
+
 
 module.exports = {
   signup,
   paystackInit,
   paystackVerify,
   login,
+  dashboard
 };
