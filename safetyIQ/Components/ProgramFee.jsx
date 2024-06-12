@@ -30,8 +30,9 @@ const ProgramFee = () => {
   const [userAmount, setUserAmount] = useState("");
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [verificationNumber, setVerificationNumber] = useState(""); // New state for verification number
-  const payInit = "http://192.168.0.100:8000/paystackinit";
-  const verifyPay = "http://192.168.0.100:8000/paystackverify";
+ const port = 101
+  const payInit = `http://192.168.0.${port}:8000/paystackinit`;
+  const verifyPay = `http://192.168.0.${port}:8000/paystackverify`;
 
   useEffect(() => {
     AsyncStorage.getItem("courseName")

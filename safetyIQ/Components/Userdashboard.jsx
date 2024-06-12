@@ -11,7 +11,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 const Userdashboard = () => {
-  const userUrl = "http://192.168.0.100:8000/dashboard";
+  const port = 101
+  const userUrl = `http://192.168.0.${port}:8000/dashboard`;
   const [id, setId] = useState("");
   const [userData, setUserData] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
