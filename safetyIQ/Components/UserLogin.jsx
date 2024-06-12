@@ -51,7 +51,7 @@ const handleLogin = (values) => {
         // console.log(userId);
         AsyncStorage.setItem("userId", userId.toString())
           .then(() => {
-            router.push("dashbaord");
+            router.push("dashboard");
           })
           .catch((error) => {
             console.error("Failed to store user ID", error);

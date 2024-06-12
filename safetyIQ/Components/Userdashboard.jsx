@@ -1,5 +1,12 @@
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
+import React, { useEffect, useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
@@ -7,31 +14,63 @@ const Userdashboard = () => {
   const userUrl = "http://192.168.0.100:8000/dashboard";
   const [id, setId] = useState("");
   const [userData, setUserData] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  AsyncStorage.getItem("userId")
+    .then((userId) => {
+      if (userId) {
+        setId(userId);
+      }
+    })
+    .catch((error) => {
+      console.log("Error fetching user ID: ", error);
+    });
+  const fetchUserId = () => {
+   AsyncStorage.getItem("userId")
+     .then((userId) => {
+       if (userId) {
+         setId(userId);
+       }
+     })
+     .catch((error) => {
+       console.log("Error fetching user ID: ", error);
+     });
+  };
+
+  const fetchData = () => {
+    axios
+      .post(userUrl, { id: id })
+      .then((response) => {
+        setUserData(response.data.user);
+        setRefreshing(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setRefreshing(false);
+      }); 
+  }
 
   useEffect(() => {
-    const fetchUserId = async () => {
-      const userId = await AsyncStorage.getItem("userId");
-      setId(userId);
-    };
+    fetchUserId()
+    fetchData()
+   
+ })
 
-    fetchUserId();
-  }, []);
 
-  useEffect(() => {
-    if (id) {
-      axios
-        .post(userUrl, { id: id })
-        .then((response) => {
-          setUserData(response.data.user);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    }
-  }, [id]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchData();
+  }, [fetchData]);
 
   return (
+      
     <View style={styles.container}>
+    <ScrollView
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       {userData ? (
         <>
           <View style={styles.header}>
@@ -53,8 +92,14 @@ const Userdashboard = () => {
           </View>
         </>
       ) : (
-        <ActivityIndicator animating={true} size="large" color="#C30000" />
+        <ActivityIndicator
+          animating={true}
+          size="large"
+          color="#C30000"
+          style={{ justifyContent: "center", alignItems: "center", flex: 1 }}
+        />
       )}
+    </ScrollView>
     </View>
   );
 };
@@ -66,7 +111,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     backgroundColor: "#fff",
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
   },
   header: {
     flexDirection: "row",
@@ -103,13 +148,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   whiteBox: {
-    width: 237,
+    width: 250,
     height: 36,
     backgroundColor: "#fff",
     borderRadius: 10,
     position: "absolute",
     top: -10,
-    left: 50,
+    left: 40,
     paddingHorizontal: 10,
     // Add shadow properties here
     shadowColor: "#000",
@@ -126,4 +171,3 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 });
-
