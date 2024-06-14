@@ -112,7 +112,7 @@ const ProgramFee = () => {
           );
           setModalVisible(false);
           setPaymentInitiated(false);
-          router.push("/");
+          router.push("login");
         } else {
           Alert.alert("Error", "Payment verification failed.");
           setPaymentInitiated(false);

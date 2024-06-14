@@ -1,16 +1,13 @@
-import { Platform, StatusBar, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
-import UserLogin from '../Components/UserLogin'
+import { Platform, StatusBar, StyleSheet, Text, View } from "react-native";
+import CourseDetail from "../Components/CourseDetail";
 
-const index = () => {
+export default function index() {
   return (
     <View style={styles.container}>
-      <UserLogin/>
+      <CourseDetail />
     </View>
-  )
+  );
 }
-
-export default index
 
 const styles = StyleSheet.create({
   container: {
