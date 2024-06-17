@@ -30,7 +30,7 @@ const ProgramFee = () => {
   const [userAmount, setUserAmount] = useState("");
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [verificationNumber, setVerificationNumber] = useState(""); // New state for verification number
- const port = 101
+ const port = 102
   const payInit = `http://192.168.0.${port}:8000/paystackinit`;
   const verifyPay = `http://192.168.0.${port}:8000/paystackverify`;
 
@@ -141,11 +141,9 @@ const ProgramFee = () => {
 
       <View style={styles.paymentbtn}>
         <TouchableOpacity style={styles.paybtn} onPress={handleBankTransfer}>
-          <Text style={styles.paybtntext}>Bank Transfer</Text>
+          <Text style={styles.paybtntext}>Paystack</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.paybtn]} onPress={handleBankTransfer}>
-          <Text style={styles.paybtntext}>Debit Card</Text>
-        </TouchableOpacity>
+        
       </View>
 
       <Modal

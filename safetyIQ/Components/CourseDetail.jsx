@@ -22,7 +22,7 @@ const CourseDetail = () => {
   AsyncStorage.setItem("courseName", packageName)
     .then(() => AsyncStorage.setItem("coursePrice", packagePrice))
     .then(() => {
-      router.push("enroll", { packageName, packagePrice });
+      router.push("login", { packageName, packagePrice });
     })
     .catch((error) => {
       console.error("Failed to save the course details:", error);

@@ -16,7 +16,7 @@ import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 
 const Userdashboard = () => {
-  const port = 101;
+  const port = 102;
   const userUrl = `http://192.168.0.${port}:8000/dashboard`;
   const profileUrl = `http://192.168.0.${port}:8000/profilePic`;
   const [id, setId] = useState("");

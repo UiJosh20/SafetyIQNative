@@ -159,7 +159,7 @@ const handleLogin = (values) => {
           <Text style={styles.forgotPasswordText}>Forgot the password?</Text>
         </Pressable>
         <Pressable
-          onPress={() => router.push("course")}
+          onPress={() => router.push("enroll")}
           style={styles.signupLinkContainer}
         >
           <Text style={styles.signupLinkText}>
