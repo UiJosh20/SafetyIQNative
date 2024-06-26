@@ -244,45 +244,6 @@ const dashboard = (req, res) => {
 
 
 
-const multer = require("multer");
-const path = require("path");
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
-    );
-  },
-});
-
-const upload = multer({ storage: storage });
-
-
-const updateProfilePic = (req, res) => {
-   const {id} = req.headers.id; 
-   const filePath = req.file.path;
-   const sqlUpdate = `UPDATE safetyiq_table SET profile_pic = ? WHERE user_id = ?`;
-   db.query(sqlUpdate, [filePath, id], (err, results) => {
-    console.log(results);
-    //  if (err) {
-    //    console.error("Error updating data:", err);
-    //    return res
-    //      .status(500)
-    //      .send("An error occurred while updating profile picture.");
-    //  }else{
-    //    res.send({
-    //      message: "Profile picture uploaded successfully.",
-    //      filePath: filePath,
-    //    });
-    //  }
-
-   });
-}
 
 
 module.exports = {
@@ -291,5 +252,5 @@ module.exports = {
   paystackVerify,
   login,
   dashboard,
-  updateProfilePic,
+
 };

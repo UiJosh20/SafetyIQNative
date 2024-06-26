@@ -30,7 +30,7 @@ const UserLogin = () => {
    const backendUrl = `http://192.168.0.${port}:8000/login`;
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSwitchOn, setIsSwitchOn] = useState(false);
-  const [userId, setuserId] = useState('')
+
 
   if (!fontsLoaded) {
     return null;
@@ -49,7 +49,6 @@ const handleLogin = (values) => {
     .then((response) => {
       if (response.status === 200) {
         const userId = response.data.user.user_id;
-        // console.log(userId);
         AsyncStorage.setItem("userId", userId.toString())
           .then(() => {
             router.push("dashboard");
@@ -58,7 +57,7 @@ const handleLogin = (values) => {
             console.error("Failed to store user ID", error);
           });
       } else {
-        router.push("signin");
+        router.push("login");
       }
     })
     .catch((error) => {
