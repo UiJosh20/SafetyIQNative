@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
@@ -11,6 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate();
 
   const toggleShowPassword = () => {
     setShowPassword(!showPassword);
@@ -42,6 +43,10 @@ const Register = () => {
         console.log("Admin registered:", response.data);
         setSubmitting(false);
         resetForm();
+        toast.success("Congrats! You are now an admin", {
+          onClose: () => navigate("/admin"),
+          autoClose: 3000, // 3 seconds
+        });
       })
       .catch((error) => {
         if (error.response && error.response.status === 409) {

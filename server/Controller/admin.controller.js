@@ -17,22 +17,30 @@ const signupAdmin = (req, res) => {
         return res.status(409).json({ message: "Email already used" });
       }
 
-      return bcrypt.hash(password, 10).then((hashedPassword) => {
-        return db("admin_table").insert({
-          first_name,
-          last_name,
-          email,
-          password: hashedPassword,
-        });
+      return bcrypt.hash(password, 10);
+    })
+    .then((hashedPassword) => {
+      if (!hashedPassword) return;
+
+      return db("admin_table").insert({
+        first_name,
+        last_name,
+        email,
+        password: hashedPassword,
       });
     })
-    .then(([adminId]) => {
+    .then((insertResult) => {
+      if (!insertResult) return;
+
+      const [adminId] = insertResult;
       sendAdminIdToEmail(email, adminId);
       res.status(201).send("Admin registered successfully");
     })
     .catch((error) => {
       console.error(error);
-      res.status(500).send("Internal Server Error");
+      if (!res.headersSent) {
+        res.status(500).send("Internal Server Error");
+      }
     });
 };
 
