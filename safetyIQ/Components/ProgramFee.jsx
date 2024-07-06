@@ -8,6 +8,7 @@ import {
   Modal,
   TextInput,
   Linking,
+  ActivityIndicator,
 } from "react-native";
 import { useFonts } from "expo-font";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -29,8 +30,9 @@ const ProgramFee = () => {
   const [userEmail, setUserEmail] = useState("");
   const [userAmount, setUserAmount] = useState("");
   const [paymentInitiated, setPaymentInitiated] = useState(false);
-  const [verificationNumber, setVerificationNumber] = useState(""); // New state for verification number
- const port = 101;
+  const [verificationNumber, setVerificationNumber] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
+  const port = 101;
   const payInit = `http://192.168.0.${port}:8000/paystackinit`;
   const verifyPay = `http://192.168.0.${port}:8000/paystackverify`;
 
@@ -64,65 +66,71 @@ const ProgramFee = () => {
   };
 
   const handlePayment = () => {
-    axios
-      .post(payInit, {
-        amount: userAmount * 100,
-        email: userEmail,
-      })
-      .then((response) => {
-        if (
-          response.data &&
-          response.data.data &&
-          response.data.data.authorization_url
-        ) {
-          const { authorization_url, reference } = response.data.data;
-          Linking.openURL(authorization_url);
-          setReference(reference);
-          setPaymentInitiated(true);
-        } else {
-          Alert.alert("Error", "Failed to get authorization URL.");
-        }
-      })
-      .catch((error) => {
-        Alert.alert(
-          "Error",
-          "An error occurred while initializing the payment."
-        );
-        console.error("Error initializing payment:", error);
-      });
+    setIsLoading(true);
+    setTimeout(() => {
+      axios
+        .post(payInit, {
+          amount: userAmount * 100,
+          email: userEmail,
+        })
+        .then((response) => {
+          if (
+            response.data &&
+            response.data.data &&
+            response.data.data.authorization_url
+          ) {
+            const { authorization_url, reference } = response.data.data;
+            Linking.openURL(authorization_url);
+            setReference(reference);
+            setPaymentInitiated(true);
+          } else {
+            Alert.alert("Error", "Failed to get authorization URL.");
+          }
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          Alert.alert(
+            "Error",
+            "An error occurred while initializing the payment."
+          );
+          console.error("Error initializing payment:", error);
+          setIsLoading(false);
+        });
+    }, 2000);
   };
 
   const handleVerifyPayment = () => {
-    axios
-      .get(verifyPay, {
-        params: {
-          reference: userReference,
-        },
-      })
-      .then((verifyResponse) => {
-        if (
-          verifyResponse.data
-        ) {
-          const verificationNumber =
-            verifyResponse.data.frpnum;
-          setVerificationNumber(verificationNumber); 
+    setIsLoading(true);
+    setTimeout(() => {
+      axios
+        .get(verifyPay, {
+          params: {
+            reference: userReference,
+          },
+        })
+        .then((verifyResponse) => {
+          if (verifyResponse.data) {
+            const verificationNumber = verifyResponse.data.frpnum;
+            setVerificationNumber(verificationNumber);
+            Alert.alert("Success", `Payment verified successfully.`);
+            setModalVisible(false);
+            setPaymentInitiated(false);
+            router.push("login");
+          } else {
+            Alert.alert("Error", "Payment verification failed.");
+            setPaymentInitiated(false);
+          }
+          setIsLoading(false);
+        })
+        .catch((error) => {
           Alert.alert(
-            "Success",
-            `Payment verified successfully.`
+            "Error",
+            "An error occurred while verifying the payment."
           );
-          setModalVisible(false);
-          setPaymentInitiated(false);
-          router.push("login");
-        } else {
-          Alert.alert("Error", "Payment verification failed.");
-          setPaymentInitiated(false);
-        }
-      })
-      .catch((error) => {
-        Alert.alert("Error", "An error occurred while verifying the payment.");
-        console.error("Error verifying payment:", error);
-        setPaymentInitiated(false);
-      });
+          console.error("Error verifying payment:", error);
+          setIsLoading(false);
+        });
+    }, 2000);
   };
 
   return (
@@ -143,7 +151,6 @@ const ProgramFee = () => {
         <TouchableOpacity style={styles.paybtn} onPress={handleBankTransfer}>
           <Text style={styles.paybtntext}>Paystack</Text>
         </TouchableOpacity>
-        
       </View>
 
       <Modal
@@ -196,6 +203,19 @@ const ProgramFee = () => {
           )}
         </View>
       </Modal>
+
+      {isLoading && (
+        <Modal
+          transparent={true}
+          animationType="none"
+          visible={isLoading}
+          onRequestClose={() => setIsLoading(false)}
+        >
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#C30000" />
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -298,5 +318,11 @@ const styles = StyleSheet.create({
     borderColor: "#6A6A6A",
     marginBottom: 15,
     padding: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
 });
