@@ -2,6 +2,7 @@ const express = require("express")
 const app = express()
 const cors = require("cors");
 const userRouter = require("./routes/user.route");
+const adminRouter = require("./routes/admin.route")
 const bodyParser = require("body-parser");
 const path = require("path");
 require('dotenv').config()
@@ -13,6 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use("/", userRouter);
+app.use("/admin", adminRouter);
 
 
 app.listen(PORT,()=>{
