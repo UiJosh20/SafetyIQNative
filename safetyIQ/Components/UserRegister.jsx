@@ -101,6 +101,7 @@ const UserRegister = () => {
                 onBlur={handleBlur("callUpNo")}
                 value={values.callUpNo}
                 keyboardType="number-pad"
+                maxLength={12}
               />
               {errors.callUpNo && touched.callUpNo && (
                 <Text style={styles.errorText}>{errors.callUpNo}</Text>

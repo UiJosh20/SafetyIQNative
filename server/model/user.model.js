@@ -1,19 +1,8 @@
+// user.model.js
+const knex = require("knex");
+const knexConfig = require("../knexfile");
 
-const mysql = require("mysql2");
-require("dotenv").config();
+const environment = process.env.NODE_ENV || "development";
+const db = knex(knexConfig[environment]);
 
-const connection = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  database: process.env.DB_NAME,
-});
-
-connection.connect((err) => {
-  if (err) {
-    console.error("Error connecting to MySQL:", err);
-    return;
-  }
-  console.log("Connected to MySQL");
-});
-
-module.exports = connection;
+module.exports = db;

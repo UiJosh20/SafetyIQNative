@@ -21,32 +21,30 @@ const signup = (req, res) => {
   bcrypt
     .hash(password, 10)
     .then((hashedPassword) => {
-      const query =
-        "INSERT INTO safetyiq_table (callUp_num, firstName, lastName, middleName, tel, email, password) VALUES (?, ?, ?, ?, ?, ?, ?)";
-      const values = [
-        callUpNo,
-        firstName,
-        lastName,
-        middleName,
-        telephoneNo,
-        email,
-        hashedPassword,
-      ];
-
-      db.query(query, values, (err, results) => {
-        if (err) {
+      db("safetyiq_table")
+        .insert({
+          callUp_num: callUpNo,
+          firstName: firstName,
+          lastName: lastName,
+          middleName: middleName,
+          tel: telephoneNo,
+          email: email,
+          password: hashedPassword,
+        })
+        .then(() => {
+          res.status(201).send("User registered successfully");
+        })
+        .catch((err) => {
           console.error(err);
           res.status(500).send("Internal Server Error");
-          return;
-        }
-        res.status(201).send("User registered successfully");
-      });
+        });
     })
     .catch((error) => {
       console.error(error);
       res.status(500).send("Error hashing password");
     });
 };
+
 
 const paystackInit = (req, res) => {
   const { amount, email } = req.body;
