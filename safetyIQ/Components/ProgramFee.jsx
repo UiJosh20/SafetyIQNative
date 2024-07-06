@@ -30,7 +30,7 @@ const ProgramFee = () => {
   const [userAmount, setUserAmount] = useState("");
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [verificationNumber, setVerificationNumber] = useState(""); // New state for verification number
- const port = 102
+ const port = 101;
   const payInit = `http://192.168.0.${port}:8000/paystackinit`;
   const verifyPay = `http://192.168.0.${port}:8000/paystackverify`;
 

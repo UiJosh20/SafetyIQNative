@@ -21,37 +21,31 @@ const signup = (req, res) => {
   bcrypt
     .hash(password, 10)
     .then((hashedPassword) => {
-      db("safetyiq_table")
-        .insert({
-          callUp_num: callUpNo,
-          firstName: firstName,
-          lastName: lastName,
-          middleName: middleName,
-          tel: telephoneNo,
-          email: email,
-          password: hashedPassword,
-        })
-        .then(() => {
-          res.status(201).send("User registered successfully");
-        })
-        .catch((err) => {
-          console.error(err);
-          res.status(500).send("Internal Server Error");
-        });
+      return db("safetyiq_table").insert({
+        callUp_num: callUpNo,
+        firstName,
+        lastName,
+        middleName,
+        tel: telephoneNo,
+        email,
+        password: hashedPassword,
+      });
+    })
+    .then(() => {
+      res.status(201).send("User registered successfully");
     })
     .catch((error) => {
       console.error(error);
-      res.status(500).send("Error hashing password");
+      res.status(500).send("Internal Server Error");
     });
 };
-
 
 const paystackInit = (req, res) => {
   const { amount, email } = req.body;
 
   const params = JSON.stringify({
-    email: email,
-    amount: amount,
+    email,
+    amount,
   });
 
   const options = {
@@ -163,55 +157,53 @@ const paystackVerify = (req, res) => {
         const randomNumber = generateRandomNumber();
         const email = parsedData.data.customer.email;
 
-        const updateQuery = `UPDATE safetyiq_table SET frpnum = ? WHERE email = ?`;
-
-        db.query(updateQuery, [randomNumber, email], (err, results) => {
-          if (results.affectedRows > 0) {
-            sendUniqueNumberToEmail(email, randomNumber);
-            res.send({
-              message: "Payment successful",
-              frpnum: randomNumber,
-            });
-          }
-        });
+        return db("safetyiq_table")
+          .where({ email })
+          .update({ frpnum: randomNumber })
+          .then((results) => {
+            if (results > 0) {
+              return sendUniqueNumberToEmail(email, randomNumber).then(() => {
+                res.send({
+                  message: "Payment successful",
+                  frpnum: randomNumber,
+                });
+              });
+            } else {
+              res.status(404).send("User not found");
+            }
+          });
       }
     })
     .catch((err) => {
       console.log(err);
+      res.status(500).send("Error verifying payment");
     });
 };
 
 const login = (req, res) => {
-  
   const { identifier, password } = req.body;
 
-  const sqlSelect = `SELECT * FROM safetyiq_table WHERE callup_num = ? OR frpnum = ?`;
-  db.query(sqlSelect, [identifier, identifier], (err, results) => {
-    if (err) {
-      console.error("Error selecting data:", err);
-      return res.status(500).send("An error occurred while logging in.");
-    }
+  db("safetyiq_table")
+    .where({ callup_num: identifier })
+    .orWhere({ frpnum: identifier })
+    .first()
+    .then((user) => {
+      if (!user) {
+        return res.status(404).send("User not found.");
+      }
 
-    if (results.length === 0) {
-      return res.status(404).send("User not found.");
-    }
-
-    const user = results[0];
-
-    bcrypt
-      .compare(password, user.password)
-      .then((match) => {
+      return bcrypt.compare(password, user.password).then((match) => {
         if (!match) {
           return res.status(401).send("Incorrect password.");
         }
 
-        res.send({message: "Login successful", status : 200, user: user});
-      })
-      .catch((error) => {
-        console.error("Error comparing passwords:", error);
-        res.status(500).send("An error occurred while logging in.");
+        res.send({ message: "Login successful", status: 200, user });
       });
-  });
+    })
+    .catch((error) => {
+      console.error("Error logging in:", error);
+      res.status(500).send("An error occurred while logging in.");
+    });
 };
 
 const dashboard = (req, res) => {
@@ -221,28 +213,21 @@ const dashboard = (req, res) => {
     return res.status(400).send("User ID is required.");
   }
 
-  const sqlSelect = `SELECT * FROM safetyiq_table WHERE user_id = ?`;
-  db.query(sqlSelect, [id], (err, results) => {
-    if (err) {
-      console.error("Error selecting data:", err);
-      return res
-        .status(500)
-        .send("An error occurred while fetching user data.");
-    }
+  db("safetyiq_table")
+    .where({ user_id: id })
+    .first()
+    .then((user) => {
+      if (!user) {
+        return res.status(404).send("User not found.");
+      }
 
-    if (results.length === 0) {
-      return res.status(404).send("User not found.");
-    }
-
-    res.send({ user: results[0] });
-  });
+      res.send({ user });
+    })
+    .catch((error) => {
+      console.error("Error fetching user data:", error);
+      res.status(500).send("An error occurred while fetching user data.");
+    });
 };
-
-
-
-
-
-
 
 module.exports = {
   signup,
@@ -250,5 +235,4 @@ module.exports = {
   paystackVerify,
   login,
   dashboard,
-
 };

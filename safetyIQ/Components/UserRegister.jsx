@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import {
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,7 +23,7 @@ const UserRegister = () => {
     "Kanit-Italic": require("./../assets/fonts/Kanit-Italic.ttf"),
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
- const port = 102
+ const port = 101
   const backendUrl = `http://192.168.0.${port}:8000/signup`;
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
@@ -62,9 +64,15 @@ const UserRegister = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container} 
+      behavior="padding"
+      >
       <Text style={styles.title}>Registration</Text>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardDismissMode="on-drag"
+      >
         <Formik
           initialValues={{
             callUpNo: "",
@@ -102,6 +110,7 @@ const UserRegister = () => {
                 value={values.callUpNo}
                 keyboardType="number-pad"
                 maxLength={12}
+                autofocus
               />
               {errors.callUpNo && touched.callUpNo && (
                 <Text style={styles.errorText}>{errors.callUpNo}</Text>
@@ -168,6 +177,8 @@ const UserRegister = () => {
                 onBlur={handleBlur("telephoneNo")}
                 keyboardType="phone-pad"
                 value={values.telephoneNo}
+                maxLength={11}
+                clearButtonMode="always"
               />
               {errors.telephoneNo && touched.telephoneNo && (
                 <Text style={styles.errorText}>{errors.telephoneNo}</Text>
@@ -260,7 +271,7 @@ const UserRegister = () => {
           )}
         </Formik>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
