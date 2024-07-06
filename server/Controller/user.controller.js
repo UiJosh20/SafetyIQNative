@@ -183,26 +183,37 @@ const paystackVerify = (req, res) => {
 const login = (req, res) => {
   const { identifier, password } = req.body;
 
+  // Check if identifier and password are provided
+  if (!identifier || !password) {
+    return res.status(400).send("Identifier and password are required.");
+  }
+
+  // Query the database for the user
   db("safetyiq_table")
     .where({ callup_num: identifier })
     .orWhere({ frpnum: identifier })
     .first()
     .then((user) => {
+      // Check if user was found
       if (!user) {
         return res.status(404).send("User not found.");
       }
 
+      // Compare the password
       return bcrypt.compare(password, user.password).then((match) => {
+        // Check if password matches
         if (!match) {
           return res.status(401).send("Incorrect password.");
         }
 
-        res.send({ message: "Login successful", status: 200, user });
+        // Send success response
+        return res.send({ message: "Login successful", status: 200, user });
       });
     })
     .catch((error) => {
+      // Log the error and send a 500 response
       console.error("Error logging in:", error);
-      res.status(500).send("An error occurred while logging in.");
+      return res.status(500).send("An error occurred while logging in.");
     });
 };
 

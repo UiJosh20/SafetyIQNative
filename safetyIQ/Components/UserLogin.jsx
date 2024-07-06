@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Switch,
   Pressable,
+  KeyboardAvoidingView,
+  ActivityIndicator,
 } from "react-native";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
@@ -26,11 +28,11 @@ const UserLogin = () => {
   });
 
   const router = useRouter();
-   const port = 101;
-   const backendUrl = `http://192.168.0.${port}:8000/login`;
+  const port = 101;
+  const backendUrl = `http://192.168.0.${port}:8000/login`;
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSwitchOn, setIsSwitchOn] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
 
   if (!fontsLoaded) {
     return null;
@@ -43,34 +45,44 @@ const UserLogin = () => {
       .required("Password is required"),
   });
 
-const handleLogin = (values) => {
-  axios
-    .post(backendUrl, values)
-    .then((response) => {
-      if (response.status === 200) {
-        const userId = response.data.user.user_id;
-        AsyncStorage.setItem("userId", userId.toString())
-          .then(() => {
-            router.push("dashboard");
-          })
-          .catch((error) => {
-            console.error("Failed to store user ID", error);
-          });
-      } else {
-        router.push("login");
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-};
+  const handleLogin = (values) => {
+    setIsLoading(true);
+    setTimeout(() => {
+      axios
+        .post(backendUrl, values)
+        .then((response) => {
+          if (response.status === 200) {
+            const userId = response.data.user.user_id;
+            AsyncStorage.setItem("userId", userId.toString())
+              .then(() => {
+                setIsLoading(false);
+                router.push("dashboard");
+              })
+              .catch((error) => {
+                console.error("Failed to store user ID", error);
+                setIsLoading(false);
+              });
+          } else {
+            setIsLoading(false);
+            router.push("login");
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          setIsLoading(false);
+        });
+    }, 2000);
+  };
 
   const toggleSwitch = () => setIsSwitchOn((previousState) => !previousState);
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container}>
       <Text style={styles.title}>Sign in to your account</Text>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardDismissMode="on-drag"
+      >
         <Formik
           initialValues={{
             identifier: "",
@@ -101,6 +113,7 @@ const handleLogin = (values) => {
                 onBlur={handleBlur("identifier")}
                 value={values.identifier}
                 keyboardType="number-pad"
+                maxLength={12}
               />
               {errors.identifier && touched.identifier && (
                 <Text style={styles.errorText}>{errors.identifier}</Text>
@@ -148,8 +161,13 @@ const handleLogin = (values) => {
               <TouchableOpacity
                 style={styles.signupButton}
                 onPress={handleSubmit}
+                disabled={isLoading} // Disable button when loading
               >
-                <Text style={styles.signupButtonText}>Sign in</Text>
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.signupButtonText}>Sign in</Text>
+                )}
               </TouchableOpacity>
             </>
           )}
@@ -167,7 +185,7 @@ const handleLogin = (values) => {
           </Text>
         </Pressable>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -228,6 +246,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#C30000",
     borderRadius: 10,
     marginTop: 20,
+    padding: 7,
   },
   signupButtonText: {
     fontFamily: "Kanit-Regular",
