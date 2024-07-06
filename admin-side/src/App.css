@@ -1,3 +1,7 @@
 .w96{
   width: 700px;
 }
+
+input::placeholder{
+  font-size: 14px;
+}
