@@ -1,10 +1,11 @@
 import { Platform, StatusBar, StyleSheet, Text, View } from "react-native";
 import CourseDetail from "../Components/CourseDetail";
+import UserLogin from "../Components/UserLogin";
 
 export default function index() {
   return (
     <View style={styles.container}>
-      <CourseDetail />
+      <UserLogin />
     </View>
   );
 }

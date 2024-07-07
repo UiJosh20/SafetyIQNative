@@ -22,7 +22,7 @@ const CourseDetail = () => {
   AsyncStorage.setItem("courseName", packageName)
     .then(() => AsyncStorage.setItem("coursePrice", packagePrice))
     .then(() => {
-      router.push("login", { packageName, packagePrice });
+      router.push("enroll", { packageName, packagePrice });
     })
     .catch((error) => {
       console.error("Failed to save the course details:", error);
@@ -39,7 +39,7 @@ const CourseDetail = () => {
             <View style={styles.circlegreen}>
               <Image source={require("../assets/diploma.svg")} />
             </View>
-            <Text style={styles.cardText}>Corpers’ Basic FRP </Text>
+            <Text style={styles.cardText}>Corpers’ FRP </Text>
           </View>
           <View style={styles.holdtextbtn}>
             <Text style={styles.holdtext}>
@@ -65,7 +65,7 @@ const CourseDetail = () => {
             <View style={styles.circleplus}>
               <Image source={require("../assets/award.png")} />
             </View>
-            <Text style={styles.cardText1}>General Basic FRP </Text>
+            <Text style={styles.cardText1}>General FRP </Text>
           </View>
           <View style={styles.holdtextbtn1}>
             <Text style={styles.holdtext1}>
@@ -117,7 +117,7 @@ const CourseDetail = () => {
             <View style={styles.circlecrimson}>
               <Image source={require("../assets/award.png")} />
             </View>
-            <Text style={styles.cardText2}>Continuous/Refresher </Text>
+            <Text style={styles.cardText2}>Mental Health First Aid </Text>
           </View>
           <View style={styles.holdtextbtn}>
             <Text style={styles.holdtext2}>

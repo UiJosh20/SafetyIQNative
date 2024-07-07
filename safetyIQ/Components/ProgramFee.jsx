@@ -23,6 +23,7 @@ const ProgramFee = () => {
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
 
+  const [firstName, setFirstName] = useState("");
   const [courseName, setCourseName] = useState("");
   const [coursePrice, setCoursePrice] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
@@ -31,26 +32,20 @@ const ProgramFee = () => {
   const [userAmount, setUserAmount] = useState("");
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [verificationNumber, setVerificationNumber] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
+  const [isLoading, setIsLoading] = useState(false);
   const port = 100;
   const payInit = `http://192.168.0.${port}:8000/paystackinit`;
   const verifyPay = `http://192.168.0.${port}:8000/paystackverify`;
 
   useEffect(() => {
-    AsyncStorage.getItem("courseName")
-      .then((savedCourseName) => {
-        if (savedCourseName) {
-          setCourseName(savedCourseName);
-        }
-        return AsyncStorage.getItem("coursePrice");
-      })
-      .then((savedCoursePrice) => {
-        if (savedCoursePrice) {
-          setCoursePrice(savedCoursePrice);
-        }
+    AsyncStorage.multiGet(["firstName", "courseName", "coursePrice"])
+      .then(([firstName, courseName, coursePrice]) => {
+        if (firstName[1]) setFirstName(firstName[1]);
+        if (courseName[1]) setCourseName(courseName[1]);
+        if (coursePrice[1]) setCoursePrice(coursePrice[1]);
       })
       .catch((error) => {
-        console.error("Failed to load the course details:", error);
+        console.error("Failed to load the details from storage:", error);
       });
   }, []);
 
@@ -128,16 +123,21 @@ const ProgramFee = () => {
   };
 
   return (
-    <View>
+    <View style={styles.container}>
       <Text style={styles.title}>Program Fee</Text>
 
-      <View style={styles.coursecon}>
-        <Text style={styles.courseDetail}>
-          Your program fee is {coursePrice}. Your login details will be
-          forwarded after payment.
+      <View style={styles.messageContainer}>
+        <Text style={styles.message}>Hello {firstName},</Text>
+        <Text style={styles.message}>
+          Your record is successfully received for enrollment on the{" "}
+          {courseName} training.
         </Text>
-        <Text style={styles.courseDetail2}>
-          You can pay through any of the payment options below:
+        <Text style={styles.message}>
+          The {courseName} training fee is {coursePrice}.
+        </Text>
+        <Text style={styles.message}>
+          Please make payment through any of the payment options below to
+          receive your login details and join your batch's study group.
         </Text>
       </View>
 
@@ -217,22 +217,28 @@ const ProgramFee = () => {
 export default ProgramFee;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#fff",
+  },
   title: {
     fontFamily: "Kanit-Bold",
     fontSize: 24,
     textAlign: "center",
     marginVertical: 15,
   },
-  courseDetail: {
-    fontFamily: "Kanit-Light",
-    fontSize: 12,
-    color: "#6A6A6A",
+  messageContainer: {
+    marginTop: 10,
+    width: "100%",
+    paddingHorizontal: 9,
+    textAlign:"justify",
   },
-  courseDetail2: {
-    fontFamily: "Kanit-Light",
-    fontSize: 12,
-    color: "#6A6A6A",
-    marginVertical: 10,
+  message: {
+    fontFamily: "Kanit-Regular",
+    fontSize: 13,
+    color: "#222",
+    marginBottom: 10,
   },
   courseDetail3: {
     fontFamily: "Kanit-Light",
@@ -242,9 +248,9 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 40,
   },
-  coursecon: {
-    marginTop: 10,
+  paymentbtn: {
     paddingHorizontal: 17,
+    marginTop: 30,
   },
   paybtntext: {
     color: "#C30000",
@@ -257,10 +263,6 @@ const styles = StyleSheet.create({
     fontFamily: "Kanit-Bold",
     fontSize: 18,
     textAlign: "center",
-  },
-  paymentbtn: {
-    paddingHorizontal: 17,
-    marginTop: 30,
   },
   paybtn: {
     width: "100%",

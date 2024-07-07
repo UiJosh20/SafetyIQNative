@@ -64,7 +64,7 @@ const UserLogin = () => {
               });
           } else {
             setIsLoading(false);
-            router.push("login");
+            router.push("index");
           }
         })
         .catch((error) => {
@@ -176,7 +176,7 @@ const UserLogin = () => {
           <Text style={styles.forgotPasswordText}>Forgot the password?</Text>
         </Pressable>
         <Pressable
-          onPress={() => router.push("enroll")}
+          onPress={() => router.push("course")}
           style={styles.signupLinkContainer}
         >
           <Text style={styles.signupLinkText}>

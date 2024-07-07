@@ -15,6 +15,7 @@ import { Formik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
 import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 
 const UserRegister = () => {
   const [fontsLoaded, fontError] = useFonts({
@@ -53,9 +54,17 @@ const UserRegister = () => {
       .post(backendUrl, values)
       .then((response) => {
         if (response.status === 201) {
-          router.push("fee");
+          // Save first name to local storage
+          AsyncStorage.setItem("firstName", values.firstName)
+            .then(() => {
+              router.push("fee");
+            })
+            .catch((error) => {
+              console.error("Failed to store first name", error);
+              router.push("fee");
+            });
         } else {
-          router.push("signin");
+          router.push("enroll");
         }
       })
       .catch((error) => {
@@ -107,7 +116,7 @@ const UserRegister = () => {
                 value={values.callUpNo}
                 keyboardType="number-pad"
                 maxLength={12}
-                autofocus
+                autoFocus
               />
               {errors.callUpNo && touched.callUpNo && (
                 <Text style={styles.errorText}>{errors.callUpNo}</Text>
