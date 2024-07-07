@@ -5,3 +5,44 @@
 input::placeholder{
   font-size: 14px;
 }
+
+.list li a{
+  font-size: 13px;
+  font-weight: bold;
+  color: white;
+
+}
+nav{
+  background-color: #970101;
+}
+
+.summary{
+  font-size: 12px;
+}
+
+.big{
+  font-size: 16px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.big2{
+  font-size: 14px;
+  text-transform: capitalize;
+  margin-bottom: 10px;
+}
+
+.loader {
+  border: 10px solid #e6e6e6; 
+  border-top: 16px solid #c30000;
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+

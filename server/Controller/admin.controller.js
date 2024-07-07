@@ -44,6 +44,38 @@ const signupAdmin = (req, res) => {
     });
 };
 
+const loginAdmin = (req, res) => {
+  const { adminId, password } = req.body;
+
+  db("admin_table")
+    .where({ admin_id: adminId }) 
+    .first()
+    .then((admin) => {
+      if (!admin) {
+        return res
+          .status(401)
+          .json({ message: "Invalid Admin ID or Password" });
+      }
+
+      return bcrypt.compare(password, admin.password).then((isMatch) => {
+        if (!isMatch) {
+          return res
+            .status(401)
+            .json({ message: "Invalid Admin ID or Password" });
+        }
+
+
+        return res
+          .status(200)
+          .json({ message: "Login successful", adminId: admin.admin_id });
+      });
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send("Internal Server Error");
+    });
+};
+
 const sendAdminIdToEmail = (email, adminId) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -69,6 +101,28 @@ const sendAdminIdToEmail = (email, adminId) => {
   });
 };
 
+
+const getAdminInfo = (req, res) => {
+  const { id } = req.params;
+
+  db("admin_table")
+    .where({ admin_id: id })
+    .first()
+    .then((admin) => {
+      if (!admin) {
+        return res.status(404).json({ message: "Admin not found" });
+      }
+      const { first_name, last_name, admin_id } = admin;
+      res.status(200).json({ first_name, last_name, admin_id });
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send("Internal Server Error");
+    });
+};
+
 module.exports = {
   signupAdmin,
+  loginAdmin,
+  getAdminInfo,
 };
