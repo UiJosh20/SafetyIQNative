@@ -121,8 +121,36 @@ const getAdminInfo = (req, res) => {
     });
 };
 
+
+
+const getStudentsByAdmin = (req, res) => {
+  const { adminId } = req.params;
+
+  // Fetch students assigned to the admin
+  db("safetyiq_table")
+    .where({ admin_id: adminId })
+    .select("user_id", "firstName", "lastName", "email", "tel")
+    .then((students) => {
+      // Fetch total number of students
+      db("safetyiq_table")
+        .count("user_id as totalStudents")
+        .first()
+        .then((countResult) => {
+          res.status(200).json({
+            students,
+            totalStudents: countResult.totalStudents,
+          });
+        });
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send("Internal Server Error");
+    });
+};
+
 module.exports = {
   signupAdmin,
   loginAdmin,
   getAdminInfo,
+  getStudentsByAdmin,
 };

@@ -12,6 +12,9 @@ exports.up = function (knex) {
     table.string("password", 255).notNullable();
     table.string("frpnum", 100).nullable();
     table.timestamp("created_at").defaultTo(knex.fn.now());
+    table.integer("admin_id").unsigned();
+    table.foreign("admin_id").references("admin_table.admin_id");
+
   });
 };
 

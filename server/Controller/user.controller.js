@@ -18,18 +18,51 @@ const signup = (req, res) => {
     password,
   } = req.body;
 
-  bcrypt
-    .hash(password, 10)
+  // Check if the email already exists in the safetyiq_table
+  db("safetyiq_table")
+    .where({ email })
+    .first()
+    .then((existingUser) => {
+      if (existingUser) {
+        return res.status(409).json({ message: "Email already used" });
+      }
+
+      // Hash the password
+      return bcrypt.hash(password, 10);
+    })
     .then((hashedPassword) => {
-      return db("safetyiq_table").insert({
-        callUp_num: callUpNo,
-        firstName,
-        lastName,
-        middleName,
-        tel: telephoneNo,
-        email,
-        password: hashedPassword,
-      });
+      if (!hashedPassword) return;
+
+      // Find the available admin with the fewest users
+      return db("admin_table")
+        .select("admin_table.admin_id")
+        .leftJoin(
+          "safetyiq_table",
+          "admin_table.admin_id",
+          "safetyiq_table.admin_id"
+        )
+        .groupBy("admin_table.admin_id")
+        .orderByRaw("COUNT(safetyiq_table.user_id) ASC")
+        .first()
+        .then((availableAdmin) => {
+          if (!availableAdmin) {
+            throw new Error("No available admin found");
+          }
+
+          const admin_id = availableAdmin.admin_id;
+
+          // Insert the new user into the safetyiq_table with the found admin_id
+          return db("safetyiq_table").insert({
+            callUp_num: callUpNo,
+            firstName,
+            lastName,
+            middleName,
+            tel: telephoneNo,
+            email,
+            password: hashedPassword,
+            admin_id,
+          });
+        });
     })
     .then(() => {
       res.status(201).send("User registered successfully");

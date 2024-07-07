@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom';
 
 const Nav = () => {
   return (
@@ -9,16 +10,16 @@ const Nav = () => {
         </div>
         <ul className="text-decoration-none flex gap-8 list">
           <li>
-            <a href="#">Academics</a>
+            <Link to={"/admin/academics"}>Academics</Link>
           </li>
           <li>
-            <a href="#">Exam</a>
+            <Link to="#">Exam</Link>
           </li>
           <li>
-            <a href="#">Settings</a>
+            <Link to={"/admin/academics"}>Settings</Link>
           </li>
           <li>
-            <a href="#">Permission</a>
+            <Link to={"/admin/academics"}>Permission</Link>
           </li>
         </ul>
       </nav>
