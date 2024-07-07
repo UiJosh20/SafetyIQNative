@@ -44,7 +44,7 @@ const Register = () => {
         setSubmitting(false);
         resetForm();
         toast.success("Congrats! You are now an admin", {
-          onClose: () => navigate("/admin"),
+          onClose: () => navigate("/"),
           autoClose: 3000, // 3 seconds
         });
       })

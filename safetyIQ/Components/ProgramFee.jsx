@@ -32,7 +32,7 @@ const ProgramFee = () => {
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [verificationNumber, setVerificationNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
-  const port = 101;
+  const port = 100;
   const payInit = `http://192.168.0.${port}:8000/paystackinit`;
   const verifyPay = `http://192.168.0.${port}:8000/paystackverify`;
 
@@ -93,7 +93,6 @@ const ProgramFee = () => {
             "Error",
             "An error occurred while initializing the payment."
           );
-          console.error("Error initializing payment:", error);
           setIsLoading(false);
         });
     }, 2000);
@@ -123,11 +122,6 @@ const ProgramFee = () => {
           setIsLoading(false);
         })
         .catch((error) => {
-          Alert.alert(
-            "Error",
-            "An error occurred while verifying the payment."
-          );
-          console.error("Error verifying payment:", error);
           setIsLoading(false);
         });
     }, 2000);

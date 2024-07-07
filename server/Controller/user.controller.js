@@ -240,7 +240,7 @@ const login = (req, res) => {
         }
 
         // Send success response
-        return res.send({ message: "Login successful", status: 200, user });
+         res.send({ message: "Login successful", status: 200, user });
       });
     })
     .catch((error) => {

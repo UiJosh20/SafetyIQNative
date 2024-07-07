@@ -28,7 +28,7 @@ const UserLogin = () => {
   });
 
   const router = useRouter();
-  const port = 101;
+  const port = 100;
   const backendUrl = `http://192.168.0.${port}:8000/login`;
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSwitchOn, setIsSwitchOn] = useState(false);
@@ -59,7 +59,7 @@ const UserLogin = () => {
                 router.push("dashboard");
               })
               .catch((error) => {
-                console.error("Failed to store user ID", error);
+                console.log("Failed to store user ID", error);
                 setIsLoading(false);
               });
           } else {

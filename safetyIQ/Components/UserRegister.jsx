@@ -23,7 +23,7 @@ const UserRegister = () => {
     "Kanit-Italic": require("./../assets/fonts/Kanit-Italic.ttf"),
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
- const port = 101
+  const port = 100;
   const backendUrl = `http://192.168.0.${port}:8000/signup`;
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
@@ -49,25 +49,22 @@ const UserRegister = () => {
   });
 
   const handleSignup = (values) => {
-    axios.post(backendUrl, values)
+    axios
+      .post(backendUrl, values)
       .then((response) => {
-        if(response.status === 201){
-            router.push("fee");
-        }else{
-            router.push("signin");
+        if (response.status === 201) {
+          router.push("fee");
+        } else {
+          router.push("signin");
         }
       })
       .catch((error) => {
         console.error(error);
-       
       });
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container} 
-      behavior="padding"
-      >
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
       <Text style={styles.title}>Registration</Text>
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -351,4 +348,3 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 });
-                     

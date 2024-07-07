@@ -10,6 +10,9 @@ const Nav = () => {
         </div>
         <ul className="text-decoration-none flex gap-8 list">
           <li>
+            <Link to={"/admin/dashboard"}>Dashboard</Link>
+          </li>
+          <li>
             <Link to={"/admin/academics"}>Academics</Link>
           </li>
           <li>

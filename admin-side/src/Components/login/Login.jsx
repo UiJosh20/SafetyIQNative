@@ -73,7 +73,7 @@ const Login = () => {
           <p className="text-center my-6">OR</p>
           <div className="w-full flex justify-center">
             <Link
-              to="/admin/signup"
+              to="/signup"
               className="btn bg-gray-800 mt-5 p-3 rounded-md text-white text-center font-bold w-72"
             >
               Create Account

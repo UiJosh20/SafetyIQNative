@@ -124,11 +124,11 @@ const getAdminInfo = (req, res) => {
 
 
 const getStudentsByAdmin = (req, res) => {
-  const { adminId } = req.params;
+  const { id } = req.params;
 
   // Fetch students assigned to the admin
   db("safetyiq_table")
-    .where({ admin_id: adminId })
+    .where({ admin_id: id })
     .select("user_id", "firstName", "lastName", "email", "tel")
     .then((students) => {
       // Fetch total number of students
