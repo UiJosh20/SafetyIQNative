@@ -16,6 +16,7 @@ const signup = (req, res) => {
     telephoneNo,
     email,
     password,
+    courseName,
   } = req.body;
 
   // Check if the email already exists in the safetyiq_table
@@ -60,6 +61,7 @@ const signup = (req, res) => {
             tel: telephoneNo,
             email,
             password: hashedPassword,
+            course_name: courseName,
             admin_id,
           });
         });

@@ -148,9 +148,23 @@ const getStudentsByAdmin = (req, res) => {
     });
 };
 
+const uploadResource = (req, res) => {
+  const { title, description, admin_id } = req.body;
+  db("resources_table")
+    .insert({ title, description, admin_id })
+    .then((insertResult) => {
+      res.status(201).json({ message: "Resource uploaded successfully" });
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    });
+};
+
 module.exports = {
   signupAdmin,
   loginAdmin,
   getAdminInfo,
   getStudentsByAdmin,
+  uploadResource,
 };

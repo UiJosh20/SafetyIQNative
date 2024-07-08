@@ -11,6 +11,7 @@ exports.up = function (knex) {
     table.string("email", 100).notNullable().unique();
     table.string("password", 255).notNullable();
     table.string("frpnum", 100).nullable();
+    table.string("course_name", 100).nullable();
     table.timestamp("created_at").defaultTo(knex.fn.now());
     table.integer("admin_id").unsigned().nullable();
     table.foreign("admin_id").references("admin_table.admin_id");

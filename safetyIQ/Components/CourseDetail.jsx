@@ -51,7 +51,7 @@ const CourseDetail = () => {
               onPress={() => {
                 userEnroll(
                   "Corpers’ Basic FRP",
-                  "₦2,000 (Two thousand naira only)"
+                  "2000"
                 );
               }}
             >
@@ -77,7 +77,7 @@ const CourseDetail = () => {
               onPress={() => {
                 userEnroll(
                   "General Basic FRP",
-                  "₦20,000 (Twenty thousand naira only)"
+                  "20000"
                 );
               }}
             >
@@ -103,7 +103,7 @@ const CourseDetail = () => {
               onPress={() => {
                 userEnroll(
                   "Advanced FRP",
-                  "₦50,000 (Fifty Thousand naira only)"
+                  "50000"
                 );
               }}
             >
@@ -129,7 +129,7 @@ const CourseDetail = () => {
               onPress={() => {
                 userEnroll(
                   "Continuous/Refresher",
-                  "₦15,000 (Fifteen thousand naira only)"
+                  "15000"
                 );
               }}
             >

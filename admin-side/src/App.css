@@ -5,6 +5,9 @@
 input::placeholder{
   font-size: 14px;
 }
+body{
+  background-color: rgb(213, 224, 233);
+}
 
 .list li a{
   font-size: 13px;
@@ -46,3 +49,6 @@ nav{
   100% { transform: rotate(360deg); }
 }
 
+.shadowlg{
+  box-shadow: 3px 3px 15px rgba(0, 0, 0, 0.404);
+}

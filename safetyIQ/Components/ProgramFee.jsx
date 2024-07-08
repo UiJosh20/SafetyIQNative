@@ -33,17 +33,17 @@ const ProgramFee = () => {
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [verificationNumber, setVerificationNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const port = 100;
+  const port = 101;
   const payInit = `http://192.168.0.${port}:8000/paystackinit`;
   const verifyPay = `http://192.168.0.${port}:8000/paystackverify`;
-
   useEffect(() => {
-    AsyncStorage.multiGet(["firstName", "courseName", "coursePrice"])
-      .then(([firstName, courseName, coursePrice]) => {
-        if (firstName[1]) setFirstName(firstName[1]);
-        if (courseName[1]) setCourseName(courseName[1]);
-        if (coursePrice[1]) setCoursePrice(coursePrice[1]);
-      })
+    AsyncStorage.multiGet(["firstName", "courseName", "coursePrice", "email"])
+    .then(([firstName, courseName, coursePrice, email]) => {
+      if (firstName[1]) setFirstName(firstName[1]);
+      if (courseName[1]) setCourseName(courseName[1]);
+      if (coursePrice[1]) setCoursePrice(coursePrice[1]);
+      if (email[1]) setUserEmail(email[1]);
+    })
       .catch((error) => {
         console.error("Failed to load the details from storage:", error);
       });
@@ -65,10 +65,11 @@ const ProgramFee = () => {
     setTimeout(() => {
       axios
         .post(payInit, {
-          amount: userAmount * 100,
+          amount: coursePrice * 100,
           email: userEmail,
         })
         .then((response) => {
+          console.log(response.data);
           if (
             response.data &&
             response.data.data &&
@@ -162,16 +163,14 @@ const ProgramFee = () => {
           </Text>
           <TextInput
             placeholder="Email Address"
-            keyboardType="email-address"
             value={userEmail}
-            onChangeText={setUserEmail}
+            editable={false}
             style={styles.input}
           />
           <TextInput
             placeholder="Amount to be paid"
-            keyboardType="number-pad"
-            value={userAmount}
-            onChangeText={setUserAmount}
+            value={coursePrice}
+            editable={false} // Disable input
             style={styles.input}
           />
           <Text
@@ -232,7 +231,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     width: "100%",
     paddingHorizontal: 9,
-    textAlign:"justify",
+    textAlign: "justify",
   },
   message: {
     fontFamily: "Kanit-Regular",

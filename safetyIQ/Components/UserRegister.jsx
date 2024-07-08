@@ -24,7 +24,7 @@ const UserRegister = () => {
     "Kanit-Italic": require("./../assets/fonts/Kanit-Italic.ttf"),
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
-  const port = 100;
+  const port = 101;
   const backendUrl = `http://192.168.0.${port}:8000/signup`;
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
@@ -50,25 +50,27 @@ const UserRegister = () => {
   });
 
   const handleSignup = (values) => {
-    axios
-      .post(backendUrl, values)
+    AsyncStorage.getItem("courseName")
+      .then((courseName) => {
+        const data = { ...values, courseName };
+        return axios.post(backendUrl, data);
+      })
       .then((response) => {
         if (response.status === 201) {
-          // Save first name to local storage
-          AsyncStorage.setItem("firstName", values.firstName)
-            .then(() => {
-              router.push("fee");
-            })
-            .catch((error) => {
-              console.error("Failed to store first name", error);
-              router.push("fee");
-            });
+          return AsyncStorage.multiSet([
+            ["firstName", values.firstName],
+            ["email", values.email], // Save email to AsyncStorage
+          ]);
         } else {
           router.push("enroll");
         }
       })
+      .then(() => {
+        router.push("fee");
+      })
       .catch((error) => {
-        console.error(error);
+        console.error("Failed to signup", error);
+        router.push("enroll");
       });
   };
 
