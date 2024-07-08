@@ -19,12 +19,35 @@ const Userdashboard = () => {
   const port = 101;
   const userUrl = `http://192.168.0.${port}:8000/dashboard`;
   const profileUrl = `http://192.168.0.${port}:8000/profilePic`;
+  const books = `http://192.168.0.${port}:8000/courseFetch`;
+
   const [id, setId] = useState("");
   const [course, setCourse] = useState("");
   const [userData, setUserData] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [items, setItems] = useState([])
   const [selectedImage, setSelectedImage] = useState(null);
+
+
+  useEffect(() => {
+    fetchUserId();
+    fetchCourseName();
+    fetchData();
+    fetchCourse();
+  }, [id]);
+
+ 
+    const fetchCourse = () => {
+      axios
+        .get(books)
+        .then((response) => {
+          setItems(response.data);
+        })
+        .catch((error) => {
+          console.error("Error fetching courses:", error);
+        });
+    };
 
   const fetchCourseName = () => {
     AsyncStorage.getItem("courseName")
@@ -61,11 +84,9 @@ const Userdashboard = () => {
       });
   };
 
-  useEffect(() => {
-    fetchUserId();
-    fetchCourseName();
-    fetchData();
-  }, [id]);
+
+
+  
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -130,7 +151,9 @@ const Userdashboard = () => {
                     style={styles.avatar}
                   />
                 ) : (
-                  <Text style={styles.avatarPlaceholder}>{userData.firstName[0]}</Text>
+                  <Text style={styles.avatarPlaceholder}>
+                    {userData.firstName[0]}
+                  </Text>
                 )}
               </TouchableOpacity>
               <View>
@@ -143,9 +166,12 @@ const Userdashboard = () => {
 
             <View style={styles.redBox}>
               <View style={styles.whiteBox}>
-                <Text style={styles.whiteBoxText}>
-                  Current Topic | Hypoglycemia
-                </Text>
+                {items.map((item, index) => (
+                  <View key={index} style={styles.whiteBoxText}>
+                    <Text>Current Topic | {item.name}</Text>
+                  </View>
+                ))}
+                
               </View>
             </View>
           </>
