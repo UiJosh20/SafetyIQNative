@@ -50,6 +50,7 @@ const Login = () => {
             className="outline-none ms-10 w-full my-5"
             value={adminId}
             onChange={(e) => setAdminId(e.target.value)}
+            autoFocus
           />
           <input
             type="password"

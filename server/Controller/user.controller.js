@@ -288,6 +288,17 @@ const fetchResources = (req, res) => {
     });
 };
 
+const courseFetch = (req, res) =>{
+    db("courses")
+      .then((courses) => {
+        res.status(200).json(courses);
+      })
+      .catch((error) => {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+      });
+}
+
 module.exports = {
   signup,
   paystackInit,
@@ -295,4 +306,5 @@ module.exports = {
   login,
   dashboard,
   fetchResources,
+  courseFetch,
 };
