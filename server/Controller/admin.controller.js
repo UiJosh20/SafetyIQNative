@@ -161,10 +161,38 @@ const uploadResource = (req, res) => {
     });
 };
 
+const courseAdd = (req, res) =>{
+    const { name, admin_id } = req.body;
+    db("courses")
+      .insert({ name, admin_id })
+      .then((insertResult) => {
+        res
+          .status(201)
+          .json({ message: "Course added successfully", id: insertResult[0] });
+      })
+      .catch((error) => {
+        console.error("Error adding course:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      });
+}
+
+const courseFetch = (req, res) =>{
+    db("courses")
+      .then((courses) => {
+        res.status(200).json(courses);
+      })
+      .catch((error) => {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+      });
+}
+
 module.exports = {
   signupAdmin,
   loginAdmin,
   getAdminInfo,
   getStudentsByAdmin,
   uploadResource,
+  courseAdd,
+  courseFetch,
 };

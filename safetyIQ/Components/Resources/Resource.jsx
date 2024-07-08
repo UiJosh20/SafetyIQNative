@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { ScrollView } from "react-native-web";
 
 const Resource = () => {
   const [Data, setData] = useState([]);
@@ -19,7 +20,7 @@ const Resource = () => {
     });
   };
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text>Resource</Text>
       <Text>{Data.title}</Text>
 
@@ -28,7 +29,7 @@ const Resource = () => {
         <View key={i}>
         </View>
       })} */}
-    </View>
+    </ScrollView>
   );
 };
 
