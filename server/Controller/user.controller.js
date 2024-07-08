@@ -275,10 +275,24 @@ const dashboard = (req, res) => {
     });
 };
 
+
+const fetchResources = (req, res) => {
+  db("resources_table")
+    .select("*")
+    .then((resources) => {
+      res.status(200).json(resources);
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    });
+};
+
 module.exports = {
   signup,
   paystackInit,
   paystackVerify,
   login,
   dashboard,
+  fetchResources,
 };
