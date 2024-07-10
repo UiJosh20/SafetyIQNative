@@ -2,82 +2,77 @@ import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 
-
-
-
 const Dashboard = () => {
   const id = JSON.parse(localStorage.getItem("token"));
-  const [data, setData] = useState([])
+  const [data, setData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [adminInfo, setAdminInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [totalStudents, setTotalStudents] = useState(0);
-const [searchTerm, setSearchTerm] = useState("");
-const [filteredItems, setFilteredItems] = useState(data);
-const itemsPerPage = 5;
-
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredItems, setFilteredItems] = useState([]);
+  const itemsPerPage = 3;
 
   useEffect(() => {
     fetchAdminInfo();
     fetchTotalStudents();
-        setFilteredItems(
-          data.filter(
-            (item) =>
-              item.fistName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              item.lastName
-                .toLowerCase()
-                .includes(searchTerm.toLowerCase())
-          )
-        );
-  }, [id, searchTerm]);
+  }, [id]);
 
-   const handleSearchChange = (event) => {
-     setSearchTerm(event.target.value);
-   };
+  useEffect(() => {
+    setFilteredItems(
+      data.filter(
+        (item) =>
+          item.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.lastName.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    );
+  }, [data, searchTerm]);
 
-   const handleClickPrevious = () => {
-     if (currentPage > 1) {
-       setCurrentPage(currentPage - 1);
-     }
-   };
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
 
-   const handleClickNext = () => {
-     if (currentPage < Math.ceil(filteredItems.length / itemsPerPage)) {
-       setCurrentPage(currentPage + 1);
-     }
-   };
+  const handleClickPrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
-   const indexOfLastItem = currentPage * itemsPerPage;
-   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+  const handleClickNext = () => {
+    if (currentPage < Math.ceil(filteredItems.length / itemsPerPage)) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
-     const fetchAdminInfo = () => {
-       axios
-         .get(`http://localhost:8000/admin/info/${id}`)
-         .then((response) => {
-           setAdminInfo(response.data);
-           setLoading(false);
-         })
-         .catch((error) => {
-           console.error("Error fetching admin info:", error);
-           setLoading(false);
-         });
-     };
-
-     const fetchTotalStudents = () => {
-       axios
-         .get(`http://localhost:8000/admin/${id}/students`)
-         .then((response) => {
-           setTotalStudents(response.data.totalStudents);
-           setData(response.data.students);
-        
-         })
-         .catch((error) => {
-           console.error("Error fetching total students:", error);
-         });
-     };
-
+  const fetchAdminInfo = () => {
+    axios
+      .get(`http://localhost:8000/admin/info/${id}`)
+      .then((response) => {
+        setAdminInfo(response.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching admin info:", error);
+        setLoading(false);
+      });
+    };
+    
+    const fetchTotalStudents = () => {
+      axios
+      .get(`http://localhost:8000/admin/${id}/students`)
+      .then((response) => {
+        setTotalStudents(response.data.totalStudents);
+        setData(response.data.students);
+        console.log(response.data.students);
+      })
+      .catch((error) => {
+        console.error("Error fetching total students:", error);
+      });
+  };
 
   if (loading) {
     return (
@@ -91,7 +86,7 @@ const itemsPerPage = 5;
     <>
       <section className="px-10 py-10">
         <div className="p-5 bg-red-100 rounded-lg shadow-lg w-80 mt-5 summary">
-          <h4 className="big  text-gray-700">
+          <h4 className="big text-gray-700">
             {adminInfo
               ? `${adminInfo.first_name} ${adminInfo.last_name}`
               : "Admin"}
@@ -105,7 +100,7 @@ const itemsPerPage = 5;
           Academics
         </small>
         <div className="p-5 bg-gray-100 rounded-lg shadow-lg w-80 mt-5 summary">
-          <h2 className="big2  text-gray-700">Number of Students</h2>
+          <h2 className="big2 text-gray-700">Number of Students</h2>
           <p>{totalStudents}</p>
         </div>
 
@@ -122,21 +117,20 @@ const itemsPerPage = 5;
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white">
               <thead>
-                <tr className="flex justify-between">
-                  <th className="py-2 px-4">
-                    student ({totalStudents})
-                  </th>
-
-                  <th className="py-2 px-4">Total | Grade</th>
+                <tr className="flex gap-96">
+                  <th className="py-2 px-4">Student ({totalStudents})</th>
+                  <th className="py-2 px-4">Course</th>
+                  <th className="py-2 px-4">Total | Grade</th> 
                 </tr>
               </thead>
               <tbody>
-                {data.map((item) => (
-                  <tr key={item.user_id}>
+                {currentItems.map((item) => (
+                  <tr key={item.user_id} className="flex gap-96">
                     <td className="py-2 px-4 border-b">
                       {item.firstName} {item.lastName}
-                    <p>{item.user_id}</p>
+                      <p>{item.user_id}</p>
                     </td>
+                    <td>{item.course_name == null ? "N/A" : item.course_name}</td>
                     {/* <td className="py-2 px-4 border-b">{item.LastName}</td> */}
                   </tr>
                 ))}

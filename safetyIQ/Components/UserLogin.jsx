@@ -9,6 +9,7 @@ import {
   Pressable,
   KeyboardAvoidingView,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
@@ -68,8 +69,11 @@ const UserLogin = () => {
           }
         })
         .catch((error) => {
-          console.log(error);
-          setIsLoading(false);
+          if (error.message == "Request failed with status code 401") {
+            Alert.alert("Invalid Login details, please check your details");
+          }
+          
+            setIsLoading(false);
         });
     }, 2000);
   };
@@ -114,6 +118,7 @@ const UserLogin = () => {
                 value={values.identifier}
                 keyboardType="number-pad"
                 maxLength={12}
+                autoFocus
               />
               {errors.identifier && touched.identifier && (
                 <Text style={styles.errorText}>{errors.identifier}</Text>

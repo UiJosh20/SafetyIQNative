@@ -46,7 +46,6 @@ export default function Academics() {
       });
   };
 
-
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
@@ -84,13 +83,13 @@ export default function Academics() {
     setNewCourse(e.target.value);
   };
 
-  const handleSubmit = (e) => {
+  const handleResourceSubmit = (e) => {
     e.preventDefault();
     axios
       .post(`http://localhost:8000/admin/upload`, newResource)
       .then((response) => {
         if (response.data.message === "Resource uploaded successfully") {
-          setNewResource({ title: "", description: "" });
+          setNewResource({ title: "", description: "", admin_id: admin_id });
           setShowModal(false);
           toast.success("Resource uploaded successfully");
           fetchCourses();
@@ -104,7 +103,10 @@ export default function Academics() {
   const handleCourseSubmit = (e) => {
     e.preventDefault();
     axios
-      .post(`http://localhost:8000/admin/courses`, { name: newCourse, admin_id })
+      .post(`http://localhost:8000/admin/courses`, {
+        name: newCourse,
+        admin_id,
+      })
       .then((response) => {
         if (response.data.message === "Course added successfully") {
           setNewCourse("");
@@ -200,9 +202,61 @@ export default function Academics() {
           </div>
         </div>
       </div>
-      {showCourseModal && (
+
+      {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
           <div className="bg-white p-6 rounded-lg w96 shadow-lg">
+            <form onSubmit={handleResourceSubmit}>
+              <h2 className="text-xl font-bold mb-4">Upload Resource</h2>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={newResource.title}
+                  onChange={handleInputChange}
+                  className="px-3 py-2 border border-gray-300 rounded-md w-full"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={newResource.description}
+                  onChange={handleInputChange}
+                  className="px-3 py-2 border border-gray-300 rounded-md w-full"
+                  required
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={toggleModal}
+                  className="mr-4 px-4 py-2 bg-gray-500 text-white rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                >
+                  Upload Resource
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showCourseModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg w-96 shadow-lg">
             <form onSubmit={handleCourseSubmit}>
               <h2 className="text-xl font-bold mb-4">Add Course</h2>
               <div className="mb-4">
@@ -213,7 +267,7 @@ export default function Academics() {
                   type="text"
                   name="course"
                   value={newCourse}
-                  onChange={(e) => setNewCourse(e.target.value)}
+                  onChange={handleCourseChange}
                   className="px-3 py-2 border border-gray-300 rounded-md w-full"
                   required
                   autoFocus

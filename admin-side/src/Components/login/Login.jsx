@@ -47,7 +47,7 @@ const Login = () => {
           <input
             type="number"
             placeholder="Admin ID"
-            className="outline-none ms-10 w-full my-5"
+            className=" w-full my-5 border-2 border-gray-300 outline-red-700 p-5"
             value={adminId}
             onChange={(e) => setAdminId(e.target.value)}
             autoFocus
@@ -55,7 +55,7 @@ const Login = () => {
           <input
             type="password"
             placeholder="Password"
-            className="outline-none w-full ms-10 my-10"
+            className=" w-full my-5 border-2 border-gray-300 outline-red-700 p-5"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -65,7 +65,7 @@ const Login = () => {
             className="btn bg-red-900 mb-3 mt-5 p-3 rounded-md text-white font-bold w-full"
             disabled={loading}
           >
-            {loading ? "Logging in..." : "Login"} 
+            {loading ? "Logging in..." : "Login"}
           </button>
           <p className="text-gray-500 text-sm text-center my-10">
             Don't have an account? <Link to="/signup">Sign up</Link> Forgot

@@ -129,7 +129,7 @@ const getStudentsByAdmin = (req, res) => {
   // Fetch students assigned to the admin
   db("safetyiq_table")
     .where({ admin_id: id })
-    .select("user_id", "firstName", "lastName", "email", "tel")
+    .select("user_id", "firstName", "lastName", "email", "tel", "course_name")
     .then((students) => {
       // Fetch total number of students
       db("safetyiq_table")

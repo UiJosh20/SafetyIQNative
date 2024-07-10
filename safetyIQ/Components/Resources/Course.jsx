@@ -5,9 +5,11 @@ import {
   View,
   ActivityIndicator,
   RefreshControl,
+  TouchableOpacity,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Course = () => {
   const [items, setItems] = useState([]);
@@ -41,6 +43,15 @@ const Course = () => {
     fetchCourse();
   };
 
+  const handleSelectCourse = (course) => {
+    AsyncStorage.setItem("currentTopic", course.name)
+      .then(() => {
+      })
+      .catch((error) => {
+        console.error("Error saving as current topic:", error);
+      });
+  };
+
   return (
     <View style={styles.container}>
       <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 10 }}>
@@ -53,15 +64,20 @@ const Course = () => {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
-          style={{height: "100%"}}
+          style={{ height: "100%" }}
         >
           {items.length === 0 ? (
             <Text>No courses available</Text>
           ) : (
             items.map((item, index) => (
-              <View key={index} style={styles.book}>
-                <Text>{item.name}</Text>
-              </View>
+              <TouchableOpacity
+                key={index}
+                onPress={() => handleSelectCourse(item)}
+              >
+                <View style={styles.book}>
+                  <Text>{item.name}</Text>
+                </View>
+              </TouchableOpacity>
             ))
           )}
         </ScrollView>

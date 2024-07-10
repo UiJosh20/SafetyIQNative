@@ -10,6 +10,7 @@
     "holdtext",
     "holdtextbtn",
     "paystack",
+    "Pressable",
     "setid",
     "signin"
   ]
