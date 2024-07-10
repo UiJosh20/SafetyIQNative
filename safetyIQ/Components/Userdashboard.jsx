@@ -209,7 +209,7 @@ const Userdashboard = () => {
 
         <View>
           <View>
-            <Text>Latest test result</Text>
+            <Text style={{fontSize:15, fontWeight:"bold", marginTop: 20, marginBottom: 5, textTransform:"capitalize"}}>Latest test result</Text>
           </View>
         </View>
       </ScrollView>
@@ -273,7 +273,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    // paddingVertical: 25,
   },
   redBox1: {
     width: "100%",

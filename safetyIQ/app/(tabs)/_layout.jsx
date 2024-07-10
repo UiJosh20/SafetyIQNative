@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   nav: {
     backgroundColor: "#c30000",
     height: 70,
-    borderRadius: 10,
+    // borderRadius: 10,
     paddingBottom: 10,
   },
   tabBarLabel: {
