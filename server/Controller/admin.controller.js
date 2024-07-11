@@ -189,7 +189,6 @@ const courseFetch = (req, res) =>{
 
 const deleteCourse = (req, res) => {
   const { id } = req.params;
-console.log(req.params);
   db("courses")
     .where({ id })
     .del()
