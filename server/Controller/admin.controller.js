@@ -149,9 +149,9 @@ const getStudentsByAdmin = (req, res) => {
 };
 
 const uploadResource = (req, res) => {
-  const { title, description, admin_id } = req.body;
+  const { title, description, course_id, admin_id } = req.body;
   db("resources_table")
-    .insert({ title, description, admin_id })
+    .insert({ title, description, course_id, admin_id })
     .then((insertResult) => {
       res.status(201).json({ message: "Resource uploaded successfully" });
     })
@@ -187,6 +187,24 @@ const courseFetch = (req, res) =>{
       });
 }
 
+const deleteCourse = (req, res) => {
+  const { id } = req.params;
+console.log(req.params);
+  db("courses")
+    .where({ id })
+    .del()
+    .then((deleteResult) => {
+      if (deleteResult) {
+        res.status(200).json({ message: "Course deleted successfully" });
+      } else {
+        res.status(404).json({ message: "Course not found" });
+      }
+    })
+    .catch((error) => {
+      console.error("Error deleting course:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    });
+};
 module.exports = {
   signupAdmin,
   loginAdmin,
@@ -195,4 +213,5 @@ module.exports = {
   uploadResource,
   courseAdd,
   courseFetch,
+  deleteCourse,
 };

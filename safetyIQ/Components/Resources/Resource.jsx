@@ -6,7 +6,7 @@ import { ScrollView } from "react-native";
 const Resource = () => {
   const [Data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const port = 101;
+  const port = 100;
   const books = `http://192.168.0.${port}:8000/resources`;
 
   useEffect(() => {

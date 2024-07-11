@@ -1,3 +1,5 @@
+// components/Academics.js
+
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -13,21 +15,22 @@ export default function Academics() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
-  const [admin_id, setId] = useState(adminId);
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // State for delete confirmation modal
+  const [courseId, setCourseId] = useState("");
   const [newResource, setNewResource] = useState({
     title: "",
     description: "",
-    admin_id: admin_id,
+    course_id: "", // Add course_id to the state
+    admin_id: adminId,
   });
   const [newCourse, setNewCourse] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const itemsPerPage = 5;
   const navigate = useNavigate();
 
+  
   useEffect(() => {
     fetchCourses();
-  }, []);
-
-  useEffect(() => {
     setFilteredItems(
       items.filter((item) =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -40,9 +43,11 @@ export default function Academics() {
       .get("http://localhost:8000/admin/courseFetch")
       .then((response) => {
         setItems(response.data);
+        setIsLoading(false); // Set loading to false when data is fetched
       })
       .catch((error) => {
         console.error("Error fetching courses:", error);
+        setIsLoading(false); // Set loading to false in case of error
       });
   };
 
@@ -74,6 +79,10 @@ export default function Academics() {
     setShowCourseModal(!showCourseModal);
   };
 
+  const toggleDeleteModal = () => {
+    setShowDeleteModal(!showDeleteModal);
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewResource((prev) => ({ ...prev, [name]: value }));
@@ -89,7 +98,12 @@ export default function Academics() {
       .post(`http://localhost:8000/admin/upload`, newResource)
       .then((response) => {
         if (response.data.message === "Resource uploaded successfully") {
-          setNewResource({ title: "", description: "", admin_id: admin_id });
+          setNewResource({
+            title: "",
+            description: "",
+            course_id: "",
+            admin_id: adminId,
+          });
           setShowModal(false);
           toast.success("Resource uploaded successfully");
           fetchCourses();
@@ -105,7 +119,7 @@ export default function Academics() {
     axios
       .post(`http://localhost:8000/admin/courses`, {
         name: newCourse,
-        admin_id,
+        admin_id: adminId,
       })
       .then((response) => {
         if (response.data.message === "Course added successfully") {
@@ -120,7 +134,41 @@ export default function Academics() {
       });
   };
 
+  const handleDeleteSubmit = (courseId) => {
+    setCourseId(courseId);
+    toggleDeleteModal();
+  };
+
+  const handleDeleteCourse = () => {
+    axios
+      .delete(`http://localhost:8000/admin/courseDelete/${courseId}`)
+      .then((response) => {
+        if (response.data.message === "Course deleted successfully") {
+          toast.success("Course deleted successfully");
+          fetchCourses();
+          setCourseId("");
+          toggleDeleteModal();
+        }
+      })
+      .catch((error) => {
+        console.error("Error deleting course:", error);
+        toast.error("Error deleting course");
+      });
+  };
+
+
+
+   if (isLoading) {
+     return (
+       <div className="flex justify-center items-center h-screen">
+         <div className="loader"></div>
+       </div>
+     );
+   }
+
+
   return (
+    <>
     <div className="container mx-auto p-4">
       <ToastContainer />
       <div className="mb-4 flex justify-between">
@@ -139,30 +187,76 @@ export default function Academics() {
         </button>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white">
-          <thead>
-            <tr className="flex border-b justify-between">
-              <th className="py-2 px-4">ID</th>
-              <th className="py-2 px-4">Course</th>
-              <th className="py-2 px-4">Resource</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentItems.map((item) => (
-              <tr key={item.id} className="flex justify-between border-b py-5">
-                <td className="py-2 px-4">{item.id}</td>
-                <td className="py-2 px-4">{item.name}</td>
-                <td className="py-2 px-4">
-                  <button className="shadow-lg w-64 p-2" onClick={toggleModal}>
-                    Upload
-                  </button>
-                </td>
+        {isLoading ? ( 
+          <div className="flex justify-center items-center">
+            <div
+              className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full"
+              role="status"
+            >
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        ) : (
+          <table className="min-w-full bg-white">
+            <thead>
+              <tr className="flex border-b justify-between">
+                <th className="py-2 px-4">ID</th>
+                <th className="py-2 px-4">Course</th>
+                <th className="py-2 px-4">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {currentItems.map((item) => (
+                <tr
+                  key={item.id}
+                  className="flex justify-between border-b py-5"
+                >
+                  <td className="py-2 px-4">{item.id}</td>
+                  <td className="py-2 px-4">{item.name}</td>
+                  <td className="py-2 px-4 flex gap-2">
+                    <button
+                      className="shadow-lg w-36 bg-gray-400 p-2 rounded-md font-bold"
+                      onClick={() =>
+                        setNewResource(
+                          (prev) => ({ ...prev, course_id: item.id }),
+                          toggleModal()
+                        )
+                      }
+                    >
+                      Upload
+                    </button>
+                    <button
+                      className="shadow-lg w-36 p-2 font-bold bg-red-700 text-white rounded-md"
+                      onClick={() => handleDeleteSubmit(item.id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
       <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
+        <div className="flex flex-1 justify-between sm:hidden">
+          <button
+            onClick={handleClickPrevious}
+            disabled={currentPage === 1}
+            className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Previous
+          </button>
+          <button
+            onClick={handleClickNext}
+            disabled={
+              currentPage === Math.ceil(filteredItems.length / itemsPerPage)
+            }
+            className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Next
+          </button>
+        </div>
         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
           <div>
             <p className="text-sm text-gray-700">
@@ -177,60 +271,101 @@ export default function Academics() {
           </div>
           <div>
             <nav
-              aria-label="Pagination"
               className="isolate inline-flex -space-x-px rounded-md shadow-sm"
+              aria-label="Pagination"
             >
               <button
                 onClick={handleClickPrevious}
-                className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
                 disabled={currentPage === 1}
+                className="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 <span className="sr-only">Previous</span>
-                <ChevronLeftIcon aria-hidden="true" className="h-5 w-5" />
+                <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
               </button>
+              {Array.from({
+                length: Math.ceil(filteredItems.length / itemsPerPage),
+              }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPage(index + 1)}
+                  className={`relative inline-flex items-center border border-gray-300 px-4 py-2 text-sm font-medium ${
+                    currentPage === index + 1
+                      ? "bg-indigo-50 border-indigo-500 text-indigo-600 z-10"
+                      : "bg-white text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
               <button
                 onClick={handleClickNext}
-                className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
                 disabled={
-                  currentPage >= Math.ceil(filteredItems.length / itemsPerPage)
+                  currentPage === Math.ceil(filteredItems.length / itemsPerPage)
                 }
+                className="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 <span className="sr-only">Next</span>
-                <ChevronRightIcon aria-hidden="true" className="h-5 w-5" />
+                <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
               </button>
             </nav>
           </div>
         </div>
       </div>
-
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg w96 shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w96">
+            <h2 className="text-2xl mb-4">Upload Resource</h2>
             <form onSubmit={handleResourceSubmit}>
-              <h2 className="text-xl font-bold mb-4">Upload Resource</h2>
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="title"
+                >
                   Title
                 </label>
                 <input
                   type="text"
+                  id="title"
                   name="title"
+                  placeholder="Resources title"
                   value={newResource.title}
                   onChange={handleInputChange}
-                  className="px-3 py-2 border border-gray-300 rounded-md w-full"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   required
-                  autoFocus
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="description"
+                >
                   Description
                 </label>
                 <textarea
+                  id="description"
                   name="description"
+                  rows={10}
                   value={newResource.description}
+                  placeholder="@ resources"
                   onChange={handleInputChange}
-                  className="px-3 py-2 border border-gray-300 rounded-md w-full"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  required
+                ></textarea>
+              </div>
+              <div className="mb-4">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="course_id"
+                >
+                  Course ID
+                </label>
+                <input
+                  type="text"
+                  id="course_id"
+                  name="course_id"
+                  value={newResource.course_id}
+                  onChange={handleInputChange}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   required
                 />
               </div>
@@ -238,60 +373,87 @@ export default function Academics() {
                 <button
                   type="button"
                   onClick={toggleModal}
-                  className="mr-4 px-4 py-2 bg-gray-500 text-white rounded-md"
+                  className="mr-4 bg-gray-500 text-white px-4 py-2 rounded-md"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                  className="bg-green-500 text-white px-4 py-2 rounded-md"
                 >
-                  Upload Resource
+                  Upload
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
       {showCourseModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg w-96 shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w96">
+            <h2 className="text-2xl mb-4">Add Course</h2>
             <form onSubmit={handleCourseSubmit}>
-              <h2 className="text-xl font-bold mb-4">Add Course</h2>
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="name"
+                >
                   Course Name
                 </label>
                 <input
                   type="text"
-                  name="course"
+                  id="name"
+                  name="name"
                   value={newCourse}
                   onChange={handleCourseChange}
-                  className="px-3 py-2 border border-gray-300 rounded-md w-full"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   required
-                  autoFocus
                 />
               </div>
               <div className="flex justify-end">
                 <button
                   type="button"
-                  onClick={() => setShowCourseModal(false)}
-                  className="mr-4 px-4 py-2 bg-gray-500 text-white rounded-md"
+                  onClick={toggleCourseModal}
+                  className="mr-4 bg-gray-500 text-white px-4 py-2 rounded-md"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                  className="bg-green-500 text-white px-4 py-2 rounded-md"
                 >
-                  Add Course
+                  Add
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+      {showDeleteModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg w96 shadow-lg">
+            <h2 className="text-2xl mb-4">Delete Course</h2>
+            <p>Are you sure you want to delete this course?</p>
+            <div className="flex justify-end mt-4">
+              <button
+                type="button"
+                onClick={toggleDeleteModal}
+                className="mr-4 bg-gray-500 text-white px-4 py-2 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteCourse}
+                className="bg-red-500 text-white px-4 py-2 rounded-md"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+    </>
   );
 }
