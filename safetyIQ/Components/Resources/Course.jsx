@@ -31,8 +31,11 @@ const Course = () => {
       .get(books)
       .then((response) => {
         setItems(response.data);
-        setLoading(false);
-        setRefreshing(false);
+
+        setTimeout(() => {
+          setLoading(false);
+          setRefreshing(false);
+        }, 3000);
       })
       .catch((error) => {
         console.error("Error fetching courses:", error);
@@ -89,7 +92,18 @@ const Course = () => {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#c30000" />
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.7)",
+            marginTop: 30,
+          }}
+        >
+          <ActivityIndicator size={57} color="#c30000" />
+        </View>
       ) : (
         <ScrollView
           refreshControl={
@@ -97,8 +111,8 @@ const Course = () => {
           }
           style={{ height: "100%", marginTop: 30 }}
         >
-          {filteredItems.length === 0 ? (
-            <Text>No Topic available</Text>
+          <Text style={{textAlign:"center"}}>No Topic available</Text>
+          {/* {filteredItems.length === 0 ? (
           ) : (
             filteredItems.map((item, index) => (
               <TouchableOpacity
@@ -106,14 +120,14 @@ const Course = () => {
                 onPress={() => handleSelectCourse(item)}
               >
                 <View style={styles.book}>
-                  <View style={{ flexDirection: "row", gap: 30,}}>
+                  <View style={{ flexDirection: "row", gap: 30, alignItems: "center" }}>
                   <View style={styles.circlegreen}>
-                    {/* <Image source={require("../assets/diploma.svg")} /> */}
+          
                   </View>
                   <Text>{item.name}</Text>
                   </View>
                   <Icon
-                    name="arrow-right"
+                    name="chevron-right"
                     size={20}
                     color="#000"
                     style={styles.icon}
@@ -121,7 +135,7 @@ const Course = () => {
                 </View>
               </TouchableOpacity>
             ))
-          )}
+          )} */}
         </ScrollView>
       )}
     </View>
@@ -132,7 +146,7 @@ export default Course;
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 5,
     width: "100%",
   },
   book: {
@@ -141,6 +155,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent:"space-between",
+    alignItems:"center",
     gap: 20, // Adjusted to fit the icon properly
   },
   circlegreen: {

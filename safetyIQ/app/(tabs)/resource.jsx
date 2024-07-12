@@ -1,12 +1,12 @@
   import React from 'react'
 import Course from '../../Components/Resources/Course'
-import { Platform, StatusBar, StyleSheet, View } from 'react-native'
+import { Platform, SafeAreaView, StatusBar, StyleSheet, View } from 'react-native'
 
 const resource = () => {
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Course/>
-    </View>
+    </SafeAreaView>
   )
 }
 

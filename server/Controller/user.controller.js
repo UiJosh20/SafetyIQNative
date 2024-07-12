@@ -277,7 +277,14 @@ const dashboard = (req, res) => {
 
 
 const fetchResources = (req, res) => {
+  const { courseId } = req.query;
+
+  if (!courseId) {
+    return res.status(400).json({ message: "Course ID is required" });
+  }
+
   db("resources_table")
+    .where({ course_id: courseId })
     .select("*")
     .then((resources) => {
       res.status(200).json(resources);
@@ -287,6 +294,7 @@ const fetchResources = (req, res) => {
       res.status(500).json({ message: "Internal Server Error" });
     });
 };
+
 
 const courseFetch = (req, res) =>{
     db("courses")
