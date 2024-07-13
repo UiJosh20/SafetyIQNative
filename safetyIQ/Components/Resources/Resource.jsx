@@ -28,10 +28,9 @@ const Resource = () => {
   const [courseContent, setCourseContent] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [completedCourses, setCompletedCourses] = useState([]);
-  const[courseId, setCouseId] = useState("")
+  const [courseId, setCourseId] = useState("");
   const [reads, setReads] = useState([]);
-  const [modalLoader, setmodalLoader] = useState(false)
-
+  const [modalLoader, setModalLoader] = useState(false);
 
   useEffect(() => {
     fetchCourse();
@@ -44,11 +43,10 @@ const Resource = () => {
       .get(books)
       .then((response) => {
         setItems(response.data);
-
         setTimeout(() => {
           setRefreshing(false);
-          setLoading(false);          
-        }, 3000);
+          setLoading(false);
+        }, 2500);
       })
       .catch((error) => {
         console.error("Error fetching courses:", error);
@@ -75,11 +73,9 @@ const Resource = () => {
     AsyncStorage.setItem(
       "completedCourses",
       JSON.stringify(updatedCompletedCourses)
-    )
-      .then(() => {})
-      .catch((error) => {
-        console.error("Error saving completed course:", error);
-      });
+    ).catch((error) => {
+      console.error("Error saving completed course:", error);
+    });
   };
 
   const onRefresh = () => {
@@ -87,42 +83,50 @@ const Resource = () => {
     fetchCourse();
   };
 
-const handleSelectCourse = (course) => {
-  setSelectedCourse(course.name);
-  setCourseContent(course.content);
-  handleFetchResources(course.id); // Pass course ID
-  setCurrentPage(0);
-  setModalVisible(true);
-  AsyncStorage.setItem("currentTopic", course.name)
-    .then(() => {})
-    .catch((error) => {
+  const handleSelectCourse = (course) => {
+    setSelectedCourse(course.name);
+    setCourseContent(course.content);
+    handleFetchResources(course.id);
+    setCurrentPage(0);
+    setModalVisible(true);
+    AsyncStorage.setItem("currentTopic", course.name).catch((error) => {
       console.error("Error saving as current topic:", error);
     });
-};
+  };
 
-
- const handleFetchResources = (courseId) => {
-   axios
-     .get(read, { params: { courseId } })
-     .then((response) => {
-       setmodalLoader(true);
-       setTimeout(() => {
-         setReads(response.data);
-         setmodalLoader(false);
-       }, 3000);
-     })
-     .catch((error) => {
-       console.error("Error fetching resources:", error);
-     });
- };
+  const handleFetchResources = (courseId) => {
+    axios
+      .get(read, { params: { courseId } })
+      .then((response) => {
+        setModalLoader(true);
+        setTimeout(() => {
+          setReads(response.data);
+          setModalLoader(false);
+        }, 2000);
+      })
+      .catch((error) => {
+        console.error("Error fetching resources:", error);
+      });
+  };
 
   const handleNextPage = () => {
-    if (currentPage < courseContent.length - 1) {
-      setCurrentPage(currentPage + 1);
-    } else {
-      saveCompletedCourse(selectedCourse);
-      setModalVisible(false);
+    if (reads.length > 0) {
+      const totalPages = Math.ceil(
+        reads[0].description.split(" ").length / 200
+      );
+      if (currentPage < totalPages - 1) {
+        setCurrentPage(currentPage + 1);
+      } else {
+        saveCompletedCourse(selectedCourse);
+        setModalVisible(false);
+      }
     }
+  };
+
+  const renderContent = (content) => {
+    const words = content.split(" ");
+    const pageWords = words.slice(currentPage * 200, (currentPage + 1) * 200);
+    return pageWords.join(" ");
   };
 
   const filteredItems = items.filter((item) =>
@@ -212,20 +216,16 @@ const handleSelectCourse = (course) => {
         </ScrollView>
       )}
 
-      {/* <Text style={styles.completedCoursesHeader}>Completed Courses</Text>
-      <ScrollView style={styles.completedCoursesContainer}>
-        {completedCourses.length === 0 ? (
-          <Text>No completed courses yet</Text>
-        ) : (
-          completedCourses.map((course, index) => (
-            <View key={index} style={styles.completedCourse}>
-              <Text>{course}</Text>
-            </View>
-          ))
-        )}
-      </ScrollView> */}
-
       <Modal visible={modalVisible} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <Icon
+            name="chevron-left"
+            size={20}
+            color="#000"
+            style={styles.icon}
+            onPress={() => setModalVisible(false)}
+          />
+        </View>
         {modalLoader ? (
           <View
             style={{
@@ -240,23 +240,15 @@ const handleSelectCourse = (course) => {
           </View>
         ) : (
           <ScrollView style={styles.modalContainer}>
-            <View style={styles.modalOverlay}>
-              <Icon
-                name="chevron-left"
-                size={20}
-                color="#000"
-                style={styles.icon}
-                onPress={() => setModalVisible(false)}
-              />
-            </View>
             <View style={styles.modalContent}>
-              {reads.map((item) => (
-                <View key={item.id}>
-                  <Text>{item.title}</Text>
-                  <Text style={styles.modalText}>{item.description}</Text>
-                </View>
-              ))}
-
+              {reads.length > 0 && reads[currentPage] && (
+                <>
+                  <Text>{reads[currentPage].title}</Text>
+                  <Text style={styles.modalText}>
+                    {renderContent(reads[currentPage].description)}
+                  </Text>
+                </>
+              )}
               <Button title="Next" onPress={handleNextPage} />
             </View>
           </ScrollView>
@@ -308,11 +300,11 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     paddingHorizontal: 17,
-    paddingVertical: 50,
+    paddingVertical: 23,
     backgroundColor: "white",
   },
   modalText: {
-    textAlign:"justify",
+    textAlign: "justify",
     marginBottom: 20,
     fontSize: 16,
   },
@@ -332,9 +324,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginVertical: 5,
   },
-
   modalOverlay: {
-    padding:20,
+    padding: 20,
     backgroundColor: "white",
-  }
+  },
 });
