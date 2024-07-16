@@ -1,5 +1,3 @@
-// components/Academics.js
-
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -15,20 +13,22 @@ export default function Academics() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false); // State for delete confirmation modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [courseId, setCourseId] = useState("");
   const [newResource, setNewResource] = useState({
     title: "",
     description: "",
-    course_id: "", // Add course_id to the state
+    course_id: "",
+    time_taken: "",
+    image: null,
     admin_id: adminId,
+    note: "", // Add note to the state
   });
   const [newCourse, setNewCourse] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const itemsPerPage = 5;
   const navigate = useNavigate();
 
-  
   useEffect(() => {
     fetchCourses();
     setFilteredItems(
@@ -43,11 +43,11 @@ export default function Academics() {
       .get("http://localhost:8000/admin/courseFetch")
       .then((response) => {
         setItems(response.data);
-        setIsLoading(false); // Set loading to false when data is fetched
+        setIsLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching courses:", error);
-        setIsLoading(false); // Set loading to false in case of error
+        setIsLoading(false);
       });
   };
 
@@ -84,8 +84,11 @@ export default function Academics() {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewResource((prev) => ({ ...prev, [name]: value }));
+    const { name, value, files } = e.target;
+    setNewResource((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value,
+    }));
   };
 
   const handleCourseChange = (e) => {
@@ -94,15 +97,32 @@ export default function Academics() {
 
   const handleResourceSubmit = (e) => {
     e.preventDefault();
+
+    const formData = new FormData();
+    formData.append("title", newResource.title);
+    formData.append("description", newResource.description);
+    formData.append("course_id", newResource.course_id);
+    formData.append("time_taken", newResource.time_taken);
+    formData.append("image", newResource.image);
+    formData.append("admin_id", newResource.admin_id);
+    formData.append("note", newResource.note); // Append note to formData
+
     axios
-      .post(`http://localhost:8000/admin/upload`, newResource)
+      .post("http://localhost:8000/admin/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
       .then((response) => {
         if (response.data.message === "Resource uploaded successfully") {
           setNewResource({
             title: "",
             description: "",
             course_id: "",
+            time_taken: "",
+            image: null,
             admin_id: adminId,
+            note: "", // Reset note
           });
           setShowModal(false);
           toast.success("Resource uploaded successfully");
@@ -117,7 +137,7 @@ export default function Academics() {
   const handleCourseSubmit = (e) => {
     e.preventDefault();
     axios
-      .post(`http://localhost:8000/admin/courses`, {
+      .post("http://localhost:8000/admin/courses", {
         name: newCourse,
         admin_id: adminId,
       })
@@ -156,304 +176,340 @@ export default function Academics() {
       });
   };
 
-
-
-   if (isLoading) {
-     return (
-       <div className="flex justify-center items-center h-screen">
-         <div className="loader"></div>
-       </div>
-     );
-   }
-
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="loader"></div>
+      </div>
+    );
+  }
 
   return (
     <>
-    <div className="container mx-auto p-4">
-      <ToastContainer />
-      <div className="mb-4 flex justify-between">
-        <input
-          type="text"
-          placeholder="Search..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="px-3 py-2 border border-gray-300 rounded-md w-full"
-        />
-        <button
-          onClick={toggleCourseModal}
-          className="ml-4 px-4 py-2 bg-green-500 text-white rounded-md"
-        >
-          Add Course
-        </button>
-      </div>
-      <div className="overflow-x-auto">
-        {isLoading ? ( 
-          <div className="flex justify-center items-center">
-            <div
-              className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full"
-              role="status"
-            >
-              <span className="visually-hidden">Loading...</span>
+      <div className="container mx-auto p-4">
+        <ToastContainer />
+        <div className="mb-4 flex justify-between">
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="px-3 py-2 border border-gray-300 rounded-md w-full"
+          />
+          <button
+            onClick={toggleCourseModal}
+            className="ml-4 px-4 py-2 bg-green-500 text-white rounded-md"
+          >
+            Add Course
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          {isLoading ? (
+            <div className="flex justify-center items-center">
+              <div
+                className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full"
+                role="status"
+              >
+                <span className="visually-hidden">Loading...</span>
+              </div>
             </div>
-          </div>
-        ) : (
-          <table className="min-w-full bg-white">
-            <thead>
-              <tr className="flex border-b justify-between">
-                <th className="py-2 px-4">ID</th>
-                <th className="py-2 px-4">Course</th>
-                <th className="py-2 px-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentItems.map((item) => (
-                <tr
-                  key={item.id}
-                  className="flex justify-between border-b py-5"
-                >
-                  <td className="py-2 px-4">{item.id}</td>
-                  <td className="py-2 px-4">{item.name}</td>
-                  <td className="py-2 px-4 flex gap-2">
-                    <button
-                      className="shadow-lg w-36 bg-gray-400 p-2 rounded-md font-bold"
-                      onClick={() =>
-                        setNewResource(
-                          (prev) => ({ ...prev, course_id: item.id }),
-                          toggleModal()
-                        )
-                      }
-                    >
-                      Upload
-                    </button>
-                    <button
-                      className="shadow-lg w-36 p-2 font-bold bg-red-700 text-white rounded-md"
-                      onClick={() => handleDeleteSubmit(item.id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
+          ) : (
+            <table className="min-w-full bg-white">
+              <thead>
+                <tr className="flex border-b justify-between">
+                  <th className="py-2 px-4">ID</th>
+                  <th className="py-2 px-4">Course</th>
+                  <th className="py-2 px-4">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-      <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
-        <div className="flex flex-1 justify-between sm:hidden">
-          <button
-            onClick={handleClickPrevious}
-            disabled={currentPage === 1}
-            className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Previous
-          </button>
-          <button
-            onClick={handleClickNext}
-            disabled={
-              currentPage === Math.ceil(filteredItems.length / itemsPerPage)
-            }
-            className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Next
-          </button>
+              </thead>
+              <tbody>
+                {currentItems.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="flex justify-between border-b py-5"
+                  >
+                    <td className="py-2 px-4">{item.id}</td>
+                    <td className="py-2 px-4">{item.name}</td>
+                    <td className="py-2 px-4 flex gap-2">
+                      <button
+                        className="shadow-lg w-36 bg-gray-400 p-2 rounded-md font-bold"
+                        onClick={() =>
+                          setNewResource(
+                            (prev) => ({ ...prev, course_id: item.id }),
+                            toggleModal()
+                          )
+                        }
+                      >
+                        Upload
+                      </button>
+                      <button
+                        className="shadow-lg w-36 p-2 font-bold bg-red-700 text-white rounded-md"
+                        onClick={() => handleDeleteSubmit(item.id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
-        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm text-gray-700">
-              Showing{" "}
-              <span className="font-medium">{indexOfFirstItem + 1}</span> to{" "}
-              <span className="font-medium">
-                {Math.min(indexOfLastItem, filteredItems.length)}
-              </span>{" "}
-              of <span className="font-medium">{filteredItems.length}</span>{" "}
-              results
-            </p>
-          </div>
-          <div>
-            <nav
-              className="isolate inline-flex -space-x-px rounded-md shadow-sm"
-              aria-label="Pagination"
+        <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
+          <div className="flex flex-1 justify-between sm:hidden">
+            <button
+              onClick={handleClickPrevious}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
-              <button
-                onClick={handleClickPrevious}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50"
+              Previous
+            </button>
+            <button
+              onClick={handleClickNext}
+              disabled={
+                currentPage === Math.ceil(filteredItems.length / itemsPerPage)
+              }
+              className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Next
+            </button>
+          </div>
+          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-gray-700">
+                Showing{" "}
+                <span className="font-medium">
+                  {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredItems.length)} of {filteredItems.length} results
+                </span>
+              </p>
+            </div>
+            <div>
+              <nav
+                className="isolate inline-flex -space-x-px rounded-md shadow-sm"
+                aria-label="Pagination"
               >
-                <span className="sr-only">Previous</span>
-                <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
-              </button>
-              {Array.from({
-                length: Math.ceil(filteredItems.length / itemsPerPage),
-              }).map((_, index) => (
                 <button
-                  key={index}
-                  onClick={() => setCurrentPage(index + 1)}
-                  className={`relative inline-flex items-center border border-gray-300 px-4 py-2 text-sm font-medium ${
-                    currentPage === index + 1
-                      ? "bg-indigo-50 border-indigo-500 text-indigo-600 z-10"
-                      : "bg-white text-gray-500 hover:bg-gray-50"
-                  }`}
+                  onClick={handleClickPrevious}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20"
                 >
-                  {index + 1}
+                  <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
                 </button>
-              ))}
-              <button
-                onClick={handleClickNext}
-                disabled={
-                  currentPage === Math.ceil(filteredItems.length / itemsPerPage)
-                }
-                className="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50"
-              >
-                <span className="sr-only">Next</span>
-                <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </nav>
+                <button
+                  onClick={handleClickNext}
+                  disabled={
+                    currentPage === Math.ceil(filteredItems.length / itemsPerPage)
+                  }
+                  className="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20"
+                >
+                  <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </nav>
+            </div>
           </div>
         </div>
       </div>
+
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w96">
-            <h2 className="text-2xl mb-4">Upload Resource</h2>
-            <form onSubmit={handleResourceSubmit}>
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="title"
-                >
-                  Title
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  placeholder="Resources title"
-                  value={newResource.title}
-                  onChange={handleInputChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="description"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  rows={10}
-                  value={newResource.description}
-                  placeholder="@ resources"
-                  onChange={handleInputChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                ></textarea>
-              </div>
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="course_id"
-                >
-                  Course ID
-                </label>
-                <input
-                  type="text"
-                  id="course_id"
-                  name="course_id"
-                  value={newResource.course_id}
-                  onChange={handleInputChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                />
-              </div>
-              <div className="flex justify-end">
+        <div
+          id="uploadModal"
+          className="fixed inset-0 flex items-center justify-center z-50"
+        >
+          <div className="modal-overlay absolute inset-0 bg-gray-900 opacity-50"></div>
+          <div className="modal-container bg-white w96 mx-auto rounded shadow-lg z-50 overflow-y-auto">
+            <div className="modal-content py-4 text-left px-6">
+              <div className="flex justify-between items-center pb-3">
+                <p className="text-2xl font-bold">Upload Resource</p>
                 <button
-                  type="button"
+                  className="modal-close cursor-pointer z-50"
                   onClick={toggleModal}
-                  className="mr-4 bg-gray-500 text-white px-4 py-2 rounded-md"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-green-500 text-white px-4 py-2 rounded-md"
-                >
-                  Upload
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-      {showCourseModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w96">
-            <h2 className="text-2xl mb-4">Add Course</h2>
-            <form onSubmit={handleCourseSubmit}>
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="name"
-                >
-                  Course Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={newCourse}
-                  onChange={handleCourseChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                />
-              </div>
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={toggleCourseModal}
-                  className="mr-4 bg-gray-500 text-white px-4 py-2 rounded-md"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-green-500 text-white px-4 py-2 rounded-md"
-                >
-                  Add
+                  <svg
+                    className="fill-current text-black"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                  >
+                    <path d="M14.53 3.47a.75.75 0 00-1.06-1.06L9 6.94 4.53 2.47a.75.75 0 00-1.06 1.06L6.94 9l-3.47 3.53a.75.75 0 001.06 1.06L9 11.06l3.53 3.47a.75.75 0 001.06-1.06L11.06 9l3.47-3.53z"></path>
+                  </svg>
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-      {showDeleteModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg w96 shadow-lg">
-            <h2 className="text-2xl mb-4">Delete Course</h2>
-            <p>Are you sure you want to delete this course?</p>
-            <div className="flex justify-end mt-4">
-              <button
-                type="button"
-                onClick={toggleDeleteModal}
-                className="mr-4 bg-gray-500 text-white px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteCourse}
-                className="bg-red-500 text-white px-4 py-2 rounded-md"
-              >
-                Delete
-              </button>
+              <form onSubmit={handleResourceSubmit}>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={newResource.title}
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    value={newResource.description}
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Time Taken
+                  </label>
+                  <input
+                    type="text"
+                    name="time_taken"
+                    value={newResource.time_taken}
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Note
+                  </label>
+                  <textarea
+                    name="note"
+                    value={newResource.note}
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Image
+                  </label>
+                  <input
+                    type="file"
+                    name="image"
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <button
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    type="submit"
+                  >
+                    Upload
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
       )}
-    </div>
+
+      {showCourseModal && (
+        <div
+          id="addCourseModal"
+          className="fixed inset-0 flex items-center justify-center z-50"
+        >
+          <div className="modal-overlay absolute inset-0 bg-gray-900 opacity-50"></div>
+          <div className="modal-container bg-white w-96 mx-auto rounded shadow-lg z-50 overflow-y-auto">
+            <div className="modal-content py-4 text-left px-6">
+              <div className="flex justify-between items-center pb-3">
+                <p className="text-2xl font-bold">Add Course</p>
+                <button
+                  className="modal-close cursor-pointer z-50"
+                  onClick={toggleCourseModal}
+                >
+                  <svg
+                    className="fill-current text-black"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                  >
+                    <path d="M14.53 3.47a.75.75 0 00-1.06-1.06L9 6.94 4.53 2.47a.75.75 0 00-1.06 1.06L6.94 9l-3.47 3.53a.75.75 0 001.06 1.06L9 11.06l3.53 3.47a.75.75 0 001.06-1.06L11.06 9l3.47-3.53z"></path>
+                  </svg>
+                </button>
+              </div>
+              <form onSubmit={handleCourseSubmit}>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Course Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newCourse}
+                    onChange={handleCourseChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <button
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    type="submit"
+                  >
+                    Add Course
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div
+          id="deleteModal"
+          className="fixed inset-0 flex items-center justify-center z-50"
+        >
+          <div className="modal-overlay absolute inset-0 bg-gray-900 opacity-50"></div>
+          <div className="modal-container bg-white w-96 mx-auto rounded shadow-lg z-50 overflow-y-auto">
+            <div className="modal-content py-4 text-left px-6">
+              <div className="flex justify-between items-center pb-3">
+                <p className="text-2xl font-bold">Delete Course</p>
+                <button
+                  className="modal-close cursor-pointer z-50"
+                  onClick={toggleDeleteModal}
+                >
+                  <svg
+                    className="fill-current text-black"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                  >
+                    <path d="M14.53 3.47a.75.75 0 00-1.06-1.06L9 6.94 4.53 2.47a.75.75 0 00-1.06 1.06L6.94 9l-3.47 3.53a.75.75 0 001.06 1.06L9 11.06l3.53 3.47a.75.75 0 001.06-1.06L11.06 9l3.47-3.53z"></path>
+                  </svg>
+                </button>
+              </div>
+              <p>Are you sure you want to delete this course?</p>
+              <div className="flex items-center justify-between pt-3">
+                <button
+                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  onClick={handleConfirmDelete}
+                >
+                  Delete
+                </button>
+                <button
+                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  onClick={toggleDeleteModal}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
-}
+};
+
+

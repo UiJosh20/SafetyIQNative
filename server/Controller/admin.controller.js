@@ -149,9 +149,18 @@ const getStudentsByAdmin = (req, res) => {
 };
 
 const uploadResource = (req, res) => {
-  const { title, description, course_id, admin_id } = req.body;
+  const { title, description, course_id, time_taken, image, admin_id, note } =
+    req.body;
   db("resources_table")
-    .insert({ title, description, course_id, admin_id })
+    .insert({
+      title,
+      description,
+      course_id,
+      time_taken,
+      image,
+      admin_id,
+      note,
+    })
     .then((insertResult) => {
       res.status(201).json({ message: "Resource uploaded successfully" });
     })
@@ -160,6 +169,7 @@ const uploadResource = (req, res) => {
       res.status(500).json({ message: "Internal Server Error" });
     });
 };
+
 
 const courseAdd = (req, res) =>{
     const { name, admin_id } = req.body;

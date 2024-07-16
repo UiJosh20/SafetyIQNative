@@ -21,7 +21,7 @@ const Resource = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const port = 100;
+  const port = 101;
   const books = `http://192.168.0.${port}:8000/courseFetch`;
   const read = `http://192.168.0.${port}:8000/resources`;
   const [modalVisible, setModalVisible] = useState(false);
@@ -251,7 +251,10 @@ const Resource = () => {
             <View style={styles.modalContent}>
               {reads.length > 0 && reads[currentPage] && (
                 <>
-                  <Text style={styles.resourseTile}>{reads[currentPage].title}</Text>
+                  <Text style={styles.resourseTile}>
+                    {reads[currentPage].title}
+                  </Text>
+                  <Text style={styles.time}>9hrs 45mins 32Sec</Text>
                   <Text style={styles.modalText}>
                     {reads[currentPage].description}
                   </Text>
@@ -316,7 +319,13 @@ const styles = StyleSheet.create({
   modalText: {
     textAlign: "justify",
     marginBottom: 20,
-    fontSize: 16,
+    fontSize: 15,
+  },
+
+  time: {
+    textAlign: "justify",
+    marginBottom: 20,
+    fontSize: 15,
   },
   completedCoursesHeader: {
     fontSize: 20,
@@ -338,10 +347,9 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "white",
   },
-  resourseTile:{
-    fontSize: 30,
+  resourseTile: {
+    fontSize: 17,
     fontWeight: "bold",
-    textAlign: "center",
     marginBottom: 20,
-  }
+  },
 });
