@@ -9,6 +9,7 @@ import {
   TextInput,
   Modal,
   Button,
+  Pressable,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -25,10 +26,8 @@ const Resource = () => {
   const read = `http://192.168.0.${port}:8000/resources`;
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [courseContent, setCourseContent] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [completedCourses, setCompletedCourses] = useState([]);
-  const [courseId, setCourseId] = useState("");
   const [reads, setReads] = useState([]);
   const [modalLoader, setModalLoader] = useState(false);
 
@@ -85,7 +84,6 @@ const Resource = () => {
 
   const handleSelectCourse = (course) => {
     setSelectedCourse(course.name);
-    setCourseContent(course.content);
     handleFetchResources(course.id);
     setCurrentPage(0);
     setModalVisible(true);
@@ -110,12 +108,16 @@ const Resource = () => {
   };
 
   const handleNextPage = () => {
-    if (reads.length > 0) {
-      const totalPages = Math.ceil(
-        reads[0].description.split(" ").length / 200
-      );
+    const currentRead = reads[currentPage];
+    if (currentRead && currentRead.content) {
+      const totalWords = currentRead.content.split(" ").length;
+      const totalPages = Math.ceil(totalWords / 1000);
+
       if (currentPage < totalPages - 1) {
         setCurrentPage(currentPage + 1);
+      } else if (currentPage === totalPages - 1 && reads.length > 1) {
+        setReads(reads.slice(1)); // Move to the next read
+        setCurrentPage(0); // Reset to the first page of the next read
       } else {
         saveCompletedCourse(selectedCourse);
         setModalVisible(false);
@@ -124,9 +126,15 @@ const Resource = () => {
   };
 
   const renderContent = (content) => {
-    const words = content.split(" ");
-    const pageWords = words.slice(currentPage * 200, (currentPage + 1) * 200);
-    return pageWords.join(" ");
+    if (content) {
+      const words = content.split(" ");
+      const pageWords = words.slice(
+        currentPage * 200,
+        (currentPage + 1) * 200
+      );
+      return pageWords.join(" ");
+    }
+    return "";
   };
 
   const filteredItems = items.filter((item) =>
@@ -243,13 +251,15 @@ const Resource = () => {
             <View style={styles.modalContent}>
               {reads.length > 0 && reads[currentPage] && (
                 <>
-                  <Text>{reads[currentPage].title}</Text>
+                  <Text style={styles.resourseTile}>{reads[currentPage].title}</Text>
                   <Text style={styles.modalText}>
-                    {renderContent(reads[currentPage].description)}
+                    {reads[currentPage].description}
                   </Text>
                 </>
               )}
-              <Button title="Next" onPress={handleNextPage} />
+              <Pressable onPress={handleNextPage}>
+                <Text>Next</Text>
+              </Pressable>
             </View>
           </ScrollView>
         )}
@@ -300,7 +310,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     paddingHorizontal: 17,
-    paddingVertical: 23,
+    paddingVertical: 15,
     backgroundColor: "white",
   },
   modalText: {
@@ -328,4 +338,10 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "white",
   },
+  resourseTile:{
+    fontSize: 30,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 20,
+  }
 });
