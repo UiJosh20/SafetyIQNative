@@ -162,7 +162,9 @@ const uploadResource = (req, res) => {
       note,
     })
     .then((insertResult) => {
-      res.status(201).json({ message: "Resource uploaded successfully" });
+      console.log(insertResult);
+
+      // res.status(201).json({ message: "Resource uploaded successfully" });
     })
     .catch((error) => {
       console.error(error);
