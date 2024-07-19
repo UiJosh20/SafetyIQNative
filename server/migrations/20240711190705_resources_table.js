@@ -4,7 +4,7 @@ exports.up = function (knex) {
     table.string("title", 255).notNullable(); // Title column
     table.text("description").notNullable(); // Description column
     table.integer("time_taken").notNullable(); // Time taken column
-    table.string("image").notNullable(); // Image column
+    table.string("image").nullable(); // Image column
     table.text("note").notNullable(); // Note column
     table.timestamps(true, true); // Timestamps
     table

@@ -21,8 +21,8 @@ export default function Academics() {
     title: "",
     description: "",
     course_id: "", // Add course_id to the state
-    time_taken:"",
-    image:null,
+    time_taken: "",
+    image: null,
     note: "",
     admin_id: adminId,
   });
@@ -31,7 +31,6 @@ export default function Academics() {
   const itemsPerPage = 5;
   const navigate = useNavigate();
 
-  
   useEffect(() => {
     fetchCourses();
     setFilteredItems(
@@ -43,14 +42,14 @@ export default function Academics() {
 
   const fetchCourses = () => {
     axios
-      .get("http://localhost:8000/admin/courseFetch")
+      .get("http://localhost:8000/admin/coursesFetch")
       .then((response) => {
-        setItems(response.data);
-        setIsLoading(false); // Set loading to false when data is fetched
+        console.log(response.data);
+        setIsLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching courses:", error);
-        setIsLoading(false); // Set loading to false in case of error
+        setIsLoading(false);
       });
   };
 
@@ -86,10 +85,11 @@ export default function Academics() {
     setShowDeleteModal(!showDeleteModal);
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewResource((prev) => ({ ...prev, [name]: value }));
-  };
+const handleInputChange = (e) => {
+  const { name, value, files } = e.target;
+  setNewResource((prev) => ({ ...prev, [name]: files ? files[0] : value }));
+};
+
 
   const handleCourseChange = (e) => {
     setNewCourse(e.target.value);
@@ -97,17 +97,32 @@ export default function Academics() {
 
   const handleResourceSubmit = (e) => {
     e.preventDefault();
+
+    // Create a new FormData object to hold the form data
+    const formData = new FormData();
+    formData.append("title", newResource.title);
+    formData.append("description", newResource.description);
+    formData.append("time_taken", newResource.time_taken);
+    formData.append("image", newResource.image); // Append the file to the form data
+    formData.append("note", newResource.note);
+    formData.append("course_id", newResource.course_id);
+    formData.append("admin_id", adminId);
+
     axios
-      .post(`http://localhost:8000/admin/upload`, newResource)
+      .post("http://localhost:8000/admin/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
       .then((response) => {
         if (response.data.message === "Resource uploaded successfully") {
           setNewResource({
             title: "",
             description: "",
             course_id: "",
-            time_taken:"",
-            image:null,
-            note:"",
+            time_taken: "",
+            image: null,
+            note: "",
             admin_id: adminId,
           });
           setShowModal(false);
@@ -120,10 +135,11 @@ export default function Academics() {
       });
   };
 
+
   const handleCourseSubmit = (e) => {
     e.preventDefault();
     axios
-      .post(`http://localhost:8000/admin/courses`, {
+      .post(`http://localhost:8000/admin/course`, {
         name: newCourse,
         admin_id: adminId,
       })
@@ -162,16 +178,13 @@ export default function Academics() {
       });
   };
 
-
-
-   if (isLoading) {
-     return (
-       <div className="flex justify-center items-center h-screen">
-         <div className="loader"></div>
-       </div>
-     );
-   }
-
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="loader"></div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -322,7 +335,10 @@ export default function Academics() {
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w96">
               <h2 className="text-2xl mb-4">Upload Resource</h2>
-              <form onSubmit={handleResourceSubmit}>
+              <form
+                onSubmit={handleResourceSubmit}
+                enctype="multipart/form-data"
+              >
                 <div className="mb-4">
                   <label
                     className="block text-gray-700 text-sm font-bold mb-2"
@@ -365,7 +381,7 @@ export default function Academics() {
                     className="block text-gray-700 text-sm font-bold mb-2"
                     htmlFor="time_taken"
                   >
-                  Amout of time
+                    Amout of time
                   </label>
                   <input
                     id="time_taken"
@@ -378,52 +394,48 @@ export default function Academics() {
                     required
                   ></input>
                 </div>
-                
-          <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="media"
-                >
-                  Topic media
-                </label>
-                <input
-                  id="image"
-                  name="image"
-                  type="file"
-                  value={newResource.image}
-                  placeholder="image / video"
-                  onChange={handleInputChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                ></input>
-              </div>
 
+                <div className="mb-4">
+                  <label
+                    className="block text-gray-700 text-sm font-bold mb-2"
+                    htmlFor="image"
+                  >
+                    Topic media
+                  </label>
+                  <input
+                    id="image"
+                    name="image"
+                    type="file"
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required
+                  ></input>
+                </div>
 
-<div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="description"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  rows={4}
-                  value={newResource.description}
-                  placeholder="@ resources"
-                  onChange={handleInputChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                ></textarea>
-              </div>
+                <div className="mb-4">
+                  <label
+                    className="block text-gray-700 text-sm font-bold mb-2"
+                    htmlFor="description"
+                  >
+                    Media
+                  </label>
+                  <textarea
+                    id="note"
+                    name="note"
+                    rows={4}
+                    value={newResource.note}
+                    placeholder="@ Resources"
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required
+                  ></textarea>
+                </div>
 
-
-               <div className="mb-4">
+                <div className="mb-4">
                   <label
                     className="block text-gray-700 text-sm font-bold mb-2"
                     htmlFor="course_id"
-                 > 
+                  >
                     Course ID
                   </label>
                   <input
@@ -437,14 +449,14 @@ export default function Academics() {
                   />
                 </div>
                 <div className="flex justify-end">
-                <button
+                  <button
                     type="button"
                     onClick={toggleModal}
                     className="mr-4 bg-gray-500 text-white px-4 py-2 rounded-md"
-                 > 
+                  >
                     Cancel
                   </button>
-                <button
+                  <button
                     type="submit"
                     className="bg-green-500 text-white px-4 py-2 rounded-md"
                   >
@@ -455,16 +467,16 @@ export default function Academics() {
             </div>
           </div>
         )}
-       {showCourseModal && (
-         <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
+        {showCourseModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w96">
               <h2 className="text-2xl mb-4">Add Course</h2>
-            <form onSubmit={handleCourseSubmit}>
-               <div className="mb-4">
-                 <label
+              <form onSubmit={handleCourseSubmit}>
+                <div className="mb-4">
+                  <label
                     className="block text-gray-700 text-sm font-bold mb-2"
                     htmlFor="name"
-                >  
+                  >
                     Course Name
                   </label>
                   <input
@@ -482,13 +494,13 @@ export default function Academics() {
                     type="button"
                     onClick={toggleCourseModal}
                     className="mr-4 bg-gray-500 text-white px-4 py-2 rounded-md"
-                 > 
+                  >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     className="bg-green-500 text-white px-4 py-2 rounded-md"
-                 > 
+                  >
                     Add
                   </button>
                 </div>
@@ -496,9 +508,9 @@ export default function Academics() {
             </div>
           </div>
         )}
-      {showDeleteModal && (
-         <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
-           <div className="bg-white p-6 rounded-lg w96 shadow-lg">
+        {showDeleteModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg w96 shadow-lg">
               <h2 className="text-2xl mb-4">Delete Course</h2>
               <p>Are you sure you want to delete this course?</p>
               <div className="flex justify-end mt-4">
@@ -509,18 +521,18 @@ export default function Academics() {
                 >
                   Cancel
                 </button>
-               <button
+                <button
                   type="button"
                   onClick={handleDeleteCourse}
                   className="bg-red-500 text-white px-4 py-2 rounded-md"
-              >  
+                >
                   Delete
                 </button>
               </div>
             </div>
           </div>
         )}
-    </div>
+      </div>
     </>
   );
 }
