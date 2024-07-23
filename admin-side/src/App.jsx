@@ -9,22 +9,22 @@ import Register from './Components/login/Register'
 import Layout from './Components/layout/Layout'
 import Dashboard from './Components/layout/Dashboard'
 import Academics from './Components/layout/Academics'
+import Reading from './Components/layout/Reading'
 
 function App() {
 
 
   return (
     <>
-  
-
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/signup" element={<Register/>} />
+        <Route path="/signup" element={<Register />} />
 
-        <Route path='/admin/' element={<Layout/>}>
-        <Route path='/admin/' element={<Navigate to='/admin/dashboard' />} />
-          <Route path='/admin/dashboard' element={<Dashboard/>} />
-          <Route path="/admin/academics" element={<Academics/>}/>
+        <Route path="/admin/" element={<Layout />}>
+          <Route path="/admin/" element={<Navigate to="/admin/dashboard" />} />
+          <Route path="/admin/dashboard" element={<Dashboard />} />
+          <Route path="/admin/academics" element={<Academics />} />
+          <Route path="/admin/reading" element={<Reading />} />
         </Route>
       </Routes>
     </>

@@ -307,6 +307,10 @@ const courseFetch = (req, res) =>{
       });
 }
 
+const readCourses = (req, res) => { 
+
+};
+
 module.exports = {
   signup,
   paystackInit,
@@ -315,4 +319,5 @@ module.exports = {
   dashboard,
   fetchResources,
   courseFetch,
+ readCourses,
 };

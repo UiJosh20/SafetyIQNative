@@ -1,5 +1,3 @@
-// components/Academics.js
-
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -7,7 +5,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 
-export default function Academics() {
+export default function Reading() {
   const adminId = JSON.parse(localStorage.getItem("token"));
   const [searchTerm, setSearchTerm] = useState("");
   const [items, setItems] = useState([]);
@@ -20,9 +18,9 @@ export default function Academics() {
   const [newResource, setNewResource] = useState({
     title: "",
     description: "",
-    course_id: "", 
-    image: null,
+    course_id: "",
     time_taken: "",
+    image: null,
     note: "",
     admin_id: adminId,
   });
@@ -30,18 +28,6 @@ export default function Academics() {
   const [isLoading, setIsLoading] = useState(true);
   const itemsPerPage = 5;
   const navigate = useNavigate();
-  const fetchCourses = () => {
-    axios
-      .get(`http://localhost:8000/admin/fetchCourse/${adminId}`)
-      .then((response) => {
-        setItems(response.data)
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching courses:", error);
-        setIsLoading(false);
-      });
-  };
 
   useEffect(() => {
     fetchCourses();
@@ -52,6 +38,20 @@ export default function Academics() {
     );
   }, [searchTerm, items]);
 
+  const fetchCourses = () => {
+    console.log("i am working")
+    // axios
+    //   .get("http://localhost:8000/admin/coursesFetch")
+    //   .then((response) => {
+    //     console.log("Fetched courses:", response.data);
+    //     setItems(response.data.courses);
+    //     setIsLoading(false);
+    //   })
+    //   .catch((error) => {
+    //     console.error("Error fetching courses:", error);
+    //     setIsLoading(false);
+    //   });
+  };
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -85,20 +85,18 @@ export default function Academics() {
     setShowDeleteModal(!showDeleteModal);
   };
 
-const handleInputChange = (e) => {
-  const { name, value, files } = e.target;
-  setNewResource((prev) => ({ ...prev, [name]: files ? files[0] : value }));
-};
-
+  const handleInputChange = (e) => {
+    const { name, value, files } = e.target;
+    setNewResource((prev) => ({ ...prev, [name]: files ? files[0] : value }));
+  };
 
   const handleCourseChange = (e) => {
     setNewCourse(e.target.value);
   };
 
-   const handleResourceSubmit = (e) => {
+  const handleResourceSubmit = (e) => {
     e.preventDefault();
 
-    // Create a new FormData object to hold the form data
     const formData = new FormData();
     formData.append("title", newResource.title);
     formData.append("description", newResource.description);
@@ -135,11 +133,10 @@ const handleInputChange = (e) => {
       });
   };
 
-
   const handleCourseSubmit = (e) => {
     e.preventDefault();
     axios
-      .post(`http://localhost:8000/admin/course`, {
+      .post(`http://localhost:8000/admin/readCourseAdd`, {
         name: newCourse,
         admin_id: adminId,
       })
@@ -163,7 +160,7 @@ const handleInputChange = (e) => {
 
   const handleDeleteCourse = () => {
     axios
-      .delete(`http://localhost:8000/admin/course/${courseId}`)
+      .delete(`http://localhost:8000/admin/courseDelete/${courseId}`)
       .then((response) => {
         if (response.data.message === "Course deleted successfully") {
           toast.success("Course deleted successfully");
@@ -281,10 +278,8 @@ const handleInputChange = (e) => {
               <p className="text-sm text-gray-700">
                 Showing{" "}
                 <span className="font-medium">{indexOfFirstItem + 1}</span> to{" "}
-                <span className="font-medium">
-                  {Math.min(indexOfLastItem, filteredItems.length)}
-                </span>{" "}
-                of <span className="font-medium">{filteredItems.length}</span>{" "}
+                <span className="font-medium">{indexOfLastItem}</span> of{" "}
+                <span className="font-medium">{filteredItems.length}</span>{" "}
                 results
               </p>
             </div>
@@ -301,21 +296,6 @@ const handleInputChange = (e) => {
                   <span className="sr-only">Previous</span>
                   <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
                 </button>
-                {Array.from({
-                  length: Math.ceil(filteredItems.length / itemsPerPage),
-                }).map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentPage(index + 1)}
-                    className={`relative inline-flex items-center border border-gray-300 px-4 py-2 text-sm font-medium ${
-                      currentPage === index + 1
-                        ? "bg-indigo-50 border-indigo-500 text-indigo-600 z-10"
-                        : "bg-white text-gray-500 hover:bg-gray-50"
-                    }`}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
                 <button
                   onClick={handleClickNext}
                   disabled={
@@ -331,209 +311,191 @@ const handleInputChange = (e) => {
             </div>
           </div>
         </div>
-        {showModal && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w96">
-              <h2 className="text-2xl mb-4">Upload Resource</h2>
-              <form
-                onSubmit={handleResourceSubmit}
-                enctype="multipart/form-data"
-              >
-                <div className="mb-4">
-                  <label
-                    className="block text-gray-700 text-sm font-bold mb-2"
-                    htmlFor="title"
-                  >
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    placeholder="Resources title"
-                    value={newResource.title}
-                    onChange={handleInputChange}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label
-                    className="block text-gray-700 text-sm font-bold mb-2"
-                    htmlFor="description"
-                  >
-                    Description
-                  </label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    rows={3}
-                    value={newResource.description}
-                    placeholder="Topic description"
-                    onChange={handleInputChange}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    required
-                  ></textarea>
-                </div>
+      </div>
 
-                <div className="mb-4">
-                  <label
-                    className="block text-gray-700 text-sm font-bold mb-2"
-                    htmlFor="time_taken"
-                  >
-                    Amout of time
-                  </label>
-                  <input
-                    id="time_taken"
-                    name="time_taken"
-                    type="text"
-                    value={newResource.time_taken}
-                    placeholder="Amount of time to read"
-                    onChange={handleInputChange}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    required
-                  ></input>
-                </div>
-
-                <div className="mb-4">
-                  <label
-                    className="block text-gray-700 text-sm font-bold mb-2"
-                    htmlFor="image"
-                  >
-                    Topic media
-                  </label>
-                  <input
-                    id="image"
-                    name="image"
-                    type="file"
-                    onChange={handleInputChange}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    required
-                  ></input>
-                </div>
-
-                <div className="mb-4">
-                  <label
-                    className="block text-gray-700 text-sm font-bold mb-2"
-                    htmlFor="description"
-                  >
-                    Media
-                  </label>
-                  <textarea
-                    id="note"
-                    name="note"
-                    rows={4}
-                    value={newResource.note}
-                    placeholder="@ Resources"
-                    onChange={handleInputChange}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    required
-                  ></textarea>
-                </div>
-
-                <div className="mb-4">
-                  <label
-                    className="block text-gray-700 text-sm font-bold mb-2"
-                    htmlFor="course_id"
-                  >
-                    Course ID
-                  </label>
-                  <input
-                    type="text"
-                    id="course_id"
-                    name="course_id"
-                    value={newResource.course_id}
-                    onChange={handleInputChange}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    required
-                    disabled
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={toggleModal}
-                    className="mr-4 bg-gray-500 text-white px-4 py-2 rounded-md"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-green-500 text-white px-4 py-2 rounded-md"
-                  >
-                    Upload
-                  </button>
-                </div>
-              </form>
+      {showModal && (
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 transition-opacity"
+              aria-hidden="true"
+            >
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
-          </div>
-        )}
-        {showCourseModal && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w96">
-              <h2 className="text-2xl mb-4">Add Course</h2>
-              <form onSubmit={handleCourseSubmit}>
-                <div className="mb-4">
-                  <label
-                    className="block text-gray-700 text-sm font-bold mb-2"
-                    htmlFor="name"
-                  >
-                    Course Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={newCourse}
-                    onChange={handleCourseChange}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    required
-                  />
+            <span
+              className="hidden sm:inline-block sm:align-middle sm:h-screen"
+              aria-hidden="true"
+            >
+              &#8203;
+            </span>
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+              <div>
+                <div className="mt-3 text-center sm:mt-5">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Upload Resource
+                  </h3>
+                  <div className="mt-2">
+                    <form onSubmit={handleResourceSubmit}>
+                      <input
+                        type="text"
+                        name="title"
+                        value={newResource.title}
+                        onChange={handleInputChange}
+                        placeholder="Resource Title"
+                        className="w-full border border-gray-300 p-2 rounded mt-2"
+                        required
+                      />
+                      <textarea
+                        name="description"
+                        value={newResource.description}
+                        onChange={handleInputChange}
+                        placeholder="Resource Description"
+                        className="w-full border border-gray-300 p-2 rounded mt-2"
+                        required
+                      />
+                      <input
+                        type="text"
+                        name="time_taken"
+                        value={newResource.time_taken}
+                        onChange={handleInputChange}
+                        placeholder="Time Taken"
+                        className="w-full border border-gray-300 p-2 rounded mt-2"
+                        required
+                      />
+                      <input
+                        type="file"
+                        name="image"
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 p-2 rounded mt-2"
+                        required
+                      />
+                      <textarea
+                        name="note"
+                        value={newResource.note}
+                        onChange={handleInputChange}
+                        placeholder="Additional Notes"
+                        className="w-full border border-gray-300 p-2 rounded mt-2"
+                      />
+                      <button
+                        type="submit"
+                        className="w-full bg-green-500 text-white p-2 rounded mt-2"
+                      >
+                        Submit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={toggleModal}
+                        className="w-full bg-red-500 text-white p-2 rounded mt-2"
+                      >
+                        Cancel
+                      </button>
+                    </form>
+                  </div>
                 </div>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={toggleCourseModal}
-                    className="mr-4 bg-gray-500 text-white px-4 py-2 rounded-md"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-green-500 text-white px-4 py-2 rounded-md"
-                  >
-                    Add
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-        {showDeleteModal && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
-            <div className="bg-white p-6 rounded-lg w96 shadow-lg">
-              <h2 className="text-2xl mb-4">Delete Course</h2>
-              <p>Are you sure you want to delete this course?</p>
-              <div className="flex justify-end mt-4">
-                <button
-                  type="button"
-                  onClick={toggleDeleteModal}
-                  className="mr-4 bg-gray-500 text-white px-4 py-2 rounded-md"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDeleteCourse}
-                  className="bg-red-500 text-white px-4 py-2 rounded-md"
-                >
-                  Delete
-                </button>
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {showCourseModal && (
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 transition-opacity"
+              aria-hidden="true"
+            >
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span
+              className="hidden sm:inline-block sm:align-middle sm:h-screen"
+              aria-hidden="true"
+            >
+              &#8203;
+            </span>
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+              <div>
+                <div className="mt-3 text-center sm:mt-5">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Add Course
+                  </h3>
+                  <div className="mt-2">
+                    <form onSubmit={handleCourseSubmit}>
+                      <input
+                        type="text"
+                        name="course"
+                        value={newCourse}
+                        onChange={handleCourseChange}
+                        placeholder="Course Name"
+                        className="w-full border border-gray-300 p-2 rounded mt-2"
+                        required
+                      />
+                      <button
+                        type="submit"
+                        className="w-full bg-green-500 text-white p-2 rounded mt-2"
+                      >
+                        Submit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={toggleCourseModal}
+                        className="w-full bg-red-500 text-white p-2 rounded mt-2"
+                      >
+                        Cancel
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 transition-opacity"
+              aria-hidden="true"
+            >
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span
+              className="hidden sm:inline-block sm:align-middle sm:h-screen"
+              aria-hidden="true"
+            >
+              &#8203;
+            </span>
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+              <div>
+                <div className="mt-3 text-center sm:mt-5">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Confirm Delete
+                  </h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      Are you sure you want to delete this course?
+                    </p>
+                    <button
+                      onClick={handleDeleteCourse}
+                      className="w-full bg-red-500 text-white p-2 rounded mt-2"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={toggleDeleteModal}
+                      className="w-full bg-gray-500 text-white p-2 rounded mt-2"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -7,19 +7,23 @@ const {
   getStudentsByAdmin,
   uploadResource,
   courseAdd,
-  courseFetch,
   deleteCourse,
+  addReadCourse,
+  readCourseAdd,
+  fetchCourse,
 } = require("../Controller/admin.controller");
 
 const parser = require("../MulterConfig");
 
 routerAdmin.post("/signup", signupAdmin);
 routerAdmin.post("/login", loginAdmin);
-routerAdmin.get("/:id", getAdminInfo);
+routerAdmin.get("/info/:id", getAdminInfo);
 routerAdmin.get("/:id/students", getStudentsByAdmin);
-routerAdmin.post("/upload", parser.single("file"), uploadResource); // Updated route to use multer for file uploads
+routerAdmin.post("/upload", uploadResource);
 routerAdmin.post("/course", courseAdd);
-routerAdmin.get("/coursesFetch", courseFetch);
+routerAdmin.get("/fetchCourse/:id", fetchCourse);
+routerAdmin.post("/readCourseAdd", readCourseAdd);
+routerAdmin.post("/readCourse", addReadCourse);
 routerAdmin.delete("/course/:id", deleteCourse);
 
 module.exports = routerAdmin;
