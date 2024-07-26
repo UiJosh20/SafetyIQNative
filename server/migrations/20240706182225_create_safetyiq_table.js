@@ -15,6 +15,8 @@ exports.up = function (knex) {
     table.timestamp("created_at").defaultTo(knex.fn.now());
     table.integer("admin_id").unsigned().nullable();
     table.foreign("admin_id").references("admin_table.admin_id");
+    table.integer("resource_id").unsigned().nullable();
+    table.foreign("resource_id").references("resources_table.resource_id");
   });
 };
 

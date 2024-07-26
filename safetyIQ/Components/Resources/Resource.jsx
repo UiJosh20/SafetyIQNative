@@ -21,7 +21,7 @@ const Resource = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const port = 101;
+  const port = 102;
   const books = `http://192.168.0.${port}:8000/courseFetch`;
   const read = `http://192.168.0.${port}:8000/resources`;
   const [modalVisible, setModalVisible] = useState(false);

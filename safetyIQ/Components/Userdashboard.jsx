@@ -16,7 +16,7 @@ import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 
 const Userdashboard = () => {
-  const port = 101;
+  const port = 102;
   const userUrl = `http://192.168.0.${port}:8000/dashboard`;
   const profileUrl = `http://192.168.0.${port}:8000/profilePic`;
   const books = `http://192.168.0.${port}:8000/courseFetch`;
@@ -32,10 +32,9 @@ const Userdashboard = () => {
 
   useEffect(() => {
     fetchUserId();
-    setInterval(()=>{
-
+    setInterval(() => {
       fetchCurrentTopic();
-    }, 1000)
+    }, 1000);
     fetchData();
     fetchCourses();
   }, [id]);
@@ -125,8 +124,8 @@ const Userdashboard = () => {
   }, [fetchData]);
 
   const pickImage = async () => {
-  console.log("pickImage");
-}
+    console.log("pickImage");
+  };
   return (
     <View style={styles.container}>
       <ScrollView
@@ -209,7 +208,17 @@ const Userdashboard = () => {
 
         <View>
           <View>
-            <Text style={{fontSize:15, fontWeight:"bold", marginTop: 20, marginBottom: 5, textTransform:"capitalize"}}>Latest test result</Text>
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: "bold",
+                marginTop: 20,
+                marginBottom: 5,
+                textTransform: "capitalize",
+              }}
+            >
+              Latest test result
+            </Text>
           </View>
         </View>
       </ScrollView>

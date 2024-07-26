@@ -133,7 +133,6 @@ const getStudentsByAdmin = (req, res) => {
     .where({ admin_id: id })
     .select("user_id", "firstName", "lastName", "email", "tel", "course_name")
     .then((students) => {
-
       // Fetch total number of students
 
       db("safetyiq_table")
@@ -152,31 +151,35 @@ const getStudentsByAdmin = (req, res) => {
     });
 };
 
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, "uploads/first_aid/");
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
-  }
+  },
 });
 
 const upload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const filetypes = /jpeg|jpg|png|gif/;
+    const filetypes = /jpeg|jpg|png|gif|mp4/;
     const mimetype = filetypes.test(file.mimetype);
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const extname = filetypes.test(
+      path.extname(file.originalname).toLowerCase()
+    );
 
     if (mimetype && extname) {
       return cb(null, true);
     } else {
-      cb("Error: File upload only supports the following filetypes - " + filetypes);
+      cb(
+        "Error: File upload only supports the following filetypes - " +
+          filetypes
+      );
     }
-  }
-}).single('image');
+  },
+}).single("image");
 
 const uploadResource = (req, res) => {
   upload(req, res, (err) => {
@@ -190,10 +193,9 @@ const uploadResource = (req, res) => {
       req.body;
     const image = req.file ? req.file.path : null;
 
-
     if (image) {
       cloudinary.uploader
-        .upload(image, { folder: "resources" })
+        .upload(image, { folder: "/resources/first_aid" })
         .then((uploadedImage) => {
           return db("resources_table").insert({
             title,
@@ -235,6 +237,11 @@ const uploadResource = (req, res) => {
 };
 
 
+const uploadRead = (req, res) => {
+  console.log(req.body);
+
+};
+
 const courseAdd = (req, res) => {
   const { name, admin_id } = req.body;
   db("courses")
@@ -265,7 +272,6 @@ const readCourseAdd = (req, res) => {
     });
 };
 
-
 const deleteCourse = (req, res) => {
   const { id } = req.params;
   db("courses")
@@ -284,35 +290,35 @@ const deleteCourse = (req, res) => {
     });
 };
 
-const addReadCourse = (req, res) => {
-  const { read_course, read_title, read_description, read_note, read_duration, admin_id, user_id } = req.body;
+// const addReadCourse = (req, res) => {
+//   const { read_course, read_title, read_description, read_note, read_duration, admin_id, user_id } = req.body;
 
-  db("read_table")
-    .insert({
-      read_course,
-      read_title,
-      read_description,
-      read_note,
-      read_duration,
-      admin_id,
-      user_id,
-      createdate: new Date(),
-    })
-    .then((insertResult) => {
-      // res.status(201).json({ message: "Course added successfully", id: insertResult[0] });
-      console.log(insertResult);
-    })
-    .catch((error) => {
-      console.error("Error adding course:", error);
-      res.status(500).json({ message: "Internal Server Error" });
-    });
-};
+//   db("read_table")
+//     .insert({
+//       read_course,
+//       read_title,
+//       read_description,
+//       read_note,
+//       read_duration,
+//       admin_id,
+//       user_id,
+//       createdate: new Date(),
+//     })
+//     .then((insertResult) => {
+//       // res.status(201).json({ message: "Course added successfully", id: insertResult[0] });
+//       console.log(insertResult);
+//     })
+//     .catch((error) => {
+//       console.error("Error adding course:", error);
+//       res.status(500).json({ message: "Internal Server Error" });
+//     });
+// };
 
 const fetchCourse = (req, res) => {
   const id = Number(req.params.id);
   if (id) {
     db("courses")
-      .where({ admin_id : id })
+      .where({ admin_id: id })
       .then((courses) => {
         res.status(200).json(courses);
       })
@@ -320,13 +326,44 @@ const fetchCourse = (req, res) => {
         console.error("Error fetching courses:", error);
         res.status(500).json({ message: "Internal Server Error" });
       });
-  }
-  else{
+  } else {
     return res.status(400).json({ message: "Admin ID is required" });
   }
-
+};
+const fetchRead = (req, res) => {
+  const id = Number(req.params.id);
+  if (id) {
+    db("readcourse")
+      .where({ admin_id: id })
+      .then((courses) => {
+        res.status(200).json(courses);
+      })
+      .catch((error) => {
+        console.error("Error fetching courses:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      });
+  } else {
+    return res.status(400).json({ message: "Admin ID is required" });
+  }
 };
 
+const deleteRead = (req, res) => {
+  const { id } = req.params;
+  db("readCourse")
+    .where({ id })
+    .del()
+    .then((deleteResult) => {
+      if (deleteResult) {
+        res.status(200).json({ message: "Course deleted successfully" });
+      } else {
+        res.status(404).json({ message: "Course not found" });
+      }
+    })
+    .catch((error) => {
+      console.error("Error deleting course:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    });
+};
 
 module.exports = {
   signupAdmin,
@@ -336,7 +373,9 @@ module.exports = {
   uploadResource,
   courseAdd,
   deleteCourse,
-  addReadCourse,
+  fetchRead,
   readCourseAdd,
   fetchCourse,
+  deleteRead,
+  uploadRead,
 };

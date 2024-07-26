@@ -33,17 +33,17 @@ const ProgramFee = () => {
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [verificationNumber, setVerificationNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const port = 101;
+  const port = 102;
   const payInit = `http://192.168.0.${port}:8000/paystackinit`;
   const verifyPay = `http://192.168.0.${port}:8000/paystackverify`;
   useEffect(() => {
     AsyncStorage.multiGet(["firstName", "courseName", "coursePrice", "email"])
-    .then(([firstName, courseName, coursePrice, email]) => {
-      if (firstName[1]) setFirstName(firstName[1]);
-      if (courseName[1]) setCourseName(courseName[1]);
-      if (coursePrice[1]) setCoursePrice(coursePrice[1]);
-      if (email[1]) setUserEmail(email[1]);
-    })
+      .then(([firstName, courseName, coursePrice, email]) => {
+        if (firstName[1]) setFirstName(firstName[1]);
+        if (courseName[1]) setCourseName(courseName[1]);
+        if (coursePrice[1]) setCoursePrice(coursePrice[1]);
+        if (email[1]) setUserEmail(email[1]);
+      })
       .catch((error) => {
         console.error("Failed to load the details from storage:", error);
       });

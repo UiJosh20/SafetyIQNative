@@ -39,18 +39,16 @@ export default function Reading() {
   }, [searchTerm, items]);
 
   const fetchCourses = () => {
-    console.log("i am working")
-    // axios
-    //   .get("http://localhost:8000/admin/coursesFetch")
-    //   .then((response) => {
-    //     console.log("Fetched courses:", response.data);
-    //     setItems(response.data.courses);
-    //     setIsLoading(false);
-    //   })
-    //   .catch((error) => {
-    //     console.error("Error fetching courses:", error);
-    //     setIsLoading(false);
-    //   });
+   axios
+     .get(`http://localhost:8000/admin/fetchRead/${adminId}`)
+     .then((response) => {
+       setItems(response.data);
+       setIsLoading(false);
+     })
+     .catch((error) => {
+       console.error("Error fetching courses:", error);
+       setIsLoading(false);
+     });
   };
 
   const handleSearchChange = (event) => {
@@ -107,7 +105,7 @@ export default function Reading() {
     formData.append("admin_id", adminId);
 
     axios
-      .post("http://localhost:8000/admin/upload", formData, {
+      .post("http://localhost:8000/admin/uploadRead", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -160,7 +158,7 @@ export default function Reading() {
 
   const handleDeleteCourse = () => {
     axios
-      .delete(`http://localhost:8000/admin/courseDelete/${courseId}`)
+      .delete(`http://localhost:8000/admin/readDelete/${courseId}`)
       .then((response) => {
         if (response.data.message === "Course deleted successfully") {
           toast.success("Course deleted successfully");
@@ -217,7 +215,7 @@ export default function Reading() {
               <thead>
                 <tr className="flex border-b justify-between">
                   <th className="py-2 px-4">ID</th>
-                  <th className="py-2 px-4">Course</th>
+                  <th className="py-2 px-4">Courses to read</th>
                   <th className="py-2 px-4">Actions</th>
                 </tr>
               </thead>
