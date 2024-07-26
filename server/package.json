@@ -4,7 +4,8 @@
   "description": "server-side of safetyIQ ",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "author": "Oluwaseun Adeyeri",
   "license": "ISC",
@@ -18,7 +19,6 @@
     "knex": "^3.1.0",
     "mongoose": "^8.4.1",
     "multer": "^1.4.5-lts.1",
-    "multer-storage-cloudinary": "^4.0.0",
     "mysql2": "^3.10.2",
     "nodemailer": "^6.9.13",
     "pg": "^8.12.0"
