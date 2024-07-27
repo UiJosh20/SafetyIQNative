@@ -25,17 +25,22 @@ const signupAdmin = (req, res) => {
     .then((hashedPassword) => {
       if (!hashedPassword) return;
 
-      return db("admin_table").insert({
-        first_name,
-        last_name,
-        email,
-        password: hashedPassword,
-      });
+      console.log("Hashed Password:", hashedPassword);
+
+      return db("admin_table")
+        .insert({
+          first_name,
+          last_name,
+          email,
+          password: hashedPassword,
+        })
+        .returning("admin_id");
     })
     .then((insertResult) => {
-      if (!insertResult) return;
+      if (!insertResult || insertResult.length === 0) return;
 
-      const [adminId] = insertResult;
+      const adminId = insertResult[0].admin_id;
+      console.log("Admin ID:", adminId);
       sendAdminIdToEmail(email, adminId);
       res.status(201).send("Admin registered successfully");
     })
@@ -45,6 +50,32 @@ const signupAdmin = (req, res) => {
         res.status(500).send("Internal Server Error");
       }
     });
+};
+
+
+const sendAdminIdToEmail = (email, adminId) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: EMAIL_USER,
+      pass: EMAIL_PASSWORD,
+    },
+  });
+
+  const mailOptions = {
+    from: EMAIL_USER,
+    to: email,
+    subject: "Your Admin ID",
+    text: `Your Admin ID is: ${adminId}`,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error("Error sending email:", error);
+    } else {
+      console.log("Email sent:", info.response);
+    }
+  });
 };
 
 const loginAdmin = (req, res) => {
@@ -78,30 +109,6 @@ const loginAdmin = (req, res) => {
     });
 };
 
-const sendAdminIdToEmail = (email, adminId) => {
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: EMAIL_USER,
-      pass: EMAIL_PASSWORD,
-    },
-  });
-
-  const mailOptions = {
-    from: EMAIL_USER,
-    to: email,
-    subject: "Your Admin ID",
-    text: `Your Admin ID is: ${adminId}`,
-  };
-
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error("Error sending email:", error);
-    } else {
-      console.log("Email sent:", info.response);
-    }
-  });
-};
 
 const getAdminInfo = (req, res) => {
   const { id } = Number(req.params.id);
@@ -236,15 +243,13 @@ const uploadResource = (req, res) => {
   });
 };
 
-
 const uploadRead = (req, res) => {
   console.log(req.body);
-
 };
 
 const courseAdd = (req, res) => {
   const { name, admin_id } = req.body;
-  db("courses")
+  db("courses_table")
     .insert({ name, admin_id })
     .then((insertResult) => {
       res
@@ -274,7 +279,7 @@ const readCourseAdd = (req, res) => {
 
 const deleteCourse = (req, res) => {
   const { id } = req.params;
-  db("courses")
+  db("courses_table")
     .where({ id })
     .del()
     .then((deleteResult) => {
@@ -317,13 +322,13 @@ const deleteCourse = (req, res) => {
 const fetchCourse = (req, res) => {
   const id = Number(req.params.id);
   if (id) {
-    db("courses")
+    db("courses_table")
       .where({ admin_id: id })
-      .then((courses) => {
-        res.status(200).json(courses);
+      .then((courses_table) => {
+        res.status(200).json(courses_table);
       })
       .catch((error) => {
-        console.error("Error fetching courses:", error);
+        console.error("Error fetching courses_table:", error);
         res.status(500).json({ message: "Internal Server Error" });
       });
   } else {
@@ -335,11 +340,11 @@ const fetchRead = (req, res) => {
   if (id) {
     db("readcourse")
       .where({ admin_id: id })
-      .then((courses) => {
-        res.status(200).json(courses);
+      .then((courses_table) => {
+        res.status(200).json(courses_table);
       })
       .catch((error) => {
-        console.error("Error fetching courses:", error);
+        console.error("Error fetching courses_table:", error);
         res.status(500).json({ message: "Internal Server Error" });
       });
   } else {

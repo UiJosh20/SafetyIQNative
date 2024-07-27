@@ -1,5 +1,3 @@
-// migrations/YYYYMMDDHHMMSS_create_admin_table.js
-
 exports.up = function (knex) {
   return knex.schema.createTable("admin_table", function (table) {
     table.increments("admin_id").primary();

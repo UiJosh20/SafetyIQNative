@@ -12,6 +12,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
+  
 
   const toggleShowPassword = () => {
     setShowPassword(!showPassword);

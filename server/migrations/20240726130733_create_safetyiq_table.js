@@ -1,5 +1,4 @@
 // migrations/YYYYMMDDHHMMSS_create_safetyiq_table.js
-
 exports.up = function (knex) {
   return knex.schema.createTable("safetyiq_table", function (table) {
     table.increments("user_id").primary();
@@ -14,9 +13,12 @@ exports.up = function (knex) {
     table.string("course_name", 100).nullable();
     table.timestamp("created_at").defaultTo(knex.fn.now());
     table.integer("admin_id").unsigned().nullable();
-    table.foreign("admin_id").references("admin_table.admin_id");
+    table.foreign("admin_id").references("admin_id").inTable("admin_table");
     table.integer("resource_id").unsigned().nullable();
-    table.foreign("resource_id").references("resources_table.resource_id");
+    table
+      .foreign("resource_id")
+      .references("resource_id")
+      .inTable("resources_table");
   });
 };
 

@@ -16,12 +16,12 @@ exports.up = function (knex) {
         .foreign("admin_id")
         .references("admin_id")
         .inTable("admin_table")
-        .onDelete("CASCADE");
+     
       table
         .foreign("user_id")
         .references("user_id")
         .inTable("safetyiq_table")
-        .onDelete("CASCADE");
+     
     });
   });
 };

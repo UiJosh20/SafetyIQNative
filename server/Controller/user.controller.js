@@ -242,7 +242,7 @@ const login = (req, res) => {
         }
 
         // Send success response
-         res.send({ message: "Login successful", status: 200, user });
+        res.send({ message: "Login successful", status: 200, user });
       });
     })
     .catch((error) => {
@@ -275,7 +275,6 @@ const dashboard = (req, res) => {
     });
 };
 
-
 const fetchResources = (req, res) => {
   const { courseId } = req.query;
 
@@ -295,21 +294,18 @@ const fetchResources = (req, res) => {
     });
 };
 
-
-const courseFetch = (req, res) =>{
-    db("courses")
-      .then((courses) => {
-        res.status(200).json(courses);
-      })
-      .catch((error) => {
-        console.error(error);
-        res.status(500).send("Internal Server Error");
-      });
-}
-
-const readCourses = (req, res) => { 
-
+const courseFetch = (req, res) => {
+  db("courses_table")
+    .then((courses_table) => {
+      res.status(200).json(courses_table);
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send("Internal Server Error");
+    });
 };
+
+const readCourses = (req, res) => {};
 
 module.exports = {
   signup,
@@ -319,5 +315,5 @@ module.exports = {
   dashboard,
   fetchResources,
   courseFetch,
- readCourses,
+  readCourses,
 };
