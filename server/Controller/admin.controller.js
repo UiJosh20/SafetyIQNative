@@ -52,7 +52,6 @@ const signupAdmin = (req, res) => {
     });
 };
 
-
 const sendAdminIdToEmail = (email, adminId) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -109,7 +108,6 @@ const loginAdmin = (req, res) => {
     });
 };
 
-
 const getAdminInfo = (req, res) => {
   const { id } = Number(req.params.id);
 
@@ -160,7 +158,7 @@ const getStudentsByAdmin = (req, res) => {
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/first_aid/");
+    cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
@@ -242,6 +240,9 @@ const uploadResource = (req, res) => {
     }
   });
 };
+
+
+
 
 const uploadRead = (req, res) => {
   console.log(req.body);

@@ -1,5 +1,5 @@
 exports.up = function (knex) {
-  return knex.schema.createTable("courses_table_table", function (table) {
+  return knex.schema.createTable("courses_table", function (table) {
     table.increments("course_id").primary();
     table.string("name").notNullable();
     table
@@ -13,5 +13,5 @@ exports.up = function (knex) {
 };
 
 exports.down = function (knex) {
-  return knex.schema.dropTable("courses_table_table");
+  return knex.schema.dropTable("courses_table");
 };

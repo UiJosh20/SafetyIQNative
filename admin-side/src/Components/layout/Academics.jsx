@@ -20,10 +20,10 @@ export default function Academics() {
   const [newResource, setNewResource] = useState({
     title: "",
     description: "",
-    course_id: "", 
-    image: null,
     time_taken: "",
+    image: null,
     note: "",
+    course_id: "",
     admin_id: adminId,
   });
   const [newCourse, setNewCourse] = useState("");
@@ -34,7 +34,7 @@ export default function Academics() {
     axios
       .get(`http://localhost:8000/admin/fetchCourse/${adminId}`)
       .then((response) => {
-        setItems(response.data)
+        setItems(response.data);
         setIsLoading(false);
       })
       .catch((error) => {
@@ -51,7 +51,6 @@ export default function Academics() {
       )
     );
   }, [searchTerm, items]);
-
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -85,55 +84,55 @@ export default function Academics() {
     setShowDeleteModal(!showDeleteModal);
   };
 
-const handleInputChange = (e) => {
-  const { name, value, files } = e.target;
-  setNewResource((prev) => ({ ...prev, [name]: files ? files[0] : value }));
-};
-
+  const handleInputChange = (e) => {
+    const { name, value, files } = e.target;
+    setNewResource((prev) => ({ ...prev, [name]: files ? files[0] : value }));
+  };
 
   const handleCourseChange = (e) => {
     setNewCourse(e.target.value);
   };
 
-   const handleResourceSubmit = (e) => {
-    e.preventDefault();
+const handleResourceSubmit = (e) => {
+  e.preventDefault();
 
-    // Create a new FormData object to hold the form data
-    const formData = new FormData();
-    formData.append("title", newResource.title);
-    formData.append("description", newResource.description);
-    formData.append("time_taken", newResource.time_taken);
-    formData.append("image", newResource.image);
-    formData.append("note", newResource.note);
-    formData.append("course_id", newResource.course_id);
-    formData.append("admin_id", adminId);
+  // Create a new FormData object to hold the form data
+  const formData = new FormData();
+  formData.append("title", newResource.title);
+  formData.append("description", newResource.description);
+  formData.append("time_taken", newResource.time_taken);
+  formData.append("image", newResource.image);
+  formData.append("note", newResource.note);
+  formData.append("course_id", newResource.course_id);
+  formData.append("admin_id", adminId);
 
-    axios
-      .post("http://localhost:8000/admin/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
-      .then((response) => {
-        if (response.data.message === "Resource uploaded successfully") {
-          setNewResource({
-            title: "",
-            description: "",
-            course_id: "",
-            time_taken: "",
-            image: null,
-            note: "",
-            admin_id: adminId,
-          });
-          setShowModal(false);
-          toast.success("Resource uploaded successfully");
-          fetchCourses();
-        }
-      })
-      .catch((error) => {
-        console.error("Error uploading resource:", error);
-      });
-  };
+  axios
+    .post("http://localhost:8000/admin/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+    .then((response) => {
+      if (response.data.message === "Resource uploaded successfully") {
+        setNewResource({
+          title: "",
+          description: "",
+          course_id: "",
+          time_taken: "",
+          image: null,
+          note: "",
+          admin_id: adminId,
+        });
+        setShowModal(false);
+        toast.success("Resource uploaded successfully");
+        fetchCourses();
+      }
+    })
+    .catch((error) => {
+      console.error("Error uploading resource:", error);
+      toast.error("Error uploading resource");
+    });
+};
 
 
   const handleCourseSubmit = (e) => {
@@ -227,17 +226,17 @@ const handleInputChange = (e) => {
               <tbody>
                 {currentItems.map((item) => (
                   <tr
-                    key={item.id}
+                    key={item.course_id}
                     className="flex justify-between border-b py-5"
                   >
-                    <td className="py-2 px-4">{item.id}</td>
+                    <td className="py-2 px-4">{item.course_id}</td>
                     <td className="py-2 px-4">{item.name}</td>
                     <td className="py-2 px-4 flex gap-2">
                       <button
                         className="shadow-lg w-36 bg-gray-400 p-2 rounded-md font-bold"
                         onClick={() =>
                           setNewResource(
-                            (prev) => ({ ...prev, course_id: item.id }),
+                            (prev) => ({ ...prev, course_id: item.course_id }),
                             toggleModal()
                           )
                         }
@@ -246,7 +245,7 @@ const handleInputChange = (e) => {
                       </button>
                       <button
                         className="shadow-lg w-36 p-2 font-bold bg-red-700 text-white rounded-md"
-                        onClick={() => handleDeleteSubmit(item.id)}
+                        onClick={() => handleDeleteSubmit(item.course_id)}
                       >
                         Delete
                       </button>

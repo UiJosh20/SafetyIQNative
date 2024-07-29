@@ -11,7 +11,7 @@ exports.up = function (knex) {
       .integer("course_id")
       .unsigned()
       .references("course_id")
-      .inTable("courses_table_table")
+      .inTable("courses_table")
       .onDelete("CASCADE");
     table
       .integer("admin_id")
