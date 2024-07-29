@@ -243,10 +243,100 @@ const uploadResource = (req, res) => {
 
 
 
+const libStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+const libUpload = multer({
+  storage: libStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png|gif|mp4/;
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(
+      path.extname(file.originalname).toLowerCase()
+    );
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(
+        "Error: File upload only supports the following filetypes - " +
+          filetypes
+      );
+    }
+  },
+}).single("image");
+
 
 const uploadRead = (req, res) => {
-  console.log(req.body);
+  libUpload(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ error: err.message });
+    } else if (err) {
+      return res.status(400).json({ error: err });
+    }
+
+    const { title, description, time_taken, note, course_name, admin_id } =
+      req.body;
+    const image = req.file ? req.file.path : null;
+
+    db("readcourse_table")
+      .select("readcourse_id")
+      .where({ name: course_name, admin_id })
+      .first()
+      .then((course) => {
+        if (!course) {
+          throw new Error(`Course with name ${course_name} does not exist.`);
+        }
+
+        const course_id = course.id;
+
+        if (image) {
+          return cloudinary.uploader
+            .upload(image, { folder: "/resources/readNote" })
+            .then((uploadedImage) => {
+              return db("read_table").insert({
+                read_course: course_name,
+                read_title: title,
+                read_description: description,
+                read_duration: time_taken,
+                read_image: uploadedImage.secure_url,
+                read_note: note,
+                admin_id,
+                readcourse_id: course_id,
+              });
+            });
+        } else {
+          return db("read_table").insert({
+            read_title: title,
+            read_description: description,
+            read_duration: time_taken,
+            read_image: null,
+            read_note: note,
+            read_course: course_name,
+            admin_id,
+            course_id,
+          });
+        }
+      })
+      .then(() => {
+        res.status(201).json({ message: "Resource uploaded successfully" });
+      })
+      .catch((error) => {
+        console.error("Error uploading resource:", error);
+        res
+          .status(500)
+          .json({ error: error.message || "Failed to upload resource" });
+      });
+  });
 };
+
 
 const courseAdd = (req, res) => {
   const { name, admin_id } = req.body;
@@ -265,7 +355,7 @@ const courseAdd = (req, res) => {
 
 const readCourseAdd = (req, res) => {
   const { name, admin_id } = req.body;
-  db("readCourse")
+  db("readcourse_table")
     .insert({ name, admin_id })
     .then((insertResult) => {
       res
@@ -339,10 +429,10 @@ const fetchCourse = (req, res) => {
 const fetchRead = (req, res) => {
   const id = Number(req.params.id);
   if (id) {
-    db("readcourse")
+    db("readcourse_table")
       .where({ admin_id: id })
-      .then((courses_table) => {
-        res.status(200).json(courses_table);
+      .then((course) => {
+        res.status(200).json(course);
       })
       .catch((error) => {
         console.error("Error fetching courses_table:", error);
@@ -355,8 +445,8 @@ const fetchRead = (req, res) => {
 
 const deleteRead = (req, res) => {
   const { id } = req.params;
-  db("readCourse")
-    .where({ id })
+  db("readcourse_table")
+    .where({ readcourse_id: id })
     .del()
     .then((deleteResult) => {
       if (deleteResult) {

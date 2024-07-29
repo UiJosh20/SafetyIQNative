@@ -23,6 +23,7 @@ export default function Reading() {
     image: null,
     note: "",
     admin_id: adminId,
+    course_name: "",
   });
   const [newCourse, setNewCourse] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -102,6 +103,7 @@ export default function Reading() {
     formData.append("image", newResource.image);
     formData.append("note", newResource.note);
     formData.append("course_id", newResource.course_id);
+    formData.append("course_name", newResource.course_name);
     formData.append("admin_id", adminId);
 
     axios
@@ -116,13 +118,14 @@ export default function Reading() {
             title: "",
             description: "",
             course_id: "",
+            course_name: "",
             time_taken: "",
             image: null,
             note: "",
             admin_id: adminId,
           });
           setShowModal(false);
-          toast.success("Resource uploaded successfully");
+          toast.success("Reading resource uploaded successfully");
           fetchCourses();
         }
       })
@@ -141,7 +144,7 @@ export default function Reading() {
       .then((response) => {
         if (response.data.message === "Course added successfully") {
           setNewCourse("");
-          toast.success("Course added successfully");
+          toast.success("Reading course added successfully");
           setShowCourseModal(false);
           fetchCourses();
         }
@@ -161,7 +164,7 @@ export default function Reading() {
       .delete(`http://localhost:8000/admin/readDelete/${courseId}`)
       .then((response) => {
         if (response.data.message === "Course deleted successfully") {
-          toast.success("Course deleted successfully");
+          toast.success("Reading course deleted successfully");
           fetchCourses();
           setCourseId("");
           toggleDeleteModal();
@@ -232,7 +235,11 @@ export default function Reading() {
                         className="shadow-lg w-36 bg-gray-400 p-2 rounded-md font-bold"
                         onClick={() =>
                           setNewResource(
-                            (prev) => ({ ...prev, course_id: item.id }),
+                            (prev) => ({
+                              ...prev,
+                              course_id: item.readcourse_id,
+                              course_name: item.name,
+                            }),
                             toggleModal()
                           )
                         }
@@ -241,7 +248,7 @@ export default function Reading() {
                       </button>
                       <button
                         className="shadow-lg w-36 p-2 font-bold bg-red-700 text-white rounded-md"
-                        onClick={() => handleDeleteSubmit(item.id)}
+                        onClick={() => handleDeleteSubmit(item.readcourse_id)}
                       >
                         Delete
                       </button>
@@ -373,6 +380,27 @@ export default function Reading() {
                         onChange={handleInputChange}
                         placeholder="Additional Notes"
                         className="w-full border border-gray-300 p-2 rounded mt-2"
+                      />
+
+                      <input
+                        type="text"
+                        id="course_id"
+                        name="course_id"
+                        value={newResource.course_id}
+                        onChange={handleInputChange}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required
+                        disabled
+                      />
+                      <input
+                        type="text"
+                        id="course_name"
+                        name="course_name"
+                        value={newResource.course_name}
+                        onChange={handleInputChange}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required
+                        disabled
                       />
                       <button
                         type="submit"

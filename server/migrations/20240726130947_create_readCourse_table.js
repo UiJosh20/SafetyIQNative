@@ -1,6 +1,6 @@
 exports.up = function (knex) {
-  return knex.schema.createTable("readCourse", function (table) {
-    table.increments("id").primary();
+  return knex.schema.createTable("readcourse_table", function (table) {
+    table.increments("readcourse_id").primary();
     table.string("name").notNullable();
     table
       .integer("admin_id")
@@ -13,5 +13,5 @@ exports.up = function (knex) {
 };
 
 exports.down = function (knex) {
-  return knex.schema.dropTable("readCourse");
+  return knex.schema.dropTable("readcourse_table");
 };
