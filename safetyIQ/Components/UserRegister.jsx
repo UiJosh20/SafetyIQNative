@@ -24,7 +24,7 @@ const UserRegister = () => {
     "Kanit-Italic": require("./../assets/fonts/Kanit-Italic.ttf"),
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
-  const port = 102;
+  const port = 101;
   const backendUrl = `http://192.168.0.${port}:8000/signup`;
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);

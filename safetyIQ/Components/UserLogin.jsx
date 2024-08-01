@@ -29,7 +29,7 @@ const UserLogin = () => {
   });
 
   const router = useRouter();
-  const port = 102;
+  const port = 101;
   const backendUrl = `http://192.168.0.${port}:8000/login`;
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSwitchOn, setIsSwitchOn] = useState(false);
@@ -52,6 +52,7 @@ const UserLogin = () => {
       axios
         .post(backendUrl, values)
         .then((response) => {
+          console.log(response.data);
           if (response.status === 200) {
             const userId = response.data.user.user_id;
             AsyncStorage.setItem("userId", userId.toString())

@@ -217,7 +217,7 @@ const paystackVerify = (req, res) => {
 
 const login = (req, res) => {
   const { identifier, password } = req.body;
-
+console.log(req.body);
   // Check if identifier and password are provided
   if (!identifier || !password) {
     return res.status(400).send("Identifier and password are required.");
@@ -225,7 +225,7 @@ const login = (req, res) => {
 
   // Query the database for the user
   db("safetyiq_table")
-    .where({ callup_num: identifier })
+    .where({ callUp_num: identifier })
     .orWhere({ frpnum: identifier })
     .first()
     .then((user) => {

@@ -33,7 +33,7 @@ const ProgramFee = () => {
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [verificationNumber, setVerificationNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const port = 102;
+  const port = 101;
   const payInit = `http://192.168.0.${port}:8000/paystackinit`;
   const verifyPay = `http://192.168.0.${port}:8000/paystackverify`;
   useEffect(() => {
@@ -159,7 +159,7 @@ const ProgramFee = () => {
         <View style={styles.modalView}>
           <Text style={styles.title}>Payment</Text>
           <Text style={styles.courseDetail3}>
-            Pay access fee and receive login details
+            Pay and verify access fee and receive login details
           </Text>
           <TextInput
             placeholder="Email Address"
