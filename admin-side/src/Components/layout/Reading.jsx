@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 
 export default function Reading() {
   const adminId = JSON.parse(localStorage.getItem("token"));
+  const userId = JSON.parse(localStorage.getItem("userIds"))[0];
+  console.log(userId)
   const [searchTerm, setSearchTerm] = useState("");
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
@@ -22,6 +24,7 @@ export default function Reading() {
     time_taken: "",
     image: null,
     note: "",
+    user_id: userId,
     admin_id: adminId,
     course_name: "",
   });
@@ -40,16 +43,16 @@ export default function Reading() {
   }, [searchTerm, items]);
 
   const fetchCourses = () => {
-   axios
-     .get(`http://localhost:8000/admin/fetchRead/${adminId}`)
-     .then((response) => {
-       setItems(response.data);
-       setIsLoading(false);
-     })
-     .catch((error) => {
-       console.error("Error fetching courses:", error);
-       setIsLoading(false);
-     });
+    axios
+      .get(`http://localhost:8000/admin/fetchRead/${adminId}/${userId}`)
+      .then((response) => {
+        setItems(response.data);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching courses:", error);
+        setIsLoading(false);
+      });
   };
 
   const handleSearchChange = (event) => {
@@ -105,6 +108,7 @@ export default function Reading() {
     formData.append("course_id", newResource.course_id);
     formData.append("course_name", newResource.course_name);
     formData.append("admin_id", adminId);
+    formData.append("user_id", userId);
 
     axios
       .post("http://localhost:8000/admin/uploadRead", formData, {
@@ -122,6 +126,7 @@ export default function Reading() {
             time_taken: "",
             image: null,
             note: "",
+            user_id: userId,
             admin_id: adminId,
           });
           setShowModal(false);
@@ -140,6 +145,7 @@ export default function Reading() {
       .post(`http://localhost:8000/admin/readCourseAdd`, {
         name: newCourse,
         admin_id: adminId,
+        user_id: userId,
       })
       .then((response) => {
         if (response.data.message === "Course added successfully") {
@@ -391,6 +397,7 @@ export default function Reading() {
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                         required
                         disabled
+                        hidden
                       />
                       <input
                         type="text"
@@ -401,6 +408,7 @@ export default function Reading() {
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                         required
                         disabled
+                        hidden
                       />
                       <button
                         type="submit"

@@ -84,7 +84,7 @@ const Resource = () => {
 
   const handleSelectCourse = (course) => {
     setSelectedCourse(course.name);
-    handleFetchResources(course.id);
+    handleFetchResources(course.course_id);
     setCurrentPage(0);
     setModalVisible(true);
     AsyncStorage.setItem("currentTopic", course.name).catch((error) => {
@@ -128,10 +128,7 @@ const Resource = () => {
   const renderContent = (content) => {
     if (content) {
       const words = content.split(" ");
-      const pageWords = words.slice(
-        currentPage * 200,
-        (currentPage + 1) * 200
-      );
+      const pageWords = words.slice(currentPage * 200, (currentPage + 1) * 200);
       return pageWords.join(" ");
     }
     return "";

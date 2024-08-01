@@ -14,12 +14,15 @@ import React, { useEffect, useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
+import { router } from "expo-router";
 
 const Userdashboard = () => {
+
   const port = 101;
   const userUrl = `http://192.168.0.${port}:8000/dashboard`;
   const profileUrl = `http://192.168.0.${port}:8000/profilePic`;
-  const books = `http://192.168.0.${port}:8000/courseFetch`;
+  const books = `http://192.168.0.${port}:8000/readFetch`;
+  const currentTopicUrl = `http://192.168.0.${port}:8000/currentTopic`;
 
   const [id, setId] = useState("");
   const [course, setCourse] = useState("");
@@ -32,29 +35,14 @@ const Userdashboard = () => {
 
   useEffect(() => {
     fetchUserId();
-    setInterval(() => {
+    const intervalId = setInterval(() => {
       fetchCurrentTopic();
+      updateTimers();
     }, 1000);
     fetchData();
     fetchCourses();
-  }, [id]);
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      updateTimers();
-    }, 1000);
     return () => clearInterval(intervalId);
-  }, [timers]);
-
-  const fetchCurrentTopic = () => {
-    AsyncStorage.getItem("currentTopic")
-      .then((topic) => {
-        setCourse(topic);
-      })
-      .catch((error) => {
-        console.log("Error fetching current topic: ", error);
-      });
-  };
+  }, [id]);
 
   const fetchUserId = () => {
     AsyncStorage.getItem("userId")
@@ -65,6 +53,20 @@ const Userdashboard = () => {
       })
       .catch((error) => {
         console.log("Error fetching user ID: ", error);
+      });
+  };
+
+  const fetchCurrentTopic = () => {
+    axios
+      .get(currentTopicUrl, { params: { userId: id } })
+      .then((response) => {
+        console.log(response.data);
+        if (response.data && response.data.currentTopic) {
+          setCourse(response.data.currentTopic);
+        }
+      })
+      .catch((error) => {
+        console.log("Error fetching current topic: ", error);
       });
   };
 
@@ -126,6 +128,7 @@ const Userdashboard = () => {
   const pickImage = async () => {
     console.log("pickImage");
   };
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -192,8 +195,14 @@ const Userdashboard = () => {
                   borderRadius: 5,
                   marginTop: -25,
                 }}
+                onPress={() =>
+                  router.push({
+                    pathname: "ReadCourse",
+                    params: { course: course },
+                  })
+                }
               >
-                <Text style={{ color: "#C30000" }}>Read More</Text>
+                <Text style={{ color: "#C30000" }}>Read Now</Text>
               </TouchableOpacity>
             </View>
           </>

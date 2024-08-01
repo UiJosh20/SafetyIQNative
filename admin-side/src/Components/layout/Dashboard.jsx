@@ -59,15 +59,20 @@ const Dashboard = () => {
         console.error("Error fetching admin info:", error);
         setLoading(false);
       });
-    };
-    
-    const fetchTotalStudents = () => {
-      axios
+  };
+
+  const fetchTotalStudents = () => {
+    axios
       .get(`http://localhost:8000/admin/${id}/students`)
       .then((response) => {
         setTotalStudents(response.data.totalStudents);
         setData(response.data.students);
-        console.log(response.data.students);
+        if (response.data.students.length > 0) {
+          const userIds = response.data.students.map(
+            (student) => student.user_id
+          );
+          localStorage.setItem("userIds", JSON.stringify(userIds));
+        }
       })
       .catch((error) => {
         console.error("Error fetching total students:", error);
@@ -120,7 +125,7 @@ const Dashboard = () => {
                 <tr className="flex gap-96">
                   <th className="py-2 px-4">Student ({totalStudents})</th>
                   <th className="py-2 px-4">Course</th>
-                  <th className="py-2 px-4">Total | Grade</th> 
+                  <th className="py-2 px-4">Total | Grade</th>
                 </tr>
               </thead>
               <tbody>
@@ -130,7 +135,9 @@ const Dashboard = () => {
                       {item.firstName} {item.lastName}
                       <p>{item.user_id}</p>
                     </td>
-                    <td>{item.course_name == null ? "N/A" : item.course_name}</td>
+                    <td>
+                      {item.course_name == null ? "N/A" : item.course_name}
+                    </td>
                     {/* <td className="py-2 px-4 border-b">{item.LastName}</td> */}
                   </tr>
                 ))}

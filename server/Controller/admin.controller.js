@@ -243,6 +243,7 @@ const uploadResource = (req, res) => {
 
 
 
+
 const libStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
@@ -282,20 +283,22 @@ const uploadRead = (req, res) => {
       return res.status(400).json({ error: err });
     }
 
-    const { title, description, time_taken, note, course_name, admin_id } =
+    const { title, description, time_taken, note, course_name, admin_id, user_id } =
       req.body;
+
+      
     const image = req.file ? req.file.path : null;
 
     db("readcourse_table")
       .select("readcourse_id")
-      .where({ name: course_name, admin_id })
+      .where({ name: course_name, admin_id, user_id })
       .first()
       .then((course) => {
         if (!course) {
           throw new Error(`Course with name ${course_name} does not exist.`);
         }
 
-        const course_id = course.id;
+        const course_id = course.readcourse_id;
 
         if (image) {
           return cloudinary.uploader
@@ -309,7 +312,9 @@ const uploadRead = (req, res) => {
                 read_image: uploadedImage.secure_url,
                 read_note: note,
                 admin_id,
+                user_id,
                 readcourse_id: course_id,
+
               });
             });
         } else {
@@ -321,11 +326,12 @@ const uploadRead = (req, res) => {
             read_note: note,
             read_course: course_name,
             admin_id,
-            course_id,
+            user_id,
+            readcourse_id: course_id,
           });
         }
       })
-      .then(() => {
+      .then((response) => {
         res.status(201).json({ message: "Resource uploaded successfully" });
       })
       .catch((error) => {
@@ -337,26 +343,28 @@ const uploadRead = (req, res) => {
   });
 };
 
-
 const courseAdd = (req, res) => {
-  const { name, admin_id } = req.body;
-  db("courses_table")
-    .insert({ name, admin_id })
-    .then((insertResult) => {
-      res
-        .status(201)
-        .json({ message: "Course added successfully", id: insertResult[0] });
-    })
-    .catch((error) => {
-      console.error("Error adding course:", error);
-      res.status(500).json({ message: "Internal Server Error" });
-    });
+const { name, admin_id, user_id } = req.body;
+const userId = Array.isArray(user_id) ? user_id[0] : user_id;
+
+db("courses_table")
+  .insert({ name, admin_id, user_id: userId })
+  .then((insertResult) => {
+    res
+      .status(201)
+      .json({ message: "Course added successfully", id: insertResult[0] });
+  })
+  .catch((error) => {
+    console.error("Error adding course:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  });
+
 };
 
 const readCourseAdd = (req, res) => {
-  const { name, admin_id } = req.body;
+  const { name, admin_id, user_id } = req.body;
   db("readcourse_table")
-    .insert({ name, admin_id })
+    .insert({ name, admin_id, user_id })
     .then((insertResult) => {
       res
         .status(201)
@@ -386,29 +394,7 @@ const deleteCourse = (req, res) => {
     });
 };
 
-// const addReadCourse = (req, res) => {
-//   const { read_course, read_title, read_description, read_note, read_duration, admin_id, user_id } = req.body;
 
-//   db("read_table")
-//     .insert({
-//       read_course,
-//       read_title,
-//       read_description,
-//       read_note,
-//       read_duration,
-//       admin_id,
-//       user_id,
-//       createdate: new Date(),
-//     })
-//     .then((insertResult) => {
-//       // res.status(201).json({ message: "Course added successfully", id: insertResult[0] });
-//       console.log(insertResult);
-//     })
-//     .catch((error) => {
-//       console.error("Error adding course:", error);
-//       res.status(500).json({ message: "Internal Server Error" });
-//     });
-// };
 
 const fetchCourse = (req, res) => {
   const id = Number(req.params.id);
@@ -426,6 +412,7 @@ const fetchCourse = (req, res) => {
     return res.status(400).json({ message: "Admin ID is required" });
   }
 };
+
 const fetchRead = (req, res) => {
   const id = Number(req.params.id);
   if (id) {

@@ -12,6 +12,7 @@
     "paystack",
     "Pressable",
     "setid",
-    "signin"
+    "signin",
+    "Userdashboard"
   ]
 }

@@ -1,11 +1,11 @@
 import { Platform, StatusBar, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
-import ReadNow from '../Components/Resources/ReadNow'
+import CourseReading from '../Components/Resources/CourseReading'
 
 const ReadCourse = () => {
   return (
     <View style={styles.container}>
-      <ReadNow/>
+      <CourseReading/>
     </View>
   )
 }

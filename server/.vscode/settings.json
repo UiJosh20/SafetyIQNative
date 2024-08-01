@@ -5,6 +5,7 @@
     "createdate",
     "frpnum",
     "readcourse",
+    "readfetch",
     "safetyiq"
   ]
 }

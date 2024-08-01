@@ -217,31 +217,29 @@ const paystackVerify = (req, res) => {
 
 const login = (req, res) => {
   const { identifier, password } = req.body;
-console.log(req.body);
   // Check if identifier and password are provided
   if (!identifier || !password) {
     return res.status(400).send("Identifier and password are required.");
   }
 
-  // Query the database for the user
+
   db("safetyiq_table")
     .where({ callUp_num: identifier })
     .orWhere({ frpnum: identifier })
     .first()
     .then((user) => {
-      // Check if user was found
+    
       if (!user) {
         return res.status(404).send("User not found.");
       }
 
-      // Compare the password
       return bcrypt.compare(password, user.password).then((match) => {
-        // Check if password matches
+      
         if (!match) {
           return res.status(401).send("Incorrect password.");
         }
 
-        // Send success response
+      
         res.send({ message: "Login successful", status: 200, user });
       });
     })
@@ -278,6 +276,8 @@ const dashboard = (req, res) => {
 const fetchResources = (req, res) => {
   const { courseId } = req.query;
 
+console.log(req.query);
+
   if (!courseId) {
     return res.status(400).json({ message: "Course ID is required" });
   }
@@ -305,7 +305,57 @@ const courseFetch = (req, res) => {
     });
 };
 
-const readCourses = (req, res) => {};
+
+const readfetch = (req, res) =>{
+    db("readcourse_table")
+      .then((courses_table) => {
+        res.status(200).json(courses_table);
+      })
+      .catch((error) => {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+      });
+}
+const readCourses = (req, res) => {
+    const { courseId } = req.query;
+  console.log(req.query);
+    if (!courseId) {
+      return res.status(400).json({ message: "Course ID is required" });
+    }
+
+    db("read_table")
+      .where({ read_course: courseId })
+      .select("*")
+      .then((resources) => {
+        console.log(resources);
+        res.status(200).json(resources);
+      })
+      .catch((error) => {
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
+      });
+};
+
+const fetchCurrentTopic = (req, res) => {
+ const { userId } = req.query;
+ if (!userId) {
+   return res.status(400).json({ message: "User ID is required" });
+ }
+
+ db("readcourse_table")
+   .where({ user_id: userId })
+   .orderBy("readcourse_id", "desc")
+   .first()
+   .then((currentTopic) => {
+     res
+       .status(200)
+       .json({ currentTopic: currentTopic ? currentTopic.name : null });
+   })
+   .catch((error) => {
+     console.error(error);
+     res.status(500).json({ message: "Internal Server Error" });
+   });
+}
 
 module.exports = {
   signup,
@@ -316,4 +366,6 @@ module.exports = {
   fetchResources,
   courseFetch,
   readCourses,
+  readfetch,
+  fetchCurrentTopic,
 };

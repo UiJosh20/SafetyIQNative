@@ -9,7 +9,13 @@ exports.up = function (knex) {
       table.text("read_note");
       table.integer("read_duration").notNullable();
       table.timestamp("createdate").defaultTo(knex.fn.now());
-
+      table.timestamp("updated_at").defaultTo(knex.fn.now());
+       table
+         .integer("user_id")
+         .unsigned()
+         .references("user_id")
+         .inTable("safetyiq_table")
+         .onDelete("CASCADE");
       table
         .integer("readcourse_id")
         .unsigned()
@@ -27,5 +33,9 @@ exports.up = function (knex) {
 };
 
 exports.down = function (knex) {
-  return knex.schema.dropTable("read_table");
+   return knex.schema.hasTable("read_table").then(function (exists) {
+     if (exists) {
+       return knex.schema.dropTable("read_table");
+     }
+   });
 };

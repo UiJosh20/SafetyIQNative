@@ -28,6 +28,6 @@ routerAdmin.get("/fetchCourse/:id", fetchCourse);
 routerAdmin.post("/readCourseAdd", readCourseAdd);
 routerAdmin.delete("/course/:id", deleteCourse);
 routerAdmin.delete("/readDelete/:id", deleteRead);
-routerAdmin.get("/fetchRead/:id", fetchRead);
+routerAdmin.get("/fetchRead/:id/:user_id", fetchRead);
 
 module.exports = routerAdmin;

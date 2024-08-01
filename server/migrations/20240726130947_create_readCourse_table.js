@@ -8,6 +8,14 @@ exports.up = function (knex) {
       .references("admin_id")
       .inTable("admin_table")
       .onDelete("CASCADE");
+
+    table
+      .integer("user_id")
+      .unsigned()
+      .references("user_id")
+      .inTable("safetyiq_table")
+      .onDelete("CASCADE");
+      
     table.timestamps(true, true);
   });
 };

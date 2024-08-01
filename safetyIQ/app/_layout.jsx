@@ -9,8 +9,8 @@ const Rootlayout = () => {
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="enroll" options={{ headerShown: false }} />
       <Stack.Screen name="course" options={{ headerShown: false }} />
-      <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="fee" options={{ headerShown: false }} />
+      <Stack.Screen name="ReadCourse" options={{ headerShown: false }} />
     </Stack>
   );
 }

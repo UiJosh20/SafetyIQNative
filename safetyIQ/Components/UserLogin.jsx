@@ -52,7 +52,6 @@ const UserLogin = () => {
       axios
         .post(backendUrl, values)
         .then((response) => {
-          console.log(response.data);
           if (response.status === 200) {
             const userId = response.data.user.user_id;
             AsyncStorage.setItem("userId", userId.toString())

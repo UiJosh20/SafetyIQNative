@@ -1,11 +1,12 @@
   import React from 'react'
-import Course from '../../Components/Resources/Course'
+
 import { Platform, SafeAreaView, StatusBar, StyleSheet, View } from 'react-native'
+// import CourseReading from '../../Components/Resources/CourseReading'
 
 const resource = () => {
   return (
     <SafeAreaView style={styles.container}>
-      <Course/>
+      {/* <CourseReading/> */}
     </SafeAreaView>
   )
 }
