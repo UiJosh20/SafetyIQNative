@@ -170,21 +170,27 @@ const Userdashboard = () => {
                     </Text>
                   </View>
                 </View>
-                <View>
+                <View style={{flexDirection:"row", width:"100%", paddingHorizontal:20, justifyContent:"space-between"}}>
+                  <View>
                   <Text
                     style={{ color: "white", marginTop: 20, marginBottom: 5 }}
                   >
                     Study Time Left:{" "}
                   </Text>
                   <Text style={styles.timer}>{formatTime(timers[course])}</Text>
-                </View>
-                <View>
-                  <Text
-                    style={{ color: "white", marginTop: 20, marginBottom: 5 }}
-                  >
-                    Test due:{" "}
-                  </Text>
-                  <Text style={styles.timer}>{formatTime(timers[course])}</Text>
+                  </View>
+                  <View>
+                    <Text
+                      style={{ color: "white", marginTop: 20, marginBottom: 5 }}
+                    >
+                      Test due:{" "}
+                    </Text>
+                    <Text style={styles.timer}>
+                      {timers[course] === 0
+                        ? formatTime(examTimers[course])
+                        : formatTime(3 * 60 * 60)}
+                    </Text>
+                  </View>
                 </View>
               </View>
               <TouchableOpacity
