@@ -44,7 +44,7 @@ export default function Reading() {
 
 
   const fetchResources = ()=>{
-   axios.get(`http://localhost:8000/admin/fetchResources/${adminId}`)
+   axios.get(`http://localhost:8000/admin/fetchResources`, {adminId: adminId})
    .then((response)=>{
     console.log(response.data);
     
