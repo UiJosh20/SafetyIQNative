@@ -10,6 +10,7 @@ import Layout from './Components/layout/Layout'
 import Dashboard from './Components/layout/Dashboard'
 import Academics from './Components/layout/Academics'
 import Reading from './Components/layout/Reading'
+import Resources from './Components/layout/Resources'
 
 function App() {
 
@@ -25,6 +26,7 @@ function App() {
           <Route path="/admin/dashboard" element={<Dashboard />} />
           <Route path="/admin/academics" element={<Academics />} />
           <Route path="/admin/reading" element={<Reading />} />
+          <Route path="/admin/resources" element={<Resources />} />
         </Route>
       </Routes>
     </>

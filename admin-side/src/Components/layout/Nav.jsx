@@ -19,6 +19,9 @@ const Nav = () => {
             <Link to={"/admin/reading"}>Read Courses</Link>
           </li>
           <li>
+            <Link to={"/admin/resources"}>Resources</Link>
+          </li>
+          <li>
             <Link to="#">Exam</Link>
           </li>
           <li>

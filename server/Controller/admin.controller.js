@@ -452,10 +452,7 @@ const deleteRead = (req, res) => {
 
 
 const fetchReadResources = (req, res) => {
-  const adminId = Number(req.params.adminId);
-
-  console.log(req.params);
-  
+  const adminId = Number(req.query.adminId);
 
   if (isNaN(adminId)) {
     return res.status(400).json({ message: "Invalid Admin ID" });
@@ -476,6 +473,7 @@ const fetchReadResources = (req, res) => {
       res.status(500).json({ message: "Internal Server Error" });
     });
 };
+
 
 module.exports = {
   signupAdmin,

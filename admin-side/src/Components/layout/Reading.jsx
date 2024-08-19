@@ -15,6 +15,7 @@ export default function Reading() {
   const [showModal, setShowModal] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const [courseId, setCourseId] = useState("");
   const [newResource, setNewResource] = useState({
     title: "",
@@ -34,7 +35,6 @@ export default function Reading() {
 
   useEffect(() => {
     fetchCourses();
-    fetchResources()
     setFilteredItems(
       items.filter((item) =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -43,13 +43,8 @@ export default function Reading() {
   }, [searchTerm, items]);
 
 
-  const fetchResources = ()=>{
-   axios.get(`http://localhost:8000/admin/fetchResources`, {adminId: adminId})
-   .then((response)=>{
-    console.log(response.data);
-    
-   })
-  }
+
+
 
   const fetchCourses = () => {
     axios
