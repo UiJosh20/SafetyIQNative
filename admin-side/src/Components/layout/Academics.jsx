@@ -9,6 +9,8 @@ import { useNavigate } from "react-router-dom";
 
 export default function Academics() {
   const adminId = JSON.parse(localStorage.getItem("token"));
+  // const userId = JSON.parse(localStorage.getItem("userIds"))[0];
+
   const [searchTerm, setSearchTerm] = useState("");
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
@@ -141,6 +143,7 @@ const handleResourceSubmit = (e) => {
       .post(`http://localhost:8000/admin/course`, {
         name: newCourse,
         admin_id: adminId,
+        // user_id:userId,
       })
       .then((response) => {
         if (response.data.message === "Course added successfully") {

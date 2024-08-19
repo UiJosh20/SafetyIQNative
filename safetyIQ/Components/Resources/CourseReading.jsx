@@ -42,7 +42,7 @@ const CourseReading = () => {
   const fetchResources = () => {
     setLoading(true);
     axios
-      .get(`http://192.168.0.101:8000/read`, {
+      .get(`http://192.168.178.2:8000/read`, {
         params: { courseId: course, userId: userId },
       })
       .then((response) => {

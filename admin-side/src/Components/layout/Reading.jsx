@@ -8,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 export default function Reading() {
   const adminId = JSON.parse(localStorage.getItem("token"));
   const userId = JSON.parse(localStorage.getItem("userIds"))[0];
-  console.log(userId)
   const [searchTerm, setSearchTerm] = useState("");
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
@@ -35,12 +34,22 @@ export default function Reading() {
 
   useEffect(() => {
     fetchCourses();
+    fetchResources()
     setFilteredItems(
       items.filter((item) =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
   }, [searchTerm, items]);
+
+
+  const fetchResources = ()=>{
+   axios.get(`http://localhost:8000/admin/fetchResources/${adminId}`)
+   .then((response)=>{
+    console.log(response.data);
+    
+   })
+  }
 
   const fetchCourses = () => {
     axios

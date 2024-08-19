@@ -343,12 +343,14 @@ const uploadRead = (req, res) => {
   });
 };
 
+
+
 const courseAdd = (req, res) => {
-const { name, admin_id, user_id } = req.body;
-const userId = Array.isArray(user_id) ? user_id[0] : user_id;
+const { name, admin_id } = req.body;
+// const userId = Array.isArray(user_id) ? user_id[0] : user_id;
 
 db("courses_table")
-  .insert({ name, admin_id, user_id: userId })
+  .insert({ name, admin_id })
   .then((insertResult) => {
     res
       .status(201)
@@ -448,6 +450,30 @@ const deleteRead = (req, res) => {
     });
 };
 
+
+const fetchReadResources = (req, res) => {
+  const adminId = Number(req.params.adminId);
+
+  if (isNaN(adminId)) {
+    return res.status(400).json({ message: "Invalid Admin ID" });
+  }
+
+  db("read_table")
+    .where({ admin_id: adminId })
+    .then((resources) => {
+      if (resources.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No resources found for this admin" });
+      }
+      res.status(200).json(resources);
+    })
+    .catch((error) => {
+      console.error("Error fetching resources:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    });
+};
+
 module.exports = {
   signupAdmin,
   loginAdmin,
@@ -461,4 +487,5 @@ module.exports = {
   fetchCourse,
   deleteRead,
   uploadRead,
+  fetchReadResources,
 };

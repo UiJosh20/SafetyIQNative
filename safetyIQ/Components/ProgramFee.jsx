@@ -34,8 +34,8 @@ const ProgramFee = () => {
   const [verificationNumber, setVerificationNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const port = 101;
-  const payInit = `http://192.168.0.${port}:8000/paystackinit`;
-  const verifyPay = `http://192.168.0.${port}:8000/paystackverify`;
+  const payInit = `http://192.168.178.2:8000/paystackinit`;
+  const verifyPay = `http://192.168.178.2:8000/paystackverify`;
   useEffect(() => {
     AsyncStorage.multiGet(["firstName", "courseName", "coursePrice", "email"])
       .then(([firstName, courseName, coursePrice, email]) => {
