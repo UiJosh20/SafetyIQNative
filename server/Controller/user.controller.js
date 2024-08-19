@@ -317,17 +317,16 @@ const readfetch = (req, res) =>{
       });
 }
 const readCourses = (req, res) => {
-    const { courseId } = req.query;
-  console.log(req.query);
+    const { courseId, userId } = req.query;
     if (!courseId) {
       return res.status(400).json({ message: "Course ID is required" });
     }
 
     db("read_table")
-      .where({ read_course: courseId })
+      .where({ user_id: userId })
       .select("*")
       .then((resources) => {
-        console.log(resources);
+        // console.log(resources);
         res.status(200).json(resources);
       })
       .catch((error) => {

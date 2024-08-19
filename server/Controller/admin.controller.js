@@ -474,6 +474,28 @@ const fetchReadResources = (req, res) => {
     });
 };
 
+const deleteResource = (req, res) => {
+  const resourceId = req.params.resourceId;
+  
+
+  db("read_table")
+    .where({ read_id: resourceId })
+    .del()
+    .then((count) => {
+      if (count === 0) {
+        return res.status(404).json({ message: "Resource not found" });
+      }
+      res.status(200).json({ message: "Resource deleted successfully" });
+    })
+    .catch((error) => {
+      console.error("Error deleting resource:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    });
+};
+
+module.exports = { deleteResource };
+
+
 
 module.exports = {
   signupAdmin,
@@ -489,4 +511,5 @@ module.exports = {
   deleteRead,
   uploadRead,
   fetchReadResources,
+  deleteResource
 };

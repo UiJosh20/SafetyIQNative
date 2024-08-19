@@ -14,6 +14,7 @@ const {
   deleteRead,
   uploadRead,
   fetchReadResources,
+  deleteResource,
 } = require("../Controller/admin.controller");
 
 const parser = require("../MulterConfig");
@@ -29,6 +30,7 @@ routerAdmin.get("/fetchCourse/:id", fetchCourse);
 routerAdmin.post("/readCourseAdd", readCourseAdd);
 routerAdmin.delete("/course/:id", deleteCourse);
 routerAdmin.delete("/readDelete/:id", deleteRead);
+routerAdmin.delete("/resources/:resourceId", deleteResource);
 routerAdmin.get("/fetchRead/:id/:user_id", fetchRead);
 routerAdmin.get("/fetchResources", fetchReadResources);
 

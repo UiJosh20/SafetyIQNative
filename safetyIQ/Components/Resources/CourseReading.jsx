@@ -7,6 +7,7 @@ import {
   RefreshControl,
   Image,
   Button,
+  Pressable,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -88,7 +89,9 @@ const CourseReading = () => {
               <Text style={styles.resourceContent}>{resource.read_note}</Text>
             </View>
           ))}
-          <Button title="Next" color={"red"}  />
+          <Pressable style={styles.nextbtn}>
+            <Text style={styles.nextbtntext}>Next</Text>
+          </Pressable>
         </ScrollView>
       )}
     </View>
@@ -113,4 +116,16 @@ const styles = StyleSheet.create({
   resourceContent: {
     fontSize: 14,
   },
+  nextbtn:{
+    padding:15,
+    backgroundColor:"#c30000",
+    width:"100%",
+    borderRadius:30,
+  },
+  nextbtntext:{
+    color:"white",
+    textAlign:"center",
+    fontSize: 18,
+
+  }
 });
