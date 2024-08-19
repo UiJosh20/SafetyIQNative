@@ -6,8 +6,9 @@ import {
   ActivityIndicator,
   RefreshControl,
   Image,
-  Button,
   Pressable,
+  Alert,
+  TextInput,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -16,11 +17,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const CourseReading = () => {
   const [resources, setResources] = useState([]);
+  const [matchedKeywords, setMatchedKeywords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [userId, setUserId] = useState(null); // Added state for userId
+  const [userId, setUserId] = useState(null);
   const route = useRoute();
   const { course } = route.params;
+  const [keywords, setKeywords] = useState("");
 
   useEffect(() => {
     AsyncStorage.getItem("userId")
@@ -63,6 +66,38 @@ const CourseReading = () => {
     fetchResources();
   };
 
+  const handleKeywordPrompt = () => {
+    Alert.prompt(
+      "Enter keywords from the readings",
+      "Please enter some keywords from the readings to confirm you have read them",
+      (text) => {
+        setKeywords(text);
+        const matched = text.split(",").filter((keyword) => {
+          return resources.some((resource) => {
+            return resource.read_description
+              .toLowerCase()
+              .includes(keyword.toLowerCase());
+          });
+        });
+        setMatchedKeywords(matched);
+        console.log("Keywords:", text);
+      }
+    );
+  };
+
+  const handleNextPress = () => {
+    Alert.alert("Confirm", "Are you sure you have read all the resources?", [
+      {
+        text: "Yes, I have read them",
+        onPress: handleKeywordPrompt,
+      },
+      {
+        text: "No, I haven't read them",
+        style: "cancel",
+      },
+    ]);
+  };
+
   return (
     <View style={styles.container}>
       {loading ? (
@@ -77,8 +112,8 @@ const CourseReading = () => {
             <View key={index} style={styles.resourceContainer}>
               <Image
                 source={{ uri: resource.read_image }}
-                style={{ width: "100%", height: 200 }}
-              ></Image>
+                style={styles.image}
+              />
               <Text style={styles.resourceTitle}>{resource.read_title}</Text>
               <Text style={styles.resourceContent}>
                 {resource.read_description}
@@ -89,9 +124,14 @@ const CourseReading = () => {
               <Text style={styles.resourceContent}>{resource.read_note}</Text>
             </View>
           ))}
-          <Pressable style={styles.nextbtn}>
+          <Pressable style={styles.nextbtn} onPress={handleNextPress}>
             <Text style={styles.nextbtntext}>Next</Text>
           </Pressable>
+          {matchedKeywords.length > 0 && (
+            <Text style={styles.resourceContent}>
+              Matched keywords: {matchedKeywords.join(", ")}
+            </Text>
+          )}
         </ScrollView>
       )}
     </View>
@@ -116,16 +156,20 @@ const styles = StyleSheet.create({
   resourceContent: {
     fontSize: 14,
   },
-  nextbtn:{
-    padding:15,
-    backgroundColor:"#c30000",
-    width:"100%",
-    borderRadius:30,
+  image: {
+    width: "100%",
+    height: 200,
   },
-  nextbtntext:{
-    color:"white",
-    textAlign:"center",
+  nextbtn: {
+    padding: 15,
+    backgroundColor: "#c30000",
+    width: "100%",
+    borderRadius: 30,
+    marginVertical: 20,
+  },
+  nextbtntext: {
+    color: "white",
+    textAlign: "center",
     fontSize: 18,
-
-  }
+  },
 });

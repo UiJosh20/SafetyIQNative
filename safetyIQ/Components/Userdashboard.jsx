@@ -88,7 +88,7 @@ const Userdashboard = () => {
       .then((response) => {
         setItems(response.data);
         const initialTimers = response.data.reduce((acc, course) => {
-          acc[course.name] = 17 * 60 * 60; // 17 hours in seconds
+          acc[course.name] = 12 * 60 * 60; 
           return acc;
         }, {});
         setTimers(initialTimers);
