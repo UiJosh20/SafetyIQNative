@@ -19,10 +19,10 @@ import { router } from "expo-router";
 const Userdashboard = () => {
 
   const port = 101;
-  const userUrl = `http://192.168.178.2:8000/dashboard`;
-  const profileUrl = `http://192.168.178.2:8000/profilePic`;
-  const books = `http://192.168.178.2:8000/readFetch`;
-  const currentTopicUrl = `http://192.168.178.2:8000/currentTopic`;
+  const userUrl = `http://192.168.10.142:8000/dashboard`;
+  const profileUrl = `http://192.168.10.142.2:8000/profilePic`;
+  const books = `http://192.168.10.142:8000/readFetch`;
+  const currentTopicUrl = `http://192.168.10.142:8000/currentTopic`;
 
   const [id, setId] = useState("");
   const [course, setCourse] = useState("");

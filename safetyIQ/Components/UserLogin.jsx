@@ -30,7 +30,7 @@ const UserLogin = () => {
 
   const router = useRouter();
   const port = 101;
-  const backendUrl = `http://192.168.178.2:8000/login`;
+  const backendUrl = `http://192.168.10.142:8000/login`;
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSwitchOn, setIsSwitchOn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

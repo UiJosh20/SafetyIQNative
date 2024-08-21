@@ -46,7 +46,7 @@ const CourseReading = () => {
   const fetchResources = () => {
     setLoading(true);
     axios
-      .get(`http://192.168.178.2:8000/read`, {
+      .get(`http://192.168.10.142:8000/read`, {
         params: { courseId: course, userId: userId },
       })
       .then((response) => {
@@ -152,13 +152,17 @@ const styles = StyleSheet.create({
   resourceTitle: {
     fontSize: 18,
     fontWeight: "bold",
+    marginTop: 50,
+    marginBottom: 20,
   },
   resourceContent: {
-    fontSize: 14,
+    fontSize: 17,
+    lineHeight:30,
   },
   image: {
     width: "100%",
     height: 200,
+    paddingVertical: 100,
   },
   nextbtn: {
     padding: 15,
