@@ -4,6 +4,7 @@ const cors = require("cors");
 const userRouter = require("./routes/user.route");
 const adminRouter = require("./routes/admin.route");
 const bodyParser = require("body-parser");
+require("node-cron")
 require("dotenv").config();
 const PORT = process.env.PORT;
 

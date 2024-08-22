@@ -8,21 +8,19 @@ import {
   Modal,
   TouchableOpacity,
   Image,
-  Button,
+  Alert,
 } from "react-native";
 import React, { useEffect, useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 
 const Userdashboard = () => {
-
-  const port = 101;
   const userUrl = `http://192.168.10.142:8000/dashboard`;
-  const profileUrl = `http://192.168.10.142.2:8000/profilePic`;
+  const profileUrl = `http://192.168.10.142:8000/profilePic`;
   const books = `http://192.168.10.142:8000/readFetch`;
   const currentTopicUrl = `http://192.168.10.142:8000/currentTopic`;
+  const checkExamUrl = `http://192.168.10.142:8000/checkExamCompletion`;
 
   const [id, setId] = useState("");
   const [course, setCourse] = useState("");
@@ -32,17 +30,23 @@ const Userdashboard = () => {
   const [items, setItems] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [timers, setTimers] = useState({});
+  const [examTimers, setExamTimers] = useState({});
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  const [isStudyTimerActive, setIsStudyTimerActive] = useState(false);
 
   useEffect(() => {
     fetchUserId();
-    const intervalId = setInterval(() => {
-      fetchCurrentTopic();
-      updateTimers();
-    }, 1000);
+    fetchCurrentTopic();
     fetchData();
     fetchCourses();
+
+    const intervalId = setInterval(() => {
+      updateTimers();
+      checkTimeAndUpdateState();
+    }, 1000);
+
     return () => clearInterval(intervalId);
-  }, [id]);
+  }, [id, course]); // Depend on `course` to restart timer on course change
 
   const fetchUserId = () => {
     AsyncStorage.getItem("userId")
@@ -62,6 +66,12 @@ const Userdashboard = () => {
       .then((response) => {
         if (response.data && response.data.currentTopic) {
           setCourse(response.data.currentTopic);
+          checkExamCompletion(response.data.currentTopic);
+          // Restart timer when course changes
+          const initialTimers = { ...timers };
+          initialTimers[response.data.currentTopic] = 12 * 60 * 60;
+          setTimers(initialTimers);
+          setIsStudyTimerActive(true);
         }
       })
       .catch((error) => {
@@ -88,10 +98,15 @@ const Userdashboard = () => {
       .then((response) => {
         setItems(response.data);
         const initialTimers = response.data.reduce((acc, course) => {
-          acc[course.name] = 12 * 60 * 60; 
+          acc[course.name] = 12 * 60 * 60;
           return acc;
         }, {});
         setTimers(initialTimers);
+        const initialExamTimers = response.data.reduce((acc, course) => {
+          acc[course.name] = 3 * 60 * 60;
+          return acc;
+        }, {});
+        setExamTimers(initialExamTimers);
       })
       .catch((error) => {
         console.log("Error fetching courses:", error);
@@ -102,7 +117,7 @@ const Userdashboard = () => {
     setTimers((prevTimers) => {
       const updatedTimers = { ...prevTimers };
       Object.keys(updatedTimers).forEach((key) => {
-        if (updatedTimers[key] > 0) {
+        if (updatedTimers[key] > 0 && isStudyTimerActive) {
           updatedTimers[key] -= 1;
         }
       });
@@ -122,10 +137,52 @@ const Userdashboard = () => {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchData();
+    checkTimeAndUpdateState();
   }, [fetchData]);
 
-  const pickImage = async () => {
-    console.log("pickImage");
+  const checkExamCompletion = (currentCourse) => {
+    axios
+      .get(checkExamUrl, { params: { userId: id, course: currentCourse } })
+      .then((response) => {
+        if (response.data && response.data.completed) {
+          setIsButtonDisabled(false);
+        } else {
+          setIsButtonDisabled(true);
+        }
+      })
+      .catch((error) => {
+        console.log("Error checking exam completion: ", error);
+      });
+  };
+
+  const checkTimeAndUpdateState = () => {
+    const now = new Date();
+    const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
+
+    if (currentHours >= 16 && currentHours < 24) {
+      // Between 4 PM and midnight
+      setIsStudyTimerActive(true);
+    } else if (currentHours >= 0 && currentHours < 4) {
+      // Between midnight and 4 AM
+      setIsStudyTimerActive(false);
+    } else {
+      // Between 4 AM and 4 PM
+      setIsStudyTimerActive(false);
+    }
+  };
+
+  const handleReadNowPress = () => {
+    const now = new Date();
+    const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
+
+    if (currentHours < 16) {
+      Alert.alert("Alert", "You can only start reading after 4 PM.");
+    } else {
+      router.push({
+        pathname: "ReadCourse",
+        params: { course: course },
+      });
+    }
   };
 
   return (
@@ -170,14 +227,23 @@ const Userdashboard = () => {
                     </Text>
                   </View>
                 </View>
-                <View style={{flexDirection:"row", width:"100%", paddingHorizontal:20, justifyContent:"space-between"}}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    width: "100%",
+                    paddingHorizontal: 20,
+                    justifyContent: "space-between",
+                  }}
+                >
                   <View>
-                  <Text
-                    style={{ color: "white", marginTop: 20, marginBottom: 5 }}
-                  >
-                    Study Time Left:{" "}
-                  </Text>
-                  <Text style={styles.timer}>{formatTime(timers[course])}</Text>
+                    <Text
+                      style={{ color: "white", marginTop: 20, marginBottom: 5 }}
+                    >
+                      Study Time Left:{" "}
+                    </Text>
+                    <Text style={styles.timer}>
+                      {formatTime(timers[course])}
+                    </Text>
                   </View>
                   <View>
                     <Text
@@ -200,57 +266,36 @@ const Userdashboard = () => {
                   borderRadius: 5,
                   marginTop: -25,
                 }}
-                onPress={() =>
-                  router.push({
-                    pathname: "ReadCourse",
-                    params: { course: course },
-                  })
-                }
+                onPress={handleReadNowPress}
               >
-                <Text style={{ color: "#C30000" }}>Read Now</Text>
+                <Text style={{ textAlign: "center" }}>Read Now</Text>
               </TouchableOpacity>
             </View>
           </>
         ) : (
-          <ActivityIndicator
-            animating={true}
-            size="large"
-            color="#C30000"
-            style={{ justifyContent: "center", alignItems: "center", flex: 1 }}
-          />
+          <ActivityIndicator size="large" color="#0000ff" />
         )}
 
-        <View>
-          <View>
-            <Text
-              style={{
-                fontSize: 15,
-                fontWeight: "bold",
-                marginTop: 20,
-                marginBottom: 5,
-                textTransform: "capitalize",
-              }}
+        <Modal
+          visible={modalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setModalVisible(false)}
             >
-              Latest test result
-            </Text>
+              <Text style={styles.modalCloseButtonText}>Close</Text>
+            </TouchableOpacity>
+            <Text>Modal Content</Text>
           </View>
-        </View>
+        </Modal>
       </ScrollView>
-
-      <Modal visible={modalVisible} transparent={true} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Upload Profile Picture</Text>
-            <Button title="Choose Image" onPress={pickImage} />
-            <Button title="Close" onPress={() => setModalVisible(false)} />
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
-
-export default Userdashboard;
 
 const styles = StyleSheet.create({
   container: {
@@ -310,7 +355,7 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
   },
   whiteBox: {
-    width: 250,
+    width: 300,
     height: 36,
     backgroundColor: "#fff",
     borderRadius: 10,
@@ -364,4 +409,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 25,
   },
-});
+  listItem: {
+    backgroundColor: "#F5F5F5",
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 5,
+    marginHorizontal: 5,
+  },
+}); 
+
+export default Userdashboard;
