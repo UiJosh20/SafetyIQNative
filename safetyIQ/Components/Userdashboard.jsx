@@ -271,6 +271,62 @@ const Userdashboard = () => {
                 <Text style={{ textAlign: "center" }}>Read Now</Text>
               </TouchableOpacity>
             </View>
+
+            <View>
+              <View style={styles.examContainer}>
+                <Text style={styles.TestText}>Latest Test result</Text>
+                <Text style={styles.seeMore}>See more</Text>
+              </View>
+
+              <View style={styles.scoreBoard}>
+                <Text style={styles.TestText}>{course}</Text>
+                <View style={styles.scoreContainer}>
+                  <View>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 10,
+                        alignItems: "center",
+                      }}
+                    >
+                      <View style={styles.correct}>
+                        <Text style={styles.correctText}>13</Text>
+                      </View>
+                      <Text style={{ fontSize: 16 }}>Correct</Text>
+                    </View>
+
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 10,
+                        alignItems: "center",
+                      }}
+                    >
+                      <View style={styles.wrong}>
+                        <Text style={styles.correctText}>7</Text>
+                      </View>
+                      <Text style={{ fontSize: 16 }}>Wrong</Text>
+                    </View>
+
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 10,
+                        alignItems: "center",
+                      }}
+                    >
+                      <View style={styles.attempt}>
+                        <Text style={styles.correctText}>3</Text>
+                      </View>
+                      <Text style={{ fontSize: 16 }}>Attempt</Text>
+                    </View>
+                  </View>
+                  <View>
+                    <Text style={styles.percentage}>70%</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
           </>
         ) : (
           <ActivityIndicator size="large" color="#0000ff" />
@@ -301,7 +357,7 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
     height: "100%",
-    backgroundColor: "#fff",
+    backgroundColor: "#f4f4f4",
     paddingHorizontal: 16,
   },
   header: {
@@ -415,6 +471,72 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginVertical: 5,
     marginHorizontal: 5,
+  },
+  TestText: {
+    fontWeight: "bold",
+    fontSize: 20,
+  },
+  seeMore: {
+    color: "blue",
+    fontWeight: "bold",
+  },
+
+  examContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
+    marginTop: 20,
+  },
+  scoreBoard: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 10,
+    paddingVertical: 25,
+    marginVertical: 10,
+    shadowColor: "rgba(0,0,0,0.6)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  correct: {
+    backgroundColor: "green",
+    padding: 3,
+    borderRadius: 5,
+    width: 40,
+    marginTop: 13,
+  },
+
+  correctText: {
+    color: "#fff",
+    fontSize: 17,
+    textAlign: "center",
+  },
+
+  wrong: {
+    backgroundColor: "#C30000",
+    padding: 3,
+    borderRadius: 5,
+    width: 40,
+    marginTop: 13,
+  },
+
+  attempt: {
+    backgroundColor: "blue",
+    padding: 3,
+    borderRadius: 5,
+    width: 40,
+    marginTop: 13,
+  },
+  scoreContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  percentage: {
+    fontWeight: "bold",
+    fontSize: 40,
+    color: "#53BD5E",
   },
 }); 
 
