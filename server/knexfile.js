@@ -28,6 +28,10 @@ module.exports = {
         rejectUnauthorized: false,
       },
     },
+    pool: {
+      min: 2, // Minimum number of connections
+      max: 10, // Maximum number of connections
+    },
     migrations: {
       tableName: "knex_migrations",
       directory: "./migrations",
