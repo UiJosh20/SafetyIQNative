@@ -50,7 +50,7 @@ const Dashboard = () => {
 
   const fetchAdminInfo = () => {
     axios
-      .get(`http://localhost:8000/admin/info/${id}`)
+      .get(`https://safetyiqnativebackend.onrender.com/admin/info/${id}`)
       .then((response) => {
         setAdminInfo(response.data);
         setLoading(false);
@@ -63,7 +63,7 @@ const Dashboard = () => {
 
   const fetchTotalStudents = () => {
     axios
-      .get(`http://localhost:8000/admin/${id}/students`)
+      .get(`https://safetyiqnativebackend.onrender.com/admin/${id}/students`)
       .then((response) => {
         setTotalStudents(response.data.totalStudents);
         setData(response.data.students);

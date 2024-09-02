@@ -21,14 +21,16 @@ const Resources = () => {
 
      const fetchResources = () => {
        axios
-         .get(`http://localhost:8000/admin/fetchResources`, {
-           params: { adminId: adminId },
-         })
+         .get(
+           `https://safetyiqnativebackend.onrender.com/admin/fetchResources`,
+           {
+             params: { adminId: adminId },
+           }
+         )
          .then((response) => {
            setReadResources(response.data);
-           
-           setIsLoading(false)
-           
+
+           setIsLoading(false);
          })
          .catch((error) => {
            console.error("Error fetching resources:", error);
@@ -45,15 +47,18 @@ const Resources = () => {
       };
 
      const handleDelete = () => {
-       axios.delete(`http://localhost:8000/admin/resources/${readResourcesID}`)
-       .then((response)=>{
+       axios
+         .delete(
+           `https://safetyiqnativebackend.onrender.com/admin/resources/${readResourcesID}`
+         )
+         .then((response) => {
            if (response.data.message === "Resource deleted successfully") {
              fetchResources();
              toast.success("Resources deleted successfully");
              setReadResourcesID("");
              toggleDeleteModal();
            }
-       })
+         });
       
      }
 

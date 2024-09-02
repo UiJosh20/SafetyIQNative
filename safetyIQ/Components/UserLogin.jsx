@@ -12,7 +12,7 @@ import {
   Alert,
 } from "react-native";
 import React, { useState } from "react";
-import { useRouter } from "expo-router";
+import { router, useRouter } from "expo-router";
 import * as Yup from "yup";
 import { Formik } from "formik";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,9 +28,9 @@ const UserLogin = () => {
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
 
-  const router = useRouter();
+
   const port = 101;
-  const backendUrl = `http://192.168.10.142:8000/login`;
+  const backendUrl = `https://safetyiqnativebackend.onrender.com/login`;
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSwitchOn, setIsSwitchOn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

@@ -21,9 +21,9 @@ const Resource = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const port = 101;
-  const books = `http://192.168.0.${port}:8000/courseFetch`;
-  const read = `http://192.168.0.${port}:8000/resources`;
+  const port = 142;
+  const books = `https://safetyiqnativebackend.onrender.com/courseFetch`;
+  const read = `https://safetyiqnativebackend.onrender.com/resources`;
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);

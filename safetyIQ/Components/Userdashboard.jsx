@@ -16,11 +16,11 @@ import axios from "axios";
 import { router } from "expo-router";
 
 const Userdashboard = () => {
-  const userUrl = `http://192.168.10.142:8000/dashboard`;
-  const profileUrl = `http://192.168.10.142:8000/profilePic`;
-  const books = `http://192.168.10.142:8000/readFetch`;
-  const currentTopicUrl = `http://192.168.10.142:8000/currentTopic`;
-  const checkExamUrl = `http://192.168.10.142:8000/checkExamCompletion`;
+  const userUrl = `https://safetyiqnativebackend.onrender.com/dashboard`;
+  const profileUrl = `https://safetyiqnativebackend.onrender.com/profilePic`;
+  const books = `https://safetyiqnativebackend.onrender.com/readFetch`;
+  const currentTopicUrl = `https://safetyiqnativebackend.onrender.com/currentTopic`;
+  const checkExamUrl = `https://safetyiqnativebackend.onrender.com/checkExamCompletion`;
 
   const [id, setId] = useState("");
   const [course, setCourse] = useState("");
@@ -67,7 +67,6 @@ const Userdashboard = () => {
         if (response.data && response.data.currentTopic) {
           setCourse(response.data.currentTopic);
           checkExamCompletion(response.data.currentTopic);
-          // Restart timer when course changes
           const initialTimers = { ...timers };
           initialTimers[response.data.currentTopic] = 12 * 60 * 60;
           setTimers(initialTimers);
@@ -159,14 +158,13 @@ const Userdashboard = () => {
     const now = new Date();
     const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
 
-    if (currentHours >= 16 && currentHours < 24) {
-      // Between 4 PM and midnight
+    if (currentHours >= 18 && currentHours < 24) {
+      // Between 6 PM and midnight
       setIsStudyTimerActive(true);
-    } else if (currentHours >= 0 && currentHours < 4) {
-      // Between midnight and 4 AM
+    } else if (currentHours >= 0 && currentHours < 14) {
+      // Between midnight and 2 AM
       setIsStudyTimerActive(false);
     } else {
-      // Between 4 AM and 4 PM
       setIsStudyTimerActive(false);
     }
   };
@@ -175,7 +173,7 @@ const Userdashboard = () => {
     const now = new Date();
     const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
 
-    if (currentHours < 16) {
+    if (currentHours < 18) {
       Alert.alert("Alert", "You can only start reading after 4 PM.");
     } else {
       router.push({
@@ -329,7 +327,7 @@ const Userdashboard = () => {
             </View>
           </>
         ) : (
-          <ActivityIndicator size="large" color="#0000ff" />
+          <ActivityIndicator size="large" color="#c30000" />
         )}
 
         <Modal

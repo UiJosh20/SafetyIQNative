@@ -34,7 +34,9 @@ export default function Academics() {
   const navigate = useNavigate();
   const fetchCourses = () => {
     axios
-      .get(`http://localhost:8000/admin/fetchCourse/${adminId}`)
+      .get(
+        `https://safetyiqnativebackend.onrender.com/admin/fetchCourse/${adminId}`
+      )
       .then((response) => {
         setItems(response.data);
         setIsLoading(false);

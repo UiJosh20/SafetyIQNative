@@ -25,7 +25,7 @@ const UserRegister = () => {
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
   const port = 101;
-  const backendUrl = `http://192.168.178.2:8000/signup`;
+  const backendUrl = `https://safetyiqnativebackend.onrender.com/signup`;
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
