@@ -34,6 +34,6 @@ routerAdmin.delete("/readDelete/:id", deleteRead);
 routerAdmin.delete("/resources/:resourceId", deleteResource);
 routerAdmin.get("/fetchRead/:id/:user_id", fetchRead);
 routerAdmin.get("/fetchResources", fetchReadResources);
-routerAdmin.psot("/examQuestion", saveExamQuestion);
+routerAdmin.post("/examQuestion", saveExamQuestion);
 
 module.exports = routerAdmin;

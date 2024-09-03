@@ -7,25 +7,26 @@
   const EMAIL_USER = process.env.EMAIL_USER;
   const EMAIL_PASSWORD = process.env.EMAIL_PASS;
 
-  const signup = (req, res) => {
-    const {
-      callUpNo,
-      firstName,
-      lastName,
-      middleName,
-      telephoneNo,
-      email,
-      password,
-      courseName,
-    } = req.body;
+const signup = (req, res) => {
+  const {
+    callUpNo,
+    firstName,
+    lastName,
+    middleName,
+    telephoneNo,
+    email,
+    password,
+    courseName,
+  } = req.body;
 
+  db.transaction((trx) => {
     // Check if the email already exists in the safetyiq_table
-    db("safetyiq_table")
+    return trx("safetyiq_table")
       .where({ email })
       .first()
       .then((existingUser) => {
         if (existingUser) {
-          return res.status(409).json({ message: "Email already used" });
+          throw new Error("Email already used");
         }
 
         // Hash the password
@@ -35,7 +36,7 @@
         if (!hashedPassword) return;
 
         // Find the available admin with the fewest users
-        return db("admin_table")
+        return trx("admin_table")
           .select("admin_table.admin_id")
           .leftJoin(
             "safetyiq_table",
@@ -53,7 +54,7 @@
             const admin_id = availableAdmin.admin_id;
 
             // Insert the new user into the safetyiq_table with the found admin_id
-            return db("safetyiq_table").insert({
+            return trx("safetyiq_table").insert({
               callUp_num: callUpNo,
               firstName,
               lastName,
@@ -73,7 +74,8 @@
         console.error(error);
         res.status(500).send("Internal Server Error");
       });
-  };
+  });
+};
 
   const paystackInit = (req, res) => {
     const { amount, email } = req.body;
