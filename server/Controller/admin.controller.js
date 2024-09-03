@@ -493,8 +493,37 @@ const deleteResource = (req, res) => {
     });
 };
 
-module.exports = { deleteResource };
+saveExamQuestion = (req, res) => {
+  const { question, options, correct_answer, course_id, admin_id } = req.body;
 
+  // Validate input data
+  if (!question || !options || !correct_answer || !course_id || !admin_id) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  // Insert the exam question into the database
+  db("exam_questions")
+    .insert({
+      question: question,
+      options: JSON.stringify(options), // Convert options to JSON string
+      correct_answer: correct_answer,
+      course_id: course_id,
+      admin_id: admin_id,
+    })
+    .returning("*")
+    .then((insertedRows) => {
+      res.status(201).json({
+        message: "Exam question saved successfully",
+        data: insertedRows[0], // Return the inserted record
+      });
+    })
+    .catch((error) => {
+      console.error("Error saving exam question:", error);
+      res
+        .status(500)
+        .json({ error: "An error occurred while saving the exam question" });
+    });
+};
 
 
 module.exports = {
@@ -511,5 +540,6 @@ module.exports = {
   deleteRead,
   uploadRead,
   fetchReadResources,
-  deleteResource
+  deleteResource,
+  saveExamQuestion,
 };
