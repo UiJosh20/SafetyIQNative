@@ -16,181 +16,181 @@ import axios from "axios";
 import { router } from "expo-router";
 
 const Userdashboard = () => {
-  const userUrl = `https://safetyiqnativebackend.onrender.com/dashboard`;
-  const profileUrl = `https://safetyiqnativebackend.onrender.com/profilePic`;
-  const books = `https://safetyiqnativebackend.onrender.com/readFetch`;
-  const currentTopicUrl = `https://safetyiqnativebackend.onrender.com/currentTopic`;
-  const checkExamUrl = `https://safetyiqnativebackend.onrender.com/checkExamCompletion`;
+  const id = AsyncStorage.getItem("userId") 
+  // const profileUrl = `https://safetyiqnativebackend.onrender.com/profilePic`;
+  // const books = `https://safetyiqnativebackend.onrender.com/readFetch`;
+  // const currentTopicUrl = `https://safetyiqnativebackend.onrender.com/currentTopic`;
+  // const checkExamUrl = `https://safetyiqnativebackend.onrender.com/checkExamCompletion`;
 
-  const [id, setId] = useState("");
-  const [course, setCourse] = useState("");
-  const [userData, setUserData] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [items, setItems] = useState([]);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [timers, setTimers] = useState({});
-  const [examTimers, setExamTimers] = useState({});
-  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-  const [isStudyTimerActive, setIsStudyTimerActive] = useState(false);
+  // const [id, setId] = useState("");
+  // const [course, setCourse] = useState("");
+  // const [userData, setUserData] = useState(null);
+  // const [refreshing, setRefreshing] = useState(false);
+  // const [modalVisible, setModalVisible] = useState(false);
+  // const [items, setItems] = useState([]);
+  // const [selectedImage, setSelectedImage] = useState(null);
+  // const [timers, setTimers] = useState({});
+  // const [examTimers, setExamTimers] = useState({});
+  // const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  // const [isStudyTimerActive, setIsStudyTimerActive] = useState(false);
 
-  useEffect(() => {
-    fetchUserId();
-    fetchCurrentTopic();
-    fetchData();
-    fetchCourses();
+  // useEffect(() => {
+  //   fetchUserId();
+  //   fetchCurrentTopic();
+  //   fetchData();
+  //   fetchCourses();
 
-    const intervalId = setInterval(() => {
-      updateTimers();
-      checkTimeAndUpdateState();
-    }, 1000);
+  //   const intervalId = setInterval(() => {
+  //     updateTimers();
+  //     checkTimeAndUpdateState();
+  //   }, 1000);
 
-    return () => clearInterval(intervalId);
-  }, [id, course]); // Depend on `course` to restart timer on course change
+  //   return () => clearInterval(intervalId);
+  // }, [id, course]); 
 
-  const fetchUserId = () => {
-    AsyncStorage.getItem("userId")
-      .then((userId) => {
-        if (userId) {
-          setId(userId);
-        }
-      })
-      .catch((error) => {
-        console.log("Error fetching user ID: ", error);
-      });
-  };
+  // const fetchUserId = () => {
+  //   AsyncStorage.getItem("userId")
+  //     .then((userId) => {
+  //       if (userId) {
+  //         setId(userId);
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.log("Error fetching user ID: ", error);
+  //     });
+  // };
 
-  const fetchCurrentTopic = () => {
-    axios
-      .get(currentTopicUrl, { params: { userId: id } })
-      .then((response) => {
-        if (response.data && response.data.currentTopic) {
-          setCourse(response.data.currentTopic);
-          checkExamCompletion(response.data.currentTopic);
-          const initialTimers = { ...timers };
-          initialTimers[response.data.currentTopic] = 12 * 60 * 60;
-          setTimers(initialTimers);
-          setIsStudyTimerActive(true);
-        }
-      })
-      .catch((error) => {
-        console.log("Error fetching current topic: ", error);
-      });
-  };
+  // const fetchCurrentTopic = () => {
+  //   axios
+  //     .get(currentTopicUrl, { params: { userId: id } })
+  //     .then((response) => {
+  //       if (response.data && response.data.currentTopic) {
+  //         setCourse(response.data.currentTopic);
+  //         checkExamCompletion(response.data.currentTopic);
+  //         const initialTimers = { ...timers };
+  //         initialTimers[response.data.currentTopic] = 12 * 60 * 60;
+  //         setTimers(initialTimers);
+  //         setIsStudyTimerActive(true);
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.log("Error fetching current topic: ", error);
+  //     });
+  // };
 
-  const fetchData = () => {
-    axios
-      .post(userUrl, { id: id })
-      .then((response) => {
-        setUserData(response.data.user);
-        setRefreshing(false);
-      })
-      .catch((error) => {
-        console.log(error);
-        setRefreshing(false);
-      });
-  };
+  // const fetchData = () => {
+  //   axios
+  //     .post(userUrl, { id: id })
+  //     .then((response) => {
+  //       setUserData(response.data.user);
+  //       setRefreshing(false);
+  //     })
+  //     .catch((error) => {
+  //       console.log(error);
+  //       setRefreshing(false);
+  //     });
+  // };
 
-  const fetchCourses = () => {
-    axios
-      .get(books)
-      .then((response) => {
-        setItems(response.data);
-        const initialTimers = response.data.reduce((acc, course) => {
-          acc[course.name] = 12 * 60 * 60;
-          return acc;
-        }, {});
-        setTimers(initialTimers);
-        const initialExamTimers = response.data.reduce((acc, course) => {
-          acc[course.name] = 3 * 60 * 60;
-          return acc;
-        }, {});
-        setExamTimers(initialExamTimers);
-      })
-      .catch((error) => {
-        console.log("Error fetching courses:", error);
-      });
-  };
+  // const fetchCourses = () => {
+  //   axios
+  //     .get(books)
+  //     .then((response) => {
+  //       setItems(response.data);
+  //       const initialTimers = response.data.reduce((acc, course) => {
+  //         acc[course.name] = 12 * 60 * 60;
+  //         return acc;
+  //       }, {});
+  //       setTimers(initialTimers);
+  //       const initialExamTimers = response.data.reduce((acc, course) => {
+  //         acc[course.name] = 3 * 60 * 60;
+  //         return acc;
+  //       }, {});
+  //       setExamTimers(initialExamTimers);
+  //     })
+  //     .catch((error) => {
+  //       console.log("Error fetching courses:", error);
+  //     });
+  // };
 
-  const updateTimers = () => {
-    setTimers((prevTimers) => {
-      const updatedTimers = { ...prevTimers };
-      Object.keys(updatedTimers).forEach((key) => {
-        if (updatedTimers[key] > 0 && isStudyTimerActive) {
-          updatedTimers[key] -= 1;
-        }
-      });
-      return updatedTimers;
-    });
-  };
+  // const updateTimers = () => {
+  //   setTimers((prevTimers) => {
+  //     const updatedTimers = { ...prevTimers };
+  //     Object.keys(updatedTimers).forEach((key) => {
+  //       if (updatedTimers[key] > 0 && isStudyTimerActive) {
+  //         updatedTimers[key] -= 1;
+  //       }
+  //     });
+  //     return updatedTimers;
+  //   });
+  // };
 
-  const formatTime = (seconds) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hrs.toString().padStart(2, "0")}:${mins
-      .toString()
-      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
+  // const formatTime = (seconds) => {
+  //   const hrs = Math.floor(seconds / 3600);
+  //   const mins = Math.floor((seconds % 3600) / 60);
+  //   const secs = seconds % 60;
+  //   return `${hrs.toString().padStart(2, "0")}:${mins
+  //     .toString()
+  //     .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  // };
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchData();
-    checkTimeAndUpdateState();
-  }, [fetchData]);
+  // const onRefresh = useCallback(() => {
+  //   setRefreshing(true);
+  //   fetchData();
+  //   checkTimeAndUpdateState();
+  // }, [fetchData]);
 
-  const checkExamCompletion = (currentCourse) => {
-    axios
-      .get(checkExamUrl, { params: { userId: id, course: currentCourse } })
-      .then((response) => {
-        if (response.data && response.data.completed) {
-          setIsButtonDisabled(false);
-        } else {
-          setIsButtonDisabled(true);
-        }
-      })
-      .catch((error) => {
-        console.log("Error checking exam completion: ", error);
-      });
-  };
+  // const checkExamCompletion = (currentCourse) => {
+  //   axios
+  //     .get(checkExamUrl, { params: { userId: id, course: currentCourse } })
+  //     .then((response) => {
+  //       if (response.data && response.data.completed) {
+  //         setIsButtonDisabled(false);
+  //       } else {
+  //         setIsButtonDisabled(true);
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.log("Error checking exam completion: ", error);
+  //     });
+  // };
 
-  const checkTimeAndUpdateState = () => {
-    const now = new Date();
-    const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
+  // const checkTimeAndUpdateState = () => {
+  //   const now = new Date();
+  //   const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
 
-    if (currentHours >= 18 && currentHours < 24) {
-      // Between 6 PM and midnight
-      setIsStudyTimerActive(true);
-    } else if (currentHours >= 0 && currentHours < 14) {
-      // Between midnight and 2 AM
-      setIsStudyTimerActive(false);
-    } else {
-      setIsStudyTimerActive(false);
-    }
-  };
+  //   if (currentHours >= 18 && currentHours < 24) {
+  //     // Between 6 PM and midnight
+  //     setIsStudyTimerActive(true);
+  //   } else if (currentHours >= 0 && currentHours < 14) {
+  //     // Between midnight and 2 AM
+  //     setIsStudyTimerActive(false);
+  //   } else {
+  //     setIsStudyTimerActive(false);
+  //   }
+  // };
 
-  const handleReadNowPress = () => {
-    const now = new Date();
-    const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
+  // const handleReadNowPress = () => {
+  //   const now = new Date();
+  //   const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
 
-    if (currentHours < 18) {
-      Alert.alert("Alert", "You can only start reading after 4 PM.");
-    } else {
-      router.push({
-        pathname: "ReadCourse",
-        params: { course: course },
-      });
-    }
-  };
+  //   if (currentHours < 18) {
+  //     Alert.alert("Alert", "You can only start reading after 4 PM.");
+  //   } else {
+  //     router.push({
+  //       pathname: "ReadCourse",
+  //       params: { course: course },
+  //     });
+  //   }
+  // };
 
   return (
     <View style={styles.container}>
       <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        // refreshControl={
+        //   <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        // }
       >
-        {userData ? (
+        {/* {userData ? (
           <>
             <View style={styles.header}>
               <TouchableOpacity
@@ -345,7 +345,7 @@ const Userdashboard = () => {
             </TouchableOpacity>
             <Text>Modal Content</Text>
           </View>
-        </Modal>
+        </Modal> */}
       </ScrollView>
     </View>
   );

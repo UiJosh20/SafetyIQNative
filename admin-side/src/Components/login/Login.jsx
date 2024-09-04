@@ -8,6 +8,7 @@ const Login = () => {
   const [adminId, setAdminId] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  let names = []
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
@@ -15,14 +16,21 @@ const Login = () => {
     setLoading(true);
 
     axios
-      .post("https://safetyiqnativebackend.onrender.com/admin/login", {
+      .post("http://localhost:8000/admin/login", {
         adminId,
         password,
       })
       .then((response) => {
         setLoading(false);
         if (response.data) {
-          localStorage.setItem("token", response.data.adminId);
+          let first_name = response.data.admin.first_name;
+          let last_name = response.data.admin.last_name;
+          let adminObj = {first_name, last_name}
+          names.push(adminObj)
+          
+
+          localStorage.setItem("adminInfo", JSON.stringify(names))
+          localStorage.setItem("id", JSON.stringify(response.data.admin.admin_id));
           toast.success("Login successful", {
             onClose: () => navigate("/admin/dashboard"),
           });
@@ -48,7 +56,7 @@ const Login = () => {
           onSubmit={handleSubmit}
         >
           <input
-            type="number"
+            type="text"
             placeholder="Admin ID"
             className=" w-full my-5 border-2 border-gray-300 outline-red-700 p-5"
             value={adminId}

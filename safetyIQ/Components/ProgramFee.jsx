@@ -35,7 +35,7 @@ const ProgramFee = () => {
   const [isLoading, setIsLoading] = useState(false);
   const port = 101;
   const payInit = `https://safetyiqnativebackend.onrender.com/paystackinit`;
-  const verifyPay = `https://safetyiqnativebackend.onrender.com/paystackverify`;
+  const verifyPay = `http://192.168.0.103:8000/paystackverify`;
   useEffect(() => {
     AsyncStorage.multiGet(["firstName", "courseName", "coursePrice", "email"])
       .then(([firstName, courseName, coursePrice, email]) => {

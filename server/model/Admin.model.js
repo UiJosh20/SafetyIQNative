@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const Schema = mongoose.Schema;
+require("dotenv").config()
+const URI = process.env.DATABASE_URL
 
 mongoose
   .connect(URI)
@@ -12,38 +15,69 @@ mongoose
   });
 
 
-const adminSchema = new mongoose.Schema({
-  firstName: {
-    type: String,
-    required: true,
-  },
-  lastName: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    match: [/\S+@\S+\.\S+/, "Invalid email address"],
-  },
-  password: {
-    type: String,
-    required: true,
-  },
+const adminSchema = new Schema({
+  admin_id: { type: String, unique: true },
+  first_name: String,
+  last_name: String,
+  email: { type: String, unique: true },
+  password: String,
 });
 
-adminSchema.pre("save", function (next) {
-  if (!this.isModified("password")) return next();
-
-  bcrypt.hash(this.password, 10, (err, hash) => {
-    if (err) return next(err);
-
-    this.password = hash;
-    next();
-  });
+// Define Resource schema
+const resourceSchema = new Schema({
+  title: String,
+  description: String,
+  time_taken: String,
+  image: String,
+  note: String,
+  course_id: Schema.Types.ObjectId,
+  admin_id: Schema.Types.ObjectId,
 });
+
+// Define Read schema
+const readSchema = new Schema({
+  read_course: String,
+  read_title: String,
+  read_description: String,
+  read_duration: String,
+  read_image: String,
+  read_note: String,
+  admin_id: Schema.Types.ObjectId,
+  user_id: Schema.Types.ObjectId,
+  readcourse_id: Schema.Types.ObjectId,
+});
+
+// Define Course schema
+const courseSchema = new Schema({
+  name: String,
+  admin_id: Schema.Types.ObjectId,
+});
+
+// Define Exam Question schema
+const examQuestionSchema = new Schema({
+  question: String,
+  options: [String],
+  correct_answer: String,
+  course_id: Schema.Types.ObjectId,
+  admin_id: Schema.Types.ObjectId,
+});
+
+
 
 const Admin = mongoose.model("Admin", adminSchema);
+const Resource = mongoose.model("Resource", resourceSchema);
+const Read = mongoose.model("Read", readSchema);
+const Course = mongoose.model("Course", courseSchema);
+const ExamQuestion = mongoose.model("ExamQuestion", examQuestionSchema);
 
-module.exports = Admin;
+
+
+
+
+module.exports = {
+  Admin,
+  Resource,
+  Read,
+  Course,
+  ExamQuestion,
+};

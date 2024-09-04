@@ -39,12 +39,20 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true, 
+    unique: true,
     match: [/\S+@\S+\.\S+/, "Invalid email address"],
   },
   password: {
     type: String,
     required: true,
+  },
+  courseName: {
+    type: String,
+    required: true,
+  },
+  frpNum: {
+    type: String,
+    default: null, // Setting frpNum to null by default
   },
 });
 

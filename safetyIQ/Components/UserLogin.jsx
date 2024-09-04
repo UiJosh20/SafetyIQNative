@@ -30,7 +30,7 @@ const UserLogin = () => {
 
 
   const port = 101;
-  const backendUrl = `https://safetyiqnativebackend.onrender.com/login`;
+  const backendUrl = "http://192.168.0.103:8000/login";
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSwitchOn, setIsSwitchOn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,17 +52,25 @@ const UserLogin = () => {
       axios
         .post(backendUrl, values)
         .then((response) => {
-          if (response.status === 200) {
+          if (response.data.message === "Login successful") {
+            const firstName = response.data.user.firstName;
+            const lastName = response.data.user.lastName;
+            let userInfo = {firstName, lastName}
             const userId = response.data.user.user_id;
+            const token = response.data.token;
+            AsyncStorage.setItem("userInfo", JSON.stringify(userInfo));
+            AsyncStorage.setItem("token", token);
             AsyncStorage.setItem("userId", userId.toString())
               .then(() => {
-                setIsLoading(false);
-                router.push("dashboard");
+                setIsLoading(false)
+              router.replace("dashboard")
               })
               .catch((error) => {
                 console.log("Failed to store user ID", error);
                 setIsLoading(false);
               });
+           
+            
           } else {
             setIsLoading(false);
             router.push("index");

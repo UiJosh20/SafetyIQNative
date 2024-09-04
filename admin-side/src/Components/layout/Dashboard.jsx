@@ -3,19 +3,43 @@ import React, { useState, useEffect } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 
 const Dashboard = () => {
-  const id = JSON.parse(localStorage.getItem("token"));
+  const id = JSON.parse(localStorage.getItem("id"));
+  const adminNames = JSON.parse(localStorage.getItem("adminInfo"))
   const [data, setData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [adminInfo, setAdminInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [totalStudents, setTotalStudents] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredItems, setFilteredItems] = useState([]);
-  const itemsPerPage = 3;
+  const [loading, setLoading] = useState(true); 
+    const [totalStudents, setTotalStudents] = useState(0);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filteredItems, setFilteredItems] = useState([]);
+    const itemsPerPage = 3;
+  
+  
+const fetchTotalStudents = () => {
+    axios
+      .get(`http://localhost:8000/admin/students`)
+      .then((response) => {
+        setTotalStudents(response.data.totalStudents);
+        setData(response.data.students);
+        
+        if (response.data.length > 0) {
+          const userEmail = response.data.map(
+            (student) => student.email
+          );
+          localStorage.setItem("userEmail", JSON.stringify(userEmail));
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching total students:", error);
+      });
+  };
+
+
 
   useEffect(() => {
-    fetchAdminInfo();
+    // fetchAdminInfo();
     fetchTotalStudents();
+    setLoading(false)
   }, [id]);
 
   useEffect(() => {
@@ -48,36 +72,36 @@ const Dashboard = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
-  const fetchAdminInfo = () => {
-    axios
-      .get(`https://safetyiqnativebackend.onrender.com/admin/info/${id}`)
-      .then((response) => {
-        setAdminInfo(response.data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching admin info:", error);
-        setLoading(false);
-      });
-  };
+  // const fetchAdminInfo = () => {
+  //   axios
+  //     .get(`https://safetyiqnativebackend.onrender.com/admin/info/${id}`)
+  //     .then((response) => {
+  //       setAdminInfo(response.data);
+  //       setLoading(false);
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error fetching admin info:", error);
+  //       setLoading(false);
+  //     });
+  // };
 
-  const fetchTotalStudents = () => {
-    axios
-      .get(`https://safetyiqnativebackend.onrender.com/admin/${id}/students`)
-      .then((response) => {
-        setTotalStudents(response.data.totalStudents);
-        setData(response.data.students);
-        if (response.data.students.length > 0) {
-          const userIds = response.data.students.map(
-            (student) => student.user_id
-          );
-          localStorage.setItem("userIds", JSON.stringify(userIds));
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching total students:", error);
-      });
-  };
+  // const fetchTotalStudents = () => {
+  //   axios
+  //     .get(`https://safetyiqnativebackend.onrender.com/admin/${id}/students`)
+  //     .then((response) => {
+  //       setTotalStudents(response.data.totalStudents);
+  //       setData(response.data.students);
+  //       if (response.data.students.length > 0) {
+  //         const userIds = response.data.students.map(
+  //           (student) => student.user_id
+  //         );
+  //         localStorage.setItem("userIds", JSON.stringify(userIds));
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error fetching total students:", error);
+  //     });
+  // };
 
   if (loading) {
     return (
@@ -92,9 +116,7 @@ const Dashboard = () => {
       <section className="px-10 py-10">
         <div className="p-5 bg-red-100 rounded-lg shadow-lg w-80 mt-5 summary">
           <h4 className="big text-gray-700">
-            {adminInfo
-              ? `${adminInfo.first_name} ${adminInfo.last_name}`
-              : "Admin"}
+            {adminNames[0].first_name} {adminNames[0].last_name}
           </h4>
           <p>Admin ID: {id}</p>
         </div>
@@ -130,14 +152,11 @@ const Dashboard = () => {
               </thead>
               <tbody>
                 {currentItems.map((item) => (
-                  <tr key={item.user_id} className="flex gap-96">
-                    <td className="py-2 px-4 border-b">
+                  <tr key={item._id} className="flex gap-96">
+                    <td className="py-2 px-4">
                       {item.firstName} {item.lastName}
-                      <p>{item.user_id}</p>
                     </td>
-                    <td>
-                      {item.course_name == null ? "N/A" : item.course_name}
-                    </td>
+                    <td>{item.courseName == null ? "N/A" : item.courseName}</td>
                     {/* <td className="py-2 px-4 border-b">{item.LastName}</td> */}
                   </tr>
                 ))}

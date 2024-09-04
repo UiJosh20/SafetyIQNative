@@ -1,5 +1,6 @@
   const User = require("../model/user.model");
   const bcrypt = require("bcryptjs");
+  const jwt = require("jsonwebtoken")
   const nodemailer = require("nodemailer");
   require("dotenv").config();
   const https = require("https");
@@ -18,6 +19,9 @@ const signup = (req, res) => {
     password,
     courseName,
   } = req.body;
+
+  
+  
 
   // Check if the email already exists
   User.findOne({ email })
@@ -124,6 +128,9 @@ const signup = (req, res) => {
   const paystackVerify = (req, res) => {
     const { reference } = req.query;
 
+    console.log(req.query);
+    
+
     const options = {
       hostname: "api.paystack.co",
       port: 443,
@@ -167,21 +174,22 @@ const signup = (req, res) => {
           const randomNumber = generateRandomNumber();
           const email = parsedData.data.customer.email;
 
-          return db("safetyiq_table")
-            .where({ email })
-            .update({ frpnum: randomNumber })
-            .then((results) => {
-              if (results > 0) {
-                return sendUniqueNumberToEmail(email, randomNumber).then(() => {
-                  res.send({
-                    message: "Payment successful",
-                    frpnum: randomNumber,
-                  });
+          return User.findOneAndUpdate(
+            { email: email },
+            { frpnum: randomNumber },
+            { new: true }
+          ).then((updatedDocument) => {
+            if (updatedDocument) {
+              return sendUniqueNumberToEmail(email, randomNumber).then(() => {
+                res.send({
+                  message: "Payment successful",
+                  frpnum: randomNumber,
                 });
-              } else {
-                res.status(404).send("User not found");
-              }
-            });
+              });
+            } else {
+              res.status(404).send("User not found");
+            }
+          });
         }
       })
       .catch((err) => {
@@ -191,21 +199,40 @@ const signup = (req, res) => {
   };
 
 const login = (req, res) => {
-  const { email, password } = req.body;
+  const { identifier, password } = req.body;
 
-  User.findOne({ email })
+  // Find the user by callupNum or frpNum (identifier)
+  User.findOne({
+    $or: [{ callupNum: identifier }, { frpNum: identifier }],
+  })
     .then((user) => {
       if (!user) {
         return res.status(404).send("User not found");
       }
 
       // Compare the provided password with the stored hashed password
-      return bcrypt.compare(password, user.password).then((isMatch) => {
+      bcrypt.compare(password, user.password).then((isMatch) => {
         if (!isMatch) {
-          return res.status(400).send("Incorrect password");
+          return res.status(401).send("Incorrect password");
         }
 
-        res.status(200).send("Login successful");
+        // Generate a JWT
+        const token = jwt.sign(
+          { id: user._id }, 
+          process.env.JWT_SECRET, 
+          { expiresIn: "1h" } 
+        );
+
+        // On successful login, return the token and user data
+        res.status(200).send({
+          message: "Login successful",
+          token, 
+          user: {
+            user_id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+          },
+        });
       });
     })
     .catch((error) => {
@@ -214,28 +241,29 @@ const login = (req, res) => {
     });
 };
 
-  const dashboard = (req, res) => {
-    const { id } = req.body;
 
-    if (!id) {
-      return res.status(400).send("User ID is required.");
-    }
+  // const dashboard = (req, res) => {
+  //   const { id } = req.body;
 
-    db("safetyiq_table")
-      .where({ user_id: id })
-      .first()
-      .then((user) => {
-        if (!user) {
-          return res.status(404).send("User not found.");
-        }
+  //   if (!id) {
+  //     return res.status(400).send("User ID is required.");
+  //   }
 
-        res.send({ user });
-      })
-      .catch((error) => {
-        console.error("Error fetching user data:", error);
-        res.status(500).send("An error occurred while fetching user data.");
-      });
-  };
+  //   db("safetyiq_table")
+  //     .where({ user_id: id })
+  //     .first()
+  //     .then((user) => {
+  //       if (!user) {
+  //         return res.status(404).send("User not found.");
+  //       }
+
+  //       res.send({ user });
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error fetching user data:", error);
+  //       res.status(500).send("An error occurred while fetching user data.");
+  //     });
+  // };
 
   const fetchResources = (req, res) => {
     const { courseId } = req.query;
@@ -325,7 +353,7 @@ const login = (req, res) => {
     paystackInit,
     paystackVerify,
     login,
-    dashboard,
+    // dashboard,
     fetchResources,
     courseFetch,
     readCourses,

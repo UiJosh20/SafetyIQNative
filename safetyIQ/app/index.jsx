@@ -11,24 +11,26 @@ export default function index() {
    useEffect(() => {
      setIsSplash(true);
      setTimeout(() => {
-       checkUserLoggedIn();
+         setIsSplash(false);
+      //  checkUserLoggedIn();
+
      }, 3700);
    }, []);
 
-   const checkUserLoggedIn = () => {
-     AsyncStorage.getItem("userId")
-       .then((user) => {
-         if (user) {
-           router.replace("dashboard");
-         } else {
-           setIsSplash(false);
-         }
-       })
-       .catch((error) => {
-         console.error("Failed to check user login status:", error);
-         setIsSplash(false);
-       });
-   };
+  //  const checkUserLoggedIn = () => {
+  //    AsyncStorage.getItem("userId")
+  //      .then((user) => {
+  //        if (user) {
+  //          router.replace("dashboard");
+  //        } else {
+  //          setIsSplash(false);
+  //        }
+  //      })
+  //      .catch((error) => {
+  //        console.error("Failed to check user login status:", error);
+  //        setIsSplash(false);
+  //      });
+  //  };
   return (
     <View style={styles.container}>
       {isSplash?(

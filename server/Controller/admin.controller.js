@@ -1,20 +1,38 @@
-const db = require("../model/user.model");
+const db = require("../model/Admin.model");
 const bcrypt = require("bcryptjs");
+const User = require("../model/user.model");
+
 const nodemailer = require("nodemailer");
 const cloudinary = require("../CloudinaryConfig");
 const multer = require("multer");
 const path = require("path");
 require("dotenv").config();
 
+const {
+  Admin,
+  Resource,
+  Read,
+  Course,
+  ExamQuestion,
+} = require("../model/Admin.model");
+const Counter = require("../model/Counter.model");
+
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASSWORD = process.env.EMAIL_PASS;
+
+// Function to get the next sequence value for admin ID
+const getNextAdminId = () => {
+  return Counter.findOneAndUpdate(
+    { model: "Admin" },
+    { $inc: { sequence_value: 1 } },
+    { new: true, upsert: true }
+  ).then((counter) => `admin${counter.sequence_value}`);
+};
 
 const signupAdmin = (req, res) => {
   const { first_name, last_name, email, password } = req.body;
 
-  db("admin_table")
-    .where({ email })
-    .first()
+  Admin.findOne({ email })
     .then((existingAdmin) => {
       if (existingAdmin) {
         return res.status(409).json({ message: "Email already used" });
@@ -25,23 +43,19 @@ const signupAdmin = (req, res) => {
     .then((hashedPassword) => {
       if (!hashedPassword) return;
 
-      console.log("Hashed Password:", hashedPassword);
-
-      return db("admin_table")
-        .insert({
+      return getNextAdminId().then((adminId) => {
+        return Admin.create({
+          admin_id: adminId,
           first_name,
           last_name,
           email,
           password: hashedPassword,
-        })
-        .returning("admin_id");
+        });
+      });
     })
-    .then((insertResult) => {
-      if (!insertResult || insertResult.length === 0) return;
-
-      const adminId = insertResult[0].admin_id;
-      console.log("Admin ID:", adminId);
-      sendAdminIdToEmail(email, adminId);
+    .then((newAdmin) => {
+      const adminId = newAdmin.admin_id;
+      sendAdminIdToEmail(req.body.email, adminId);
       res.status(201).send("Admin registered successfully");
     })
     .catch((error) => {
@@ -80,9 +94,7 @@ const sendAdminIdToEmail = (email, adminId) => {
 const loginAdmin = (req, res) => {
   const { adminId, password } = req.body;
 
-  db("admin_table")
-    .where({ admin_id: adminId })
-    .first()
+  Admin.findOne({ admin_id: adminId })
     .then((admin) => {
       if (!admin) {
         return res
@@ -97,9 +109,7 @@ const loginAdmin = (req, res) => {
             .json({ message: "Invalid Admin ID or Password" });
         }
 
-        return res
-          .status(200)
-          .json({ message: "Login successful", adminId: admin.admin_id });
+        return res.status(200).json({ message: "Login successful", admin });
       });
     })
     .catch((error) => {
@@ -108,47 +118,12 @@ const loginAdmin = (req, res) => {
     });
 };
 
-const getAdminInfo = (req, res) => {
-  const { id } = Number(req.params.id);
-
-  console.log(req.params.id);
-
-  db("admin_table")
-    .where({ admin_id: id })
-    .first()
-    .then((admin) => {
-      if (!admin) {
-        return res.status(404).json({ message: "Admin not found" });
-      }
-      const { first_name, last_name, admin_id } = admin;
-      res.status(200).json({ first_name, last_name, admin_id });
-    })
-    .catch((error) => {
-      console.error(error);
-      res.status(500).send("Internal Server Error");
-    });
-};
-
-const getStudentsByAdmin = (req, res) => {
-  const { id } = req.params;
-
-  // Fetch students assigned to the admin
-
-  db("safetyiq_table")
-    .where({ admin_id: id })
-    .select("user_id", "firstName", "lastName", "email", "tel", "course_name")
+const getAllStudents = (req, res) => {
+  User.find({})
+    .select("user_id firstName lastName email tel course_name")
     .then((students) => {
-      // Fetch total number of students
-
-      db("safetyiq_table")
-        .count("user_id as totalStudents")
-        .first()
-        .then((countResult) => {
-          res.status(200).json({
-            students,
-            totalStudents: countResult.totalStudents,
-          });
-        });
+      const totalStudents = students.length;
+      res.status(200).json({ totalStudents, students });
     })
     .catch((error) => {
       console.error(error);
@@ -156,7 +131,9 @@ const getStudentsByAdmin = (req, res) => {
     });
 };
 
-const storage = multer.diskStorage({
+
+
+const storage = multer.dis  {/* <td className="py-2 px-4 border-b">{item.LastName}</td> */}kStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
   },
@@ -241,9 +218,6 @@ const uploadResource = (req, res) => {
   });
 };
 
-
-
-
 const libStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
@@ -274,7 +248,6 @@ const libUpload = multer({
   },
 }).single("image");
 
-
 const uploadRead = (req, res) => {
   libUpload(req, res, (err) => {
     if (err instanceof multer.MulterError) {
@@ -283,10 +256,16 @@ const uploadRead = (req, res) => {
       return res.status(400).json({ error: err });
     }
 
-    const { title, description, time_taken, note, course_name, admin_id, user_id } =
-      req.body;
+    const {
+      title,
+      description,
+      time_taken,
+      note,
+      course_name,
+      admin_id,
+      user_id,
+    } = req.body;
 
-      
     const image = req.file ? req.file.path : null;
 
     db("readcourse_table")
@@ -314,7 +293,6 @@ const uploadRead = (req, res) => {
                 admin_id,
                 user_id,
                 readcourse_id: course_id,
-
               });
             });
         } else {
@@ -343,24 +321,21 @@ const uploadRead = (req, res) => {
   });
 };
 
-
-
 const courseAdd = (req, res) => {
-const { name, admin_id } = req.body;
-// const userId = Array.isArray(user_id) ? user_id[0] : user_id;
+  const { name, admin_id } = req.body;
+  // const userId = Array.isArray(user_id) ? user_id[0] : user_id;
 
-db("courses_table")
-  .insert({ name, admin_id })
-  .then((insertResult) => {
-    res
-      .status(201)
-      .json({ message: "Course added successfully", id: insertResult[0] });
-  })
-  .catch((error) => {
-    console.error("Error adding course:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  });
-
+  db("courses_table")
+    .insert({ name, admin_id })
+    .then((insertResult) => {
+      res
+        .status(201)
+        .json({ message: "Course added successfully", id: insertResult[0] });
+    })
+    .catch((error) => {
+      console.error("Error adding course:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    });
 };
 
 const readCourseAdd = (req, res) => {
@@ -395,8 +370,6 @@ const deleteCourse = (req, res) => {
       res.status(500).json({ message: "Internal Server Error" });
     });
 };
-
-
 
 const fetchCourse = (req, res) => {
   const id = Number(req.params.id);
@@ -450,7 +423,6 @@ const deleteRead = (req, res) => {
     });
 };
 
-
 const fetchReadResources = (req, res) => {
   const adminId = Number(req.query.adminId);
 
@@ -476,7 +448,6 @@ const fetchReadResources = (req, res) => {
 
 const deleteResource = (req, res) => {
   const resourceId = req.params.resourceId;
-  
 
   db("read_table")
     .where({ read_id: resourceId })
@@ -525,12 +496,11 @@ saveExamQuestion = (req, res) => {
     });
 };
 
-
 module.exports = {
   signupAdmin,
   loginAdmin,
-  getAdminInfo,
-  getStudentsByAdmin,
+  // getAdminInfo,
+getAllStudents,
   uploadResource,
   courseAdd,
   deleteCourse,

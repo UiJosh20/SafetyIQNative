@@ -3,8 +3,7 @@ const routerAdmin = express.Router();
 const {
   signupAdmin,
   loginAdmin,
-  getAdminInfo,
-  getStudentsByAdmin,
+  // getAdminInfo,
   uploadResource,
   courseAdd,
   deleteCourse,
@@ -16,14 +15,15 @@ const {
   fetchReadResources,
   deleteResource,
   saveExamQuestion,
+  getAllStudents,
 } = require("../Controller/admin.controller");
 
 const parser = require("../MulterConfig");
 
 routerAdmin.post("/signup", signupAdmin);
 routerAdmin.post("/login", loginAdmin);
-routerAdmin.get("/info/:id", getAdminInfo);
-routerAdmin.get("/:id/students", getStudentsByAdmin);
+// routerAdmin.get("/info/:id", getAdminInfo);
+routerAdmin.get("/students", getAllStudents);
 routerAdmin.post("/upload", uploadResource);
 routerAdmin.post("/uploadRead", uploadRead);
 routerAdmin.post("/course", courseAdd);
