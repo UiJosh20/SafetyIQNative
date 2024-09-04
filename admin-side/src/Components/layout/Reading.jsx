@@ -33,33 +33,33 @@ export default function Reading() {
   const itemsPerPage = 5;
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchCourses();
-    setFilteredItems(
-      items.filter((item) =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
-  }, [searchTerm, items]);
+    const fetchCourses = () => {
+      axios
+        .get(`http://localhost:8000/admin/fetchRead`)
+        .then((response) => {
+          setItems(response.data);
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error fetching courses:", error);
+          setIsLoading(false);
+        });
+    };
+
+
+   useEffect(() => {
+     fetchCourses();
+     setFilteredItems(
+       items.filter((item) =>
+         item.name.toLowerCase().includes(searchTerm.toLowerCase())
+       )
+     );
+   }, [searchTerm, items]);
 
 
 
 
 
-  const fetchCourses = () => {
-    axios
-      .get(
-        `https://safetyiqnativebackend.onrender.com/admin/fetchRead/${adminId}/${userId}`
-      )
-      .then((response) => {
-        setItems(response.data);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching courses:", error);
-        setIsLoading(false);
-      });
-  };
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -152,13 +152,12 @@ export default function Reading() {
   const handleCourseSubmit = (e) => {
     e.preventDefault();
     axios
-      .post(`https://safetyiqnativebackend.onrender.com/admin/readCourseAdd`, {
+      .post(`http://localhost:8000/admin/readCourseAdd`, {
         name: newCourse,
         admin_id: adminId,
-        user_id: userId,
       })
       .then((response) => {
-        if (response.data.message === "Course added successfully") {
+        if (response.data.message === "Read course added successfully") {
           setNewCourse("");
           toast.success("Reading course added successfully");
           setShowCourseModal(false);
@@ -235,7 +234,6 @@ export default function Reading() {
             <table className="min-w-full bg-white">
               <thead>
                 <tr className="flex border-b justify-between">
-                  <th className="py-2 px-4">ID</th>
                   <th className="py-2 px-4">Courses to read</th>
                   <th className="py-2 px-4">Actions</th>
                 </tr>
@@ -246,7 +244,6 @@ export default function Reading() {
                     key={item.id}
                     className="flex justify-between border-b py-5"
                   >
-                    <td className="py-2 px-4">{item.id}</td>
                     <td className="py-2 px-4">{item.name}</td>
                     <td className="py-2 px-4 flex gap-2">
                       <button

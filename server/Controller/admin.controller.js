@@ -1,7 +1,7 @@
-const db = require("../model/Admin.model");
 const bcrypt = require("bcryptjs");
+const mongoose = require("mongoose")
 const User = require("../model/user.model");
-
+const ObjectId = mongoose.Types.ObjectId;
 const nodemailer = require("nodemailer");
 const cloudinary = require("../CloudinaryConfig");
 const multer = require("multer");
@@ -13,6 +13,7 @@ const {
   Resource,
   Read,
   Course,
+  readCourse,
   ExamQuestion,
 } = require("../model/Admin.model");
 const Counter = require("../model/Counter.model");
@@ -133,7 +134,7 @@ const getAllStudents = (req, res) => {
 
 
 
-const storage = multer.dis  {/* <td className="py-2 px-4 border-b">{item.LastName}</td> */}kStorage({
+const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
   },
@@ -325,30 +326,48 @@ const courseAdd = (req, res) => {
   const { name, admin_id } = req.body;
   // const userId = Array.isArray(user_id) ? user_id[0] : user_id;
 
-  db("courses_table")
-    .insert({ name, admin_id })
-    .then((insertResult) => {
-      res
-        .status(201)
-        .json({ message: "Course added successfully", id: insertResult[0] });
+  const newCourse = new Course({
+    name,
+    admin_id: admin_id,
+  });
+
+  newCourse
+    .save()
+    .then((course) => {
+      res.status(201).json({
+        message: "Course added successfully",
+        id: course._id,
+        name: course.name,
+      });
     })
     .catch((error) => {
-      console.error("Error adding course:", error);
+      console.error("Error adding read course:", error);
       res.status(500).json({ message: "Internal Server Error" });
     });
 };
 
+
 const readCourseAdd = (req, res) => {
-  const { name, admin_id, user_id } = req.body;
-  db("readcourse_table")
-    .insert({ name, admin_id, user_id })
-    .then((insertResult) => {
-      res
-        .status(201)
-        .json({ message: "Course added successfully", id: insertResult[0] });
+  const { name, admin_id } = req.body;
+
+
+
+  const newReadCourse = new readCourse({
+    name,
+    admin_id: admin_id,
+  });
+
+  newReadCourse
+    .save()
+    .then((course) => {
+      res.status(201).json({
+        message: "Read course added successfully",
+        id: course._id,
+        name: course.name,
+      });
     })
     .catch((error) => {
-      console.error("Error adding course:", error);
+      console.error("Error adding read course:", error);
       res.status(500).json({ message: "Internal Server Error" });
     });
 };
@@ -372,37 +391,25 @@ const deleteCourse = (req, res) => {
 };
 
 const fetchCourse = (req, res) => {
-  const id = Number(req.params.id);
-  if (id) {
-    db("courses_table")
-      .where({ admin_id: id })
-      .then((courses_table) => {
-        res.status(200).json(courses_table);
-      })
-      .catch((error) => {
-        console.error("Error fetching courses_table:", error);
-        res.status(500).json({ message: "Internal Server Error" });
-      });
-  } else {
-    return res.status(400).json({ message: "Admin ID is required" });
-  }
+Course.find({})
+  .then((courses) => {
+    res.status(200).json(courses);
+  })
+  .catch((error) => {
+    console.error("Error fetching courses:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  });
 };
 
 const fetchRead = (req, res) => {
-  const id = Number(req.params.id);
-  if (id) {
-    db("readcourse_table")
-      .where({ admin_id: id })
-      .then((course) => {
-        res.status(200).json(course);
-      })
-      .catch((error) => {
-        console.error("Error fetching courses_table:", error);
-        res.status(500).json({ message: "Internal Server Error" });
-      });
-  } else {
-    return res.status(400).json({ message: "Admin ID is required" });
-  }
+ readCourse.find({})
+   .then((courses) => {    
+     res.status(200).json(courses);
+   })
+   .catch((error) => {
+     console.error("Error fetching courses:", error);
+     res.status(500).json({ message: "Internal Server Error" });
+   });
 };
 
 const deleteRead = (req, res) => {

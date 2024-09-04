@@ -50,7 +50,12 @@ const readSchema = new Schema({
 // Define Course schema
 const courseSchema = new Schema({
   name: String,
-  admin_id: Schema.Types.ObjectId,
+  admin_id: String,
+});
+
+const readCourseSchema = new Schema({
+  name: String,
+  admin_id: String,
 });
 
 // Define Exam Question schema
@@ -68,8 +73,8 @@ const Admin = mongoose.model("Admin", adminSchema);
 const Resource = mongoose.model("Resource", resourceSchema);
 const Read = mongoose.model("Read", readSchema);
 const Course = mongoose.model("Course", courseSchema);
+const readCourse = mongoose.model("readCourse", readCourseSchema);
 const ExamQuestion = mongoose.model("ExamQuestion", examQuestionSchema);
-
 
 
 
@@ -80,4 +85,5 @@ module.exports = {
   Read,
   Course,
   ExamQuestion,
+  readCourse
 };

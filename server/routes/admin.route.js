@@ -27,12 +27,12 @@ routerAdmin.get("/students", getAllStudents);
 routerAdmin.post("/upload", uploadResource);
 routerAdmin.post("/uploadRead", uploadRead);
 routerAdmin.post("/course", courseAdd);
-routerAdmin.get("/fetchCourse/:id", fetchCourse);
+routerAdmin.get("/fetchCourse", fetchCourse);
 routerAdmin.post("/readCourseAdd", readCourseAdd);
 routerAdmin.delete("/course/:id", deleteCourse);
 routerAdmin.delete("/readDelete/:id", deleteRead);
 routerAdmin.delete("/resources/:resourceId", deleteResource);
-routerAdmin.get("/fetchRead/:id/:user_id", fetchRead);
+routerAdmin.get("/fetchRead", fetchRead);
 routerAdmin.get("/fetchResources", fetchReadResources);
 routerAdmin.post("/examQuestion", saveExamQuestion);
 

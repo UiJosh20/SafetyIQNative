@@ -8,7 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 
 export default function Academics() {
-  const adminId = JSON.parse(localStorage.getItem("token"));
+  const adminId = JSON.parse(localStorage.getItem("id"));
   // const userId = JSON.parse(localStorage.getItem("userIds"))[0];
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,7 +35,7 @@ export default function Academics() {
   const fetchCourses = () => {
     axios
       .get(
-        `https://safetyiqnativebackend.onrender.com/admin/fetchCourse/${adminId}`
+        `http://localhost:8000/admin/fetchCourse`
       )
       .then((response) => {
         setItems(response.data);
@@ -145,13 +145,15 @@ const handleResourceSubmit = (e) => {
       .post(`http://localhost:8000/admin/course`, {
         name: newCourse,
         admin_id: adminId,
-        // user_id:userId,
       })
       .then((response) => {
         if (response.data.message === "Course added successfully") {
+          let course_id = response.data.id;
           setNewCourse("");
           toast.success("Course added successfully");
           setShowCourseModal(false);
+          setCourseId(course_id)
+          
           fetchCourses();
         }
       })
@@ -223,7 +225,6 @@ const handleResourceSubmit = (e) => {
             <table className="min-w-full bg-white">
               <thead>
                 <tr className="flex border-b justify-between">
-                  <th className="py-2 px-4">ID</th>
                   <th className="py-2 px-4">Course</th>
                   <th className="py-2 px-4">Actions</th>
                 </tr>
@@ -234,7 +235,7 @@ const handleResourceSubmit = (e) => {
                     key={item.course_id}
                     className="flex justify-between border-b py-5"
                   >
-                    <td className="py-2 px-4">{item.course_id}</td>
+            
                     <td className="py-2 px-4">{item.name}</td>
                     <td className="py-2 px-4 flex gap-2">
                       <button
