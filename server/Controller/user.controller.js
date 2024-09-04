@@ -1,4 +1,4 @@
-  const db = require("../model/user.model");
+  const User = require("../model/user.model");
   const bcrypt = require("bcryptjs");
   const nodemailer = require("nodemailer");
   require("dotenv").config();
@@ -19,63 +19,36 @@ const signup = (req, res) => {
     courseName,
   } = req.body;
 
-  db.transaction((trx) => {
-    // Check if the email already exists in the safetyiq_table
-    return trx("safetyiq_table")
-      .where({ email })
-      .first()
-      .then((existingUser) => {
-        if (existingUser) {
-          throw new Error("Email already used");
-        }
+  // Check if the email already exists
+  User.findOne({ email })
+    .then((existingUser) => {
+      if (existingUser) {
+        throw new Error("Email already used");
+      }
 
-        // Hash the password
-        return bcrypt.hash(password, 10);
-      })
-      .then((hashedPassword) => {
-        if (!hashedPassword) return;
-
-        // Find the available admin with the fewest users
-        return trx("admin_table")
-          .select("admin_table.admin_id")
-          .leftJoin(
-            "safetyiq_table",
-            "admin_table.admin_id",
-            "safetyiq_table.admin_id"
-          )
-          .groupBy("admin_table.admin_id")
-          .orderByRaw("COUNT(safetyiq_table.user_id) ASC")
-          .first()
-          .then((availableAdmin) => {
-            if (!availableAdmin) {
-              throw new Error("No available admin found");
-            }
-
-            const admin_id = availableAdmin.admin_id;
-
-            // Insert the new user into the safetyiq_table with the found admin_id
-            return trx("safetyiq_table").insert({
-              callUp_num: callUpNo,
-              firstName,
-              lastName,
-              middleName,
-              tel: telephoneNo,
-              email,
-              password: hashedPassword,
-              course_name: courseName,
-              admin_id,
-            });
-          });
-      })
-      .then(() => {
-        res.status(201).send("User registered successfully");
-      })
-      .catch((error) => {
-        console.error(error);
-        res.status(500).send("Internal Server Error");
+      // Insert the new user into the users collection
+      const newUser = new User({
+        callupNum: callUpNo,
+        firstName,
+        lastName,
+        middleName,
+        tel: telephoneNo,
+        email,
+        password, // This will be hashed in the pre-save middleware
+        courseName,
       });
-  });
+
+      return newUser.save();
+    })
+    .then(() => {
+      res.status(201).send("User registered successfully");
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send("Internal Server Error");
+    });
 };
+
 
   const paystackInit = (req, res) => {
     const { amount, email } = req.body;
@@ -217,40 +190,29 @@ const signup = (req, res) => {
       });
   };
 
-  const login = (req, res) => {
-    const { identifier, password } = req.body;
-    // Check if identifier and password are provided
-    if (!identifier || !password) {
-      return res.status(400).send("Identifier and password are required.");
-    }
+const login = (req, res) => {
+  const { email, password } = req.body;
 
+  User.findOne({ email })
+    .then((user) => {
+      if (!user) {
+        return res.status(404).send("User not found");
+      }
 
-    db("safetyiq_table")
-      .where({ callUp_num: identifier })
-      .orWhere({ frpnum: identifier })
-      .first()
-      .then((user) => {
-      
-        if (!user) {
-          return res.status(404).send("User not found.");
+      // Compare the provided password with the stored hashed password
+      return bcrypt.compare(password, user.password).then((isMatch) => {
+        if (!isMatch) {
+          return res.status(400).send("Incorrect password");
         }
 
-        return bcrypt.compare(password, user.password).then((match) => {
-        
-          if (!match) {
-            return res.status(401).send("Incorrect password.");
-          }
-
-        
-          res.send({ message: "Login successful", status: 200, user });
-        });
-      })
-      .catch((error) => {
-        // Log the error and send a 500 response
-        console.error("Error logging in:", error);
-        return res.status(500).send("An error occurred while logging in.");
+        res.status(200).send("Login successful");
       });
-  };
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send("Internal Server Error");
+    });
+};
 
   const dashboard = (req, res) => {
     const { id } = req.body;
