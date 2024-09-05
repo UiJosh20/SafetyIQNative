@@ -4,6 +4,16 @@
   const nodemailer = require("nodemailer");
   require("dotenv").config();
   const https = require("https");
+  const {
+    Admin,
+    Resource,
+    Read,
+    Course,
+    readCourse,
+    ExamQuestion,
+  } = require("../model/Admin.model");
+  const CurrentTopic = require("../model/CurrentTopic.model");
+
   const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
   const EMAIL_USER = process.env.EMAIL_USER;
   const EMAIL_PASSWORD = process.env.EMAIL_PASS;
@@ -327,24 +337,39 @@ const login = (req, res) => {
         });
   };
 
-  const fetchCurrentTopic = (req, res) => {
-  const { userId } = req.query;
-  if (!userId) {
-    return res.status(400).json({ message: "User ID is required" });
-  }
 
-  db("readcourse_table")
-    .where({ user_id: userId })
-    .orderBy("readcourse_id", "desc")
-    .first()
-    .then((currentTopic) => {
-      res
-        .status(200)
-        .json({ currentTopic: currentTopic ? currentTopic.name : null });
+  cron.schedule("0 2 * * *", () => {
+    console.log("Running cron job to update the current topic...");
+    fetchCurrentTopic();
+  });
+
+
+  const fetchCurrentTopic = (req, res) => {
+  readCourse
+    .find({})
+    .then((topics) => {
+      if (topics.length === 0) {
+        console.error("No topics found");
+        return;
+      }
+
+
+      const newCurrentTopic = topics[Math.floor(Math.random() * topics.length)];
+
+      CurrentTopic.findOneAndUpdate(
+        {},
+        { topic: newCurrentTopic._id, date: new Date() },
+        { upsert: true, new: true }
+      )
+        .then(() => {
+          console.log(`Current topic changed to: ${newCurrentTopic.name}`);
+        })
+        .catch((error) => {
+          console.error("Error updating current topic:", error);
+        });
     })
     .catch((error) => {
-      console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      console.error("Error fetching topics:", error);
     });
   }
 

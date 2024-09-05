@@ -58,7 +58,7 @@ const UserLogin = () => {
             let userInfo = {firstName, lastName}
             const userId = response.data.user.user_id;
             const token = response.data.token;
-            AsyncStorage.setItem("userInfo", JSON.stringify(userInfo));
+            AsyncStorage.setItem("userInfo", userInfo);
             AsyncStorage.setItem("token", token);
             AsyncStorage.setItem("userId", userId.toString())
               .then(() => {
