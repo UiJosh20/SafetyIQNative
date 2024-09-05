@@ -359,23 +359,7 @@ const readCourseAdd = (req, res) => {
     });
 };
 
-const deleteCourse = (req, res) => {
-  const { id } = req.params;
-  db("courses_table")
-    .where({ id })
-    .del()
-    .then((deleteResult) => {
-      if (deleteResult) {
-        res.status(200).json({ message: "Course deleted successfully" });
-      } else {
-        res.status(404).json({ message: "Course not found" });
-      }
-    })
-    .catch((error) => {
-      console.error("Error deleting course:", error);
-      res.status(500).json({ message: "Internal Server Error" });
-    });
-};
+
 
 const fetchCourse = (req, res) => {
 Course.find({})
@@ -399,23 +383,7 @@ const fetchRead = (req, res) => {
    });
 };
 
-const deleteRead = (req, res) => {
-  const { id } = req.params;
-  db("readcourse_table")
-    .where({ readcourse_id: id })
-    .del()
-    .then((deleteResult) => {
-      if (deleteResult) {
-        res.status(200).json({ message: "Course deleted successfully" });
-      } else {
-        res.status(404).json({ message: "Course not found" });
-      }
-    })
-    .catch((error) => {
-      console.error("Error deleting course:", error);
-      res.status(500).json({ message: "Internal Server Error" });
-    });
-};
+
 
 const fetchAllResources = (req, res) => {
   Promise.all([
@@ -440,24 +408,69 @@ const fetchAllResources = (req, res) => {
       res.status(500).json({ message: "Internal Server Error" });
     });
 };
-;
+
+
+const deleteCourse = (req, res) => {
+   const { id } = req.params;
+
+   Course
+     .deleteOne({ name: id })
+     .then((deletedResource) => {
+       if (!deletedResource) {
+         return res.status(404).json({ message: "Resource not found" });
+       }
+       res.json({ message: "Course deleted successfully" });
+     })
+     .catch((error) => {
+       console.error("Error deleting resource:", error);
+       res.status(500).json({ message: "Error deleting resource" });
+     });
+};
+
+const deleteRead = (req, res) => {
+  const { courseTopic } = req.params;
+  
+
+   readCourse
+     .deleteOne({ name: courseTopic })
+     .then((deletedResource) => {
+       if (!deletedResource) {
+         return res.status(404).json({ message: "Resource not found" });
+       }
+       res.json({ message: "Read course deleted successfully" });
+     })
+     .catch((error) => {
+       console.error("Error deleting resource:", error);
+       res.status(500).json({ message: "Error deleting resource" });
+     });
+};
 
 const deleteResource = (req, res) => {
-  const resourceId = req.params.resourceId;
+    const { title } = req.params;
+    if (!title) {
+      return res.status(400).json({ message: "Resource title is required" });
+    }
 
-  db("read_table")
-    .where({ read_id: resourceId })
-    .del()
-    .then((count) => {
-      if (count === 0) {
-        return res.status(404).json({ message: "Resource not found" });
-      }
-      res.status(200).json({ message: "Resource deleted successfully" });
-    })
-    .catch((error) => {
-      console.error("Error deleting resource:", error);
-      res.status(500).json({ message: "Internal Server Error" });
-    });
+    // Delete resource by title from both Read and Resource models
+    Promise.all([
+      Read.deleteOne({ read_title: title }),
+      Resource.deleteOne({ title: title }),
+    ])
+      .then(([readResult, resourceResult]) => {
+        const totalDeleted =
+          readResult.deletedCount + resourceResult.deletedCount;
+
+        // Check if any resource was deleted
+        if (totalDeleted === 0) {
+          return res.status(404).json({ message: "Resource not found" });
+        }
+
+        res.status(200).json({ message: "Resource(s) deleted successfully" });
+      })
+      .catch((error) => {
+        console.error("Error deleting resource:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      });
 };
 
 saveExamQuestion = (req, res) => {

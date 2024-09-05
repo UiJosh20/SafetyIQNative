@@ -159,18 +159,18 @@ export default function Reading() {
       });
   };
 
-  const handleDeleteSubmit = (courseId) => {
-    setCourseId(courseId);
+  const handleDeleteSubmit = (courseTopic) => {
+    setCourseId(courseTopic);
     toggleDeleteModal();
   };
 
   const handleDeleteCourse = () => {
     axios
       .delete(
-        `https://safetyiqnativebackend.onrender.com/admin/readDelete/${courseId}`
+        `http://localhost:8000/admin/readDelete/${courseId}`
       )
       .then((response) => {
-        if (response.data.message === "Course deleted successfully") {
+        if (response.data.message === "Read course deleted successfully") {
           toast.success("Reading course deleted successfully");
           fetchCourses();
           setCourseId("");
@@ -253,7 +253,7 @@ export default function Reading() {
                       </button>
                       <button
                         className="shadow-lg w-36 p-2 font-bold bg-red-700 text-white rounded-md"
-                        onClick={() => handleDeleteSubmit(item.readcourse_id)}
+                        onClick={() => handleDeleteSubmit(item.name)}
                       >
                         Delete
                       </button>
@@ -387,7 +387,7 @@ export default function Reading() {
                         className="w-full border border-gray-300 p-2 rounded mt-2"
                       />
 
-                    
+
                       <input
                         type="text"
                         id="course_name"

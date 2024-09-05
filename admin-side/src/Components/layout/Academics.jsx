@@ -249,7 +249,7 @@ const handleResourceSubmit = (e) => {
                       </button>
                       <button
                         className="shadow-lg w-36 p-2 font-bold bg-red-700 text-white rounded-md"
-                        onClick={() => handleDeleteSubmit(item.course_id)}
+                        onClick={() => handleDeleteSubmit(item.name)}
                       >
                         Delete
                       </button>

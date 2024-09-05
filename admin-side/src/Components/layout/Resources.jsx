@@ -1,123 +1,130 @@
-import axios from 'axios';
-import React, { useEffect, useState } from 'react'
-import { toast, ToastContainer } from 'react-toastify';
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
 
 const Resources = () => {
-  const adminId = JSON.parse(localStorage.getItem("id"));
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [readResources, setReadResources] = useState([]);
+  const [firstAidResources, setFirstAidResources] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [readResourcesID, setReadResourcesID] = useState(true);
+  const [title, setTitle] = useState("");
+  const [resourceType, setResourceType] = useState("");
 
+  useEffect(() => {
+    setIsLoading(true);
+    setTimeout(() => {
+      fetchResources();
+      setIsLoading(false);
+    }, 2000);
+  }, []);
 
-    useEffect(() => {
-      setIsLoading(true)
-      setTimeout(()=>{
-        fetchResources();
-        setIsLoading(false)
-      }, 2000)
-    }, [])
-    
+  const fetchResources = () => {
+    axios
+      .get(`http://localhost:8000/admin/fetchResources`)
+      .then((response) => {
+        const resources = response.data;
+        console.log(resources);
+        setReadResources(resources.filter((res) => res.read_title));
+        setFirstAidResources(resources.filter((res) => res.title));
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching resources:", error);
+        toast.error("No resources added yet");
+        setIsLoading(false);
+      });
+  };
 
-     const fetchResources = () => {
-       axios
-         .get(
-           `http://localhost:8000/admin/fetchResources`,
-         )
-         .then((response) => {
-           setReadResources(response.data);
-            // console.log(response.data);
-            
-           setIsLoading(false);
-         })
-         .catch((error) => {
-           console.error("Error fetching resources:", error);
-         });
-     };
+  const toggleDeleteModal = () => {
+    setShowDeleteModal(!showDeleteModal);
+  };
 
-       const toggleDeleteModal = () => {
-         setShowDeleteModal(!showDeleteModal);
-       };
+  const handleDeleteSubmit = (title, type) => {
+    setTitle(title);
+    setResourceType(type);
+    toggleDeleteModal();
+  };
 
-      const handleDeleteSubmit = (recoursesId) => {
-        setReadResourcesID(recoursesId);
-        toggleDeleteModal();
-      };
+  const handleDelete = () => {
+    axios
+      .delete(`http://localhost:8000/admin/resources/${title}`)
+      .then((response) => {
+        if (response.data.message === "Resource(s) deleted successfully") {
+          fetchResources();
+          toast.success("Resource deleted successfully");
+          setTitle("");
+          toggleDeleteModal();
+        }
+      })
+      .catch((error) => {
+        console.error("Error deleting resource:", error);
+        toast.error("Error deleting resource.");
+      });
+  };
 
-     const handleDelete = () => {
-       axios
-         .delete(
-           `https://safetyiqnativebackend.onrender.com/admin/resources/${readResourcesID}`
-         )
-         .then((response) => {
-           if (response.data.message === "Resource deleted successfully") {
-             fetchResources();
-             toast.success("Resources deleted successfully");
-             setReadResourcesID("");
-             toggleDeleteModal();
-           }
-         });
-      
-     }
-
-       if (isLoading) {
-         return (
-           <div className="flex justify-center items-center h-screen">
-             <div className="loader"></div>
-           </div>
-         );
-       }
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="loader"></div>
+      </div>
+    );
+  }
 
   return (
     <>
       <ToastContainer />
       <h3 className="font-bold text-3xl py-4">Read Resources</h3>
       <section className="bg-white w-full flex flex-wrap justify-center p-20 gap-10">
-        {readResources.map((item, i) => (
-          <div key={i} className="w-96 shadow-md">
-            <img src={item.read_image} alt="" />
-
-            <div className="p-3">
-              <h1>{item.read_title}</h1>
-              <p>{item.read_description}</p>
-              <p>{item.read_duration}</p>
+        {readResources.length > 0 ? (
+          readResources.map((item, i) => (
+            <div key={i} className="w-96 shadow-md border border-gray-500">
+              <img src={item.read_image} alt="" />
+              <div className="p-3">
+                <h1>{item.read_title}</h1>
+                <p>{item.read_description}</p>
+                <p>{item.read_duration}</p>
+              </div>
+              <div className="my-3 p-3">
+                <button
+                  className="shadow-lg w-36 p-2 font-bold bg-red-700 text-white rounded-md"
+                  onClick={() => handleDeleteSubmit(item.read_title, "read")}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-
-            <div className="my-3 p-3">
-              <button
-                className="shadow-lg w-36 p-2 font-bold bg-red-700 text-white rounded-md"
-                onClick={() => handleDeleteSubmit(item.read_id)}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <p className="text-center w-full">No read resources added yet</p>
+        )}
       </section>
 
-      <h3 className="font-bold text-3xl py-4">First Aid resources</h3>
+      <h3 className="font-bold text-3xl py-4">First Aid Resources</h3>
       <section className="bg-white w-full flex flex-wrap justify-center p-20 gap-10">
-        {readResources.map((item, i) => (
-          <div key={i} className="w-96 shadow-md">
-            <img src={item.image} alt="" />
-
-            <div className="p-3">
-              <h1>{item.title}</h1>
-              <p>{item.description}</p>
-              <p>{item.duration}</p>
+        {firstAidResources.length > 0 ? (
+          firstAidResources.map((item, i) => (
+            <div key={i} className="w-96 shadow-md border border-gray-500">
+              <img src={item.image} alt="" />
+              <div className="p-3">
+                <h1>{item.title}</h1>
+                <p>{item.description}</p>
+                <p>{item.duration}</p>
+              </div>
+              <div className="my-3 p-3">
+                <button
+                  className="shadow-lg w-36 p-2 font-bold bg-red-700 text-white rounded-md"
+                  onClick={() => handleDeleteSubmit(item.title, "firstAid")}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-
-            <div className="my-3 p-3">
-              <button
-                className="shadow-lg w-36 p-2 font-bold bg-red-700 text-white rounded-md"
-                onClick={() => handleDeleteSubmit(item.read_id)}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <p className="text-center w-full">No first aid resources added yet</p>
+        )}
       </section>
+
       {showDeleteModal && (
         <div className="fixed z-10 inset-0 overflow-y-auto">
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -141,7 +148,7 @@ const Resources = () => {
                   </h3>
                   <div className="mt-2">
                     <p className="text-sm text-gray-500">
-                      Are you sure you want to delete this course?
+                      Are you sure you want to delete this resource?
                     </p>
                     <button
                       onClick={handleDelete}
@@ -164,6 +171,6 @@ const Resources = () => {
       )}
     </>
   );
-}
+};
 
-export default Resources
+export default Resources;
