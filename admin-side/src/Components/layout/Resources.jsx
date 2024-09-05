@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { toast, ToastContainer } from 'react-toastify';
 
 const Resources = () => {
-  const adminId = JSON.parse(localStorage.getItem("token"));
+  const adminId = JSON.parse(localStorage.getItem("id"));
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [readResources, setReadResources] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,14 +22,12 @@ const Resources = () => {
      const fetchResources = () => {
        axios
          .get(
-           `https://safetyiqnativebackend.onrender.com/admin/fetchResources`,
-           {
-             params: { adminId: adminId },
-           }
+           `http://localhost:8000/admin/fetchResources`,
          )
          .then((response) => {
            setReadResources(response.data);
-
+            // console.log(response.data);
+            
            setIsLoading(false);
          })
          .catch((error) => {
@@ -72,8 +70,9 @@ const Resources = () => {
 
   return (
     <>
-      <section className="bg-white w-full flex justify-center p-20 gap-10">
-        <ToastContainer />
+      <ToastContainer />
+      <h3 className="font-bold text-3xl py-4">Read Resources</h3>
+      <section className="bg-white w-full flex flex-wrap justify-center p-20 gap-10">
         {readResources.map((item, i) => (
           <div key={i} className="w-96 shadow-md">
             <img src={item.read_image} alt="" />
@@ -82,6 +81,30 @@ const Resources = () => {
               <h1>{item.read_title}</h1>
               <p>{item.read_description}</p>
               <p>{item.read_duration}</p>
+            </div>
+
+            <div className="my-3 p-3">
+              <button
+                className="shadow-lg w-36 p-2 font-bold bg-red-700 text-white rounded-md"
+                onClick={() => handleDeleteSubmit(item.read_id)}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <h3 className="font-bold text-3xl py-4">First Aid resources</h3>
+      <section className="bg-white w-full flex flex-wrap justify-center p-20 gap-10">
+        {readResources.map((item, i) => (
+          <div key={i} className="w-96 shadow-md">
+            <img src={item.image} alt="" />
+
+            <div className="p-3">
+              <h1>{item.title}</h1>
+              <p>{item.description}</p>
+              <p>{item.duration}</p>
             </div>
 
             <div className="my-3 p-3">

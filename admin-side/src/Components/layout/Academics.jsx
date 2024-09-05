@@ -25,8 +25,7 @@ export default function Academics() {
     time_taken: "",
     image: null,
     note: "",
-    course_id: "",
-    admin_id: adminId,
+    course_name:""
   });
   const [newCourse, setNewCourse] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -125,7 +124,6 @@ const handleResourceSubmit = (e) => {
           time_taken: "",
           image: null,
           note: "",
-          admin_id: adminId,
         });
         setShowModal(false);
         toast.success("Resource uploaded successfully");
@@ -242,7 +240,7 @@ const handleResourceSubmit = (e) => {
                         className="shadow-lg w-36 bg-gray-400 p-2 rounded-md font-bold"
                         onClick={() =>
                           setNewResource(
-                            (prev) => ({ ...prev, course_id: item.course_id }),
+                            (prev) => ({ ...prev, course_name: item.name }),
                             toggleModal()
                           )
                         }
@@ -436,18 +434,19 @@ const handleResourceSubmit = (e) => {
                   ></textarea>
                 </div>
 
-                <div className="mb-4">
+                    
+                <div className="mb-4" hidden>
                   <label
                     className="block text-gray-700 text-sm font-bold mb-2"
                     htmlFor="course_id"
                   >
-                    Course ID
+                    Course Name
                   </label>
                   <input
                     type="text"
                     id="course_id"
                     name="course_id"
-                    value={newResource.course_id}
+                    value={newResource.course_name}
                     onChange={handleInputChange}
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     required

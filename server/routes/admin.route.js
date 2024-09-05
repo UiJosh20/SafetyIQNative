@@ -12,10 +12,10 @@ const {
   fetchRead,
   deleteRead,
   uploadRead,
-  fetchReadResources,
   deleteResource,
   saveExamQuestion,
   getAllStudents,
+  fetchAllResources,
 } = require("../Controller/admin.controller");
 
 const parser = require("../MulterConfig");
@@ -33,7 +33,7 @@ routerAdmin.delete("/course/:id", deleteCourse);
 routerAdmin.delete("/readDelete/:id", deleteRead);
 routerAdmin.delete("/resources/:resourceId", deleteResource);
 routerAdmin.get("/fetchRead", fetchRead);
-routerAdmin.get("/fetchResources", fetchReadResources);
+routerAdmin.get("/fetchResources", fetchAllResources);
 routerAdmin.post("/examQuestion", saveExamQuestion);
 
 module.exports = routerAdmin;

@@ -154,10 +154,10 @@ const fetchTotalStudents = () => {
                 {currentItems.map((item) => (
                   <tr key={item._id} className="flex gap-96">
                     <td className="py-2 px-4">
-                      {item.firstName} {item.lastName}
+                      {item.firstName} {item.lastName}{" "}
+                      
                     </td>
                     <td>{item.courseName == null ? "N/A" : item.courseName}</td>
-                    {/* <td className="py-2 px-4 border-b">{item.LastName}</td> */}
                   </tr>
                 ))}
               </tbody>

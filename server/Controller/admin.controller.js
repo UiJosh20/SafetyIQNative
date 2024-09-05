@@ -121,7 +121,7 @@ const loginAdmin = (req, res) => {
 
 const getAllStudents = (req, res) => {
   User.find({})
-    .select("user_id firstName lastName email tel course_name")
+    .select("user_id firstName lastName email tel courseName")
     .then((students) => {
       const totalStudents = students.length;
       res.status(200).json({ totalStudents, students });
@@ -165,6 +165,7 @@ const upload = multer({
 }).single("image");
 
 const uploadResource = (req, res) => {
+  // Handle file upload with multer
   upload(req, res, (err) => {
     if (err instanceof multer.MulterError) {
       return res.status(400).json({ error: err.message });
@@ -172,23 +173,29 @@ const uploadResource = (req, res) => {
       return res.status(400).json({ error: err });
     }
 
-    const { title, description, time_taken, note, course_id, admin_id } =
-      req.body;
+    const {
+      title,
+      description,
+      time_taken,
+      note,
+    } = req.body;
+
     const image = req.file ? req.file.path : null;
+
+    const resourceData = {
+      title,
+      description,
+      time_taken,
+      note,
+    };
 
     if (image) {
       cloudinary.uploader
         .upload(image, { folder: "/resources/first_aid" })
         .then((uploadedImage) => {
-          return db("resources_table").insert({
-            title,
-            description,
-            time_taken,
-            image: uploadedImage.secure_url,
-            note,
-            course_id,
-            admin_id,
-          });
+          resourceData.image = uploadedImage.secure_url;
+          const newResource = new Resource(resourceData);
+          return newResource.save();
         })
         .then(() => {
           res.status(201).json({ message: "Resource uploaded successfully" });
@@ -198,21 +205,14 @@ const uploadResource = (req, res) => {
           res.status(500).json({ error: "Failed to upload resource" });
         });
     } else {
-      db("resources_table")
-        .insert({
-          title,
-          description,
-          time_taken,
-          image: null,
-          note,
-          course_id,
-          admin_id,
-        })
+      const newResource = new Resource(resourceData);
+      newResource
+        .save()
         .then(() => {
           res.status(201).json({ message: "Resource uploaded successfully" });
         })
         .catch((error) => {
-          console.error("Error uploading resource:", error);
+          console.error("Error saving resource:", error);
           res.status(500).json({ error: "Failed to upload resource" });
         });
     }
@@ -262,65 +262,52 @@ const uploadRead = (req, res) => {
       description,
       time_taken,
       note,
-      course_name,
-      admin_id,
-      user_id,
     } = req.body;
 
     const image = req.file ? req.file.path : null;
 
-    db("readcourse_table")
-      .select("readcourse_id")
-      .where({ name: course_name, admin_id, user_id })
-      .first()
-      .then((course) => {
-        if (!course) {
-          throw new Error(`Course with name ${course_name} does not exist.`);
-        }
+    const readData = {
+      read_title: title,
+      read_description: description,
+      read_duration: time_taken,
+      read_note: note,
 
-        const course_id = course.readcourse_id;
+    };
 
-        if (image) {
-          return cloudinary.uploader
-            .upload(image, { folder: "/resources/readNote" })
-            .then((uploadedImage) => {
-              return db("read_table").insert({
-                read_course: course_name,
-                read_title: title,
-                read_description: description,
-                read_duration: time_taken,
-                read_image: uploadedImage.secure_url,
-                read_note: note,
-                admin_id,
-                user_id,
-                readcourse_id: course_id,
-              });
-            });
-        } else {
-          return db("read_table").insert({
-            read_title: title,
-            read_description: description,
-            read_duration: time_taken,
-            read_image: null,
-            read_note: note,
-            read_course: course_name,
-            admin_id,
-            user_id,
-            readcourse_id: course_id,
-          });
-        }
-      })
-      .then((response) => {
-        res.status(201).json({ message: "Resource uploaded successfully" });
-      })
-      .catch((error) => {
-        console.error("Error uploading resource:", error);
-        res
-          .status(500)
-          .json({ error: error.message || "Failed to upload resource" });
-      });
+    if (image) {
+      cloudinary.uploader
+        .upload(image, { folder: "/resources/readNote" })
+        .then((uploadedImage) => {
+          readData.read_image = uploadedImage.secure_url;
+          const newRead = new Read(readData);
+          return newRead.save();
+        })
+        .then(() => {
+          res.status(201).json({ message: "Resource uploaded successfully" });
+        })
+        .catch((error) => {
+          console.error("Error uploading resource:", error);
+          res
+            .status(500)
+            .json({ error: error.message || "Failed to upload resource" });
+        });
+    } else {
+      const newRead = new Read(readData);
+      newRead
+        .save()
+        .then(() => {
+          res.status(201).json({ message: "Resource uploaded successfully" });
+        })
+        .catch((error) => {
+          console.error("Error saving resource:", error);
+          res
+            .status(500)
+            .json({ error: error.message || "Failed to upload resource" });
+        });
+    }
   });
 };
+
 
 const courseAdd = (req, res) => {
   const { name, admin_id } = req.body;
@@ -430,28 +417,30 @@ const deleteRead = (req, res) => {
     });
 };
 
-const fetchReadResources = (req, res) => {
-  const adminId = Number(req.query.adminId);
+const fetchAllResources = (req, res) => {
+  Promise.all([
+    Read.find({}).lean(),         
+    Resource.find({}).lean()      
+  ])
+    .then(([readResources, generalResources]) => {
+      const allResources = [...readResources, ...generalResources];
 
-  if (isNaN(adminId)) {
-    return res.status(400).json({ message: "Invalid Admin ID" });
-  }
-
-  db("read_table")
-    .where({ admin_id: adminId })
-    .then((resources) => {
-      if (resources.length === 0) {
-        return res
-          .status(404)
-          .json({ message: "No resources found for this admin" });
+      // Check if resources exist
+      if (allResources.length === 0) {
+        return res.status(404).json({ message: "No resources found" });
       }
-      res.status(200).json(resources);
+
+      // Send combined resources as a response
+      res.status(200).json(allResources);
     })
     .catch((error) => {
       console.error("Error fetching resources:", error);
+
+      // Handle potential server errors properly
       res.status(500).json({ message: "Internal Server Error" });
     });
 };
+;
 
 const deleteResource = (req, res) => {
   const resourceId = req.params.resourceId;
@@ -516,7 +505,7 @@ getAllStudents,
   fetchCourse,
   deleteRead,
   uploadRead,
-  fetchReadResources,
+  fetchAllResources,
   deleteResource,
   saveExamQuestion,
 };

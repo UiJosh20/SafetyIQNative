@@ -30,8 +30,6 @@ const resourceSchema = new Schema({
   time_taken: String,
   image: String,
   note: String,
-  course_id: Schema.Types.ObjectId,
-  admin_id: Schema.Types.ObjectId,
 });
 
 // Define Read schema
@@ -42,9 +40,6 @@ const readSchema = new Schema({
   read_duration: String,
   read_image: String,
   read_note: String,
-  admin_id: Schema.Types.ObjectId,
-  user_id: Schema.Types.ObjectId,
-  readcourse_id: Schema.Types.ObjectId,
 });
 
 // Define Course schema

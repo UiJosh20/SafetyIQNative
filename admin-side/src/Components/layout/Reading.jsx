@@ -24,9 +24,6 @@ export default function Reading() {
     time_taken: "",
     image: null,
     note: "",
-    user_id: userId,
-    admin_id: adminId,
-    course_name: "",
   });
   const [newCourse, setNewCourse] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -111,14 +108,10 @@ export default function Reading() {
     formData.append("time_taken", newResource.time_taken);
     formData.append("image", newResource.image);
     formData.append("note", newResource.note);
-    formData.append("course_id", newResource.course_id);
-    formData.append("course_name", newResource.course_name);
-    formData.append("admin_id", adminId);
-    formData.append("user_id", userId);
 
     axios
       .post(
-        "https://safetyiqnativebackend.onrender.com/admin/uploadRead",
+        "http://localhost:8000/admin/uploadRead",
         formData,
         {
           headers: {
@@ -131,13 +124,10 @@ export default function Reading() {
           setNewResource({
             title: "",
             description: "",
-            course_id: "",
             course_name: "",
             time_taken: "",
             image: null,
             note: "",
-            user_id: userId,
-            admin_id: adminId,
           });
           setShowModal(false);
           toast.success("Reading resource uploaded successfully");
@@ -397,17 +387,7 @@ export default function Reading() {
                         className="w-full border border-gray-300 p-2 rounded mt-2"
                       />
 
-                      <input
-                        type="text"
-                        id="course_id"
-                        name="course_id"
-                        value={newResource.course_id}
-                        onChange={handleInputChange}
-                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        required
-                        disabled
-                        hidden
-                      />
+                    
                       <input
                         type="text"
                         id="course_name"

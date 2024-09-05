@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   paybtntext: {
-    color: "#C30000",
+    color: "#fff",
     fontFamily: "Kanit-Bold",
     fontSize: 18,
     textAlign: "center",
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     width: "100%",
     padding: 10,
     marginVertical: 7,
-    backgroundColor: "#fff",
+    backgroundColor: "#c30000",
     borderRadius: 5,
     shadowColor: "#000",
     shadowOffset: {
