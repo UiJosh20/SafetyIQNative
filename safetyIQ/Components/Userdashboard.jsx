@@ -148,7 +148,7 @@ const fetchCurrentTopic = () => {
     const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
     
 
-    if (currentHours > 13) {
+    if (currentHours < 13) {
       Alert.alert("Alert", "You can start reading after 2 PM.");
     } else {
       router.push({

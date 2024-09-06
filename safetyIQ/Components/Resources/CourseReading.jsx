@@ -125,10 +125,9 @@ const fetchResources = () => {
               </Text>
               <Text style={styles.resourceContent}>
                 {" "}
-                <Text style={styles.resourceContent}>{resource.read_note}</Text>
+                <Text style={styles.resourceContent}>{resource.read_description}</Text>
                 {resource.read_duration}
               </Text>
-              <Text style={styles.resourceContent}>{resource.read_note}</Text>
             </View>
           ))}
           <Pressable style={styles.nextbtn} onPress={handleShowNoteModal}>
