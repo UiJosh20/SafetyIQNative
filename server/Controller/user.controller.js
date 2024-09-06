@@ -321,30 +321,33 @@ const login = (req, res) => {
           res.status(500).send("Internal Server Error");
         });
   }
-  const readCourses = (req, res) => {
-      const { courseId, userId } = req.query;
-      if (!courseId) {
-        return res.status(400).json({ message: "Course ID is required" });
+const readCourses = (req, res) => {
+  const { currentTopic } = req.query; 
+
+  if (!currentTopic) {
+    return res.status(400).json({ message: "Current topic is required" });
+  }
+
+  Read.find({ read_course: currentTopic }) 
+    .then((resources) => {
+      if (!resources.length) {
+        return res
+          .status(404)
+          .json({ message: "No resources found for this topic" });
       }
-
-      db("read_table")
-        .where({ user_id: userId })
-        .select("*")
-        .then((resources) => {
-          // console.log(resources);
-          res.status(200).json(resources);
-        })
-        .catch((error) => {
-          console.error(error);
-          res.status(500).json({ message: "Internal Server Error" });
-        });
-  };
+      res.status(200).json(resources);
+    })
+    .catch((error) => {
+      console.error("Error fetching resources:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    });
+};
 
 
-  // cron.schedule("0 2 * * *", () => {
-  //   console.log("Running cron job to update the current topic...");
-  //   fetchCurrentTopic();
-  // });
+  cron.schedule("0 2 * * *", () => {
+    console.log("Running cron job to update the current topic...");
+    fetchCurrentTopic();
+  });
 
 
 

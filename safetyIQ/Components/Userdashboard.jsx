@@ -30,9 +30,8 @@ const Userdashboard = () => {
 
    const currentTopicUrl = `http://192.168.0.103:8000/currentTopic/${ids}`;
   
-  // const profileUrl = `https://safetyiqnativebackend.onrender.com/profilePic`;
   const books = `http://192.168.0.103:8000/readFetch`;
-  // const checkExamUrl = `https://safetyiqnativebackend.onrender.com/checkExamCompletion`;
+
   
   const [course, setCourse] = useState("");
   const [userData, setUserData] = useState(null);
@@ -91,7 +90,7 @@ const fetchCurrentTopic = () => {
       }
     })
     .catch((error) => {
-      console.log("Error fetching current topic: ", error);
+      console.log("no new course to fetch");
     });
 };
 
@@ -99,26 +98,6 @@ const fetchCurrentTopic = () => {
 
  
 
-  // const fetchCourses = () => {
-  //   axios
-  //     .get(books)
-  //     .then((response) => {
-  //       setItems(response.data);
-  //       const initialTimers = response.data.reduce((acc, course) => {
-  //         acc[course.name] = 12 * 60 * 60;
-  //         return acc;
-  //       }, {});
-  //       setTimers(initialTimers);
-  //       const initialExamTimers = response.data.reduce((acc, course) => {
-  //         acc[course.name] = 3 * 60 * 60;
-  //         return acc;
-  //       }, {});
-  //       setExamTimers(initialExamTimers);
-  //     })
-  //     .catch((error) => {
-  //       console.log("Error fetching courses:", error);
-  //     });
-  // };
 
   const updateTimers = () => {
     setTimers((prevTimers) => {
@@ -151,32 +130,15 @@ const fetchCurrentTopic = () => {
     checkTimeAndUpdateState();
   }, []);
 
-  // const checkExamCompletion = (currentCourse) => {
-  //   axios
-  //     .get(checkExamUrl, { params: { userId: id, course: currentCourse } })
-  //     .then((response) => {
-  //       if (response.data && response.data.completed) {
-  //         setIsButtonDisabled(false);
-  //       } else {
-  //         setIsButtonDisabled(true);
-  //       }
-  //     })
-  //     .catch((error) => {
-  //       console.log("Error checking exam completion: ", error);
-  //     });
-  // };
+
 
   const checkTimeAndUpdateState = () => {
     const now = new Date();
     const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
 
-    if (currentHours >= 18 && currentHours < 24) {
-      // Between 6 PM and midnight
+    if (course && currentHours > 13) {
       setIsStudyTimerActive(true);
-    } else if (currentHours >= 0 && currentHours < 14) {
-      // Between midnight and 2 AM
-      setIsStudyTimerActive(false);
-    } else {
+    }else {
       setIsStudyTimerActive(false);
     }
   };
@@ -184,9 +146,10 @@ const fetchCurrentTopic = () => {
   const handleReadNowPress = () => {
     const now = new Date();
     const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
+    
 
-    if (currentHours < 18) {
-      Alert.alert("Alert", "You can only start reading after 2 PM.");
+    if (currentHours > 13) {
+      Alert.alert("Alert", "You can start reading after 2 PM.");
     } else {
       router.push({
         pathname: "ReadCourse",

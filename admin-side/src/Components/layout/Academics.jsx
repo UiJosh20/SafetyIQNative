@@ -106,8 +106,8 @@ const handleResourceSubmit = (e) => {
   formData.append("time_taken", newResource.time_taken);
   formData.append("image", newResource.image);
   formData.append("note", newResource.note);
-  formData.append("course_id", newResource.course_id);
-  formData.append("admin_id", adminId);
+  formData.append("course_name", newResource.course_name);
+
 
   axios
     .post("http://localhost:8000/admin/upload", formData, {

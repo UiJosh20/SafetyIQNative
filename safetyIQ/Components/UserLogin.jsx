@@ -27,12 +27,11 @@ const UserLogin = () => {
     "Kanit-Italic": require("./../assets/fonts/Kanit-Italic.ttf"),
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
+    if (!fontsLoaded) {
+      return null;
+    }
 
   useEffect(() => {
-      if (!fontsLoaded) {
-        return null;
-      }
-
     AsyncStorage.getItem("token").then((token) => {
       if (token) {
 

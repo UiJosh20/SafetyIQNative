@@ -9,6 +9,7 @@ import {
   Pressable,
   Alert,
   TextInput,
+  Modal,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -18,6 +19,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const CourseReading = () => {
   const [resources, setResources] = useState([]);
   const [matchedKeywords, setMatchedKeywords] = useState([]);
+    const [showNoteModal, setShowNoteModal] = useState(false);
+    const [selectedResource, setSelectedResource] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userId, setUserId] = useState(null);
@@ -30,36 +33,34 @@ const CourseReading = () => {
       .then((userId) => {
         if (userId) {
           setUserId(userId);
+      fetchResources();
+
         }
       })
       .catch((error) => {
         console.log("Error fetching user ID: ", error);
       });
-  }, []);
+  }, [course]);
 
-  useEffect(() => {
-    if (userId) {
-      fetchResources();
-    }
-  }, [course, userId]);
 
-  const fetchResources = () => {
-    setLoading(true);
-    axios
-      .get(`http://192.168.10.142:8000/read`, {
-        params: { courseId: course, userId: userId },
-      })
-      .then((response) => {
-        setResources(response.data);
-        setLoading(false);
-        setRefreshing(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching resources:", error);
-        setLoading(false);
-        setRefreshing(false);
-      });
-  };
+
+const fetchResources = () => {
+  setLoading(true);
+  axios
+    .get(`http://192.168.0.103:8000/read`, {
+      params: { currentTopic: course }, 
+    })
+    .then((response) => {
+      setResources(response.data); 
+      setLoading(false);
+      setRefreshing(false);
+    })
+    .catch((error) => {
+      console.error("Error fetching resources:", error);
+      setLoading(false);
+      setRefreshing(false);
+    });
+};
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -86,7 +87,7 @@ const CourseReading = () => {
   };
 
   const handleNextPress = () => {
-    Alert.alert("Confirm", "Are you sure you have read all the resources?", [
+    Alert.alert("Confirm", "Are you sure you have read the resources?", [
       {
         text: "Yes, I have read them",
         onPress: handleKeywordPrompt,
@@ -96,6 +97,10 @@ const CourseReading = () => {
         style: "cancel",
       },
     ]);
+  };
+  const handleShowNoteModal = (resource) => {
+    setSelectedResource(resource);
+    setShowNoteModal(true);
   };
 
   return (
@@ -119,19 +124,50 @@ const CourseReading = () => {
                 {resource.read_description}
               </Text>
               <Text style={styles.resourceContent}>
+                {" "}
+                <Text style={styles.resourceContent}>{resource.read_note}</Text>
                 {resource.read_duration}
               </Text>
               <Text style={styles.resourceContent}>{resource.read_note}</Text>
             </View>
           ))}
-          <Pressable style={styles.nextbtn} onPress={handleNextPress}>
-            <Text style={styles.nextbtntext}>Next</Text>
+          <Pressable style={styles.nextbtn} onPress={handleShowNoteModal}>
+            <Text style={styles.nextbtntext}>Read</Text>
           </Pressable>
           {matchedKeywords.length > 0 && (
             <Text style={styles.resourceContent}>
               Matched keywords: {matchedKeywords.join(", ")}
             </Text>
           )}
+          <Modal
+            visible={showNoteModal}
+            animationType="slide"
+            onRequestClose={() => setShowNoteModal(false)}
+          >
+            <View style={styles.modalContainer}>
+              {resources.map((resource, index) => (
+                <View key={index}>
+                  <Text style={styles.modalTitle}>{resource.read_title}</Text>
+                </View>
+              ))}
+
+              <ScrollView>
+                {resources.map((resource, index) => (
+                  <View key={index}>
+                    <Text style={styles.resourceContent}>
+                      {resource.read_note}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+              <Pressable
+                style={styles.finishButton}
+                onPress={handleNextPress}
+              >
+                <Text style={styles.finishButtonText}>Finish</Text>
+              </Pressable>
+            </View>
+          </Modal>
         </ScrollView>
       )}
     </View>
@@ -157,7 +193,7 @@ const styles = StyleSheet.create({
   },
   resourceContent: {
     fontSize: 17,
-    lineHeight:30,
+    lineHeight: 30,
   },
   image: {
     width: "100%",
@@ -172,6 +208,32 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   nextbtntext: {
+    color: "white",
+    textAlign: "center",
+    fontSize: 18,
+  },
+  modalContainer: {
+    flex: 1,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign:"center"
+  },
+  modalContent: {
+    fontSize: 18,
+    lineHeight: 24,
+  },
+  finishButton: {
+    padding: 15,
+    backgroundColor: "#c30000",
+    width: "100%",
+    borderRadius: 30,
+    marginVertical: 20,
+  },
+  finishButtonText: {
     color: "white",
     textAlign: "center",
     fontSize: 18,

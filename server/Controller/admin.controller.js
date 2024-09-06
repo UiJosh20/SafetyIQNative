@@ -262,7 +262,10 @@ const uploadRead = (req, res) => {
       description,
       time_taken,
       note,
+      course_name
     } = req.body;
+
+    
 
     const image = req.file ? req.file.path : null;
 
@@ -271,6 +274,7 @@ const uploadRead = (req, res) => {
       read_description: description,
       read_duration: time_taken,
       read_note: note,
+      read_course: course_name
 
     };
 

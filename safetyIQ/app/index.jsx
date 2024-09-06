@@ -12,6 +12,7 @@ export default function index() {
      setIsSplash(true);
      setTimeout(() => {
          setIsSplash(false);
+         
      }, 3500);
    }, []);
 

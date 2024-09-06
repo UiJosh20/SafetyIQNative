@@ -20,7 +20,7 @@ export default function Reading() {
   const [newResource, setNewResource] = useState({
     title: "",
     description: "",
-    course_id: "",
+    course_name: "",
     time_taken: "",
     image: null,
     note: "",
@@ -108,6 +108,7 @@ export default function Reading() {
     formData.append("time_taken", newResource.time_taken);
     formData.append("image", newResource.image);
     formData.append("note", newResource.note);
+    formData.append("course_name", newResource.course_name);
 
     axios
       .post(
