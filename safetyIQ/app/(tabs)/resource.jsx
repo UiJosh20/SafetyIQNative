@@ -1,12 +1,13 @@
   import React from 'react'
 
 import { Platform, SafeAreaView, StatusBar, StyleSheet, View } from 'react-native'
-import CourseReading from '../../Components/Resources/CourseReading'
+import CompletedCourse from '../../Components/CompletedCourse'
+
 
 const resource = () => {
   return (
     <SafeAreaView style={styles.container}>
-      <CourseReading/>
+        <CompletedCourse/>
     </SafeAreaView>
   )
 }

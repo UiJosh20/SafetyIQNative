@@ -8,8 +8,8 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
-  Button,
   Pressable,
+  Image,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -21,9 +21,8 @@ const Resource = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const port = 142;
-  const books = `https://safetyiqnativebackend.onrender.com/courseFetch`;
-  const read = `https://safetyiqnativebackend.onrender.com/resources`;
+  const books = `http://192.168.0.103:8000/courseFetch`;
+  const read = `http://192.168.0.103:8000/resources`;
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -42,13 +41,10 @@ const Resource = () => {
       .get(books)
       .then((response) => {
         setItems(response.data);
-        setTimeout(() => {
-          setRefreshing(false);
-          setLoading(false);
-        }, 2500);
+        setLoading(false);
       })
       .catch((error) => {
-        console.error("Error fetching courses:", error);
+        console.log("Error fetching courses:", error);
         setLoading(false);
         setRefreshing(false);
       });
@@ -83,8 +79,8 @@ const Resource = () => {
   };
 
   const handleSelectCourse = (course) => {
-    setSelectedCourse(course.name);
-    handleFetchResources(course.course_id);
+    setSelectedCourse(course);
+    handleFetchResources();
     setCurrentPage(0);
     setModalVisible(true);
     AsyncStorage.setItem("currentTopic", course.name).catch((error) => {
@@ -92,11 +88,15 @@ const Resource = () => {
     });
   };
 
-  const handleFetchResources = (courseId) => {
+  const handleFetchResources = () => {
+    let course = selectedCourse.name;
+
     axios
-      .get(read, { params: { courseId } })
+      .get(read, { params: { course } })
       .then((response) => {
         setModalLoader(true);
+        console.log(response.data);
+        
         setTimeout(() => {
           setReads(response.data);
           setModalLoader(false);
@@ -125,15 +125,6 @@ const Resource = () => {
     }
   };
 
-  const renderContent = (content) => {
-    if (content) {
-      const words = content.split(" ");
-      const pageWords = words.slice(currentPage * 200, (currentPage + 1) * 200);
-      return pageWords.join(" ");
-    }
-    return "";
-  };
-
   const filteredItems = items.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -148,7 +139,7 @@ const Resource = () => {
           textAlign: "center",
         }}
       >
-        Topics
+        First Aid
       </Text>
       <View
         style={{
@@ -203,9 +194,7 @@ const Resource = () => {
                       alignItems: "center",
                     }}
                   >
-                    <View style={styles.circlegreen}>
-                      {/* <Image source={require("../assets/diploma.svg")} /> */}
-                    </View>
+                    <View style={styles.circlegreen}></View>
                     <Text>{item.name}</Text>
                   </View>
                   <Icon
@@ -246,20 +235,39 @@ const Resource = () => {
         ) : (
           <ScrollView style={styles.modalContainer}>
             <View style={styles.modalContent}>
-              {reads.length > 0 && reads[currentPage] && (
+              {reads.length > 0 ? (
                 <>
-                  <Text style={styles.resourseTile}>
-                    {reads[currentPage].title}
-                  </Text>
-                  <Text style={styles.time}>9hrs 45mins 32Sec</Text>
-                  <Text style={styles.modalText}>
-                    {reads[currentPage].description}
-                  </Text>
+                  {reads.map((item, i) => (
+                    <View key={i} style={styles.resourceItem}>
+                      <View>
+                        <Image
+                          source={{ uri: item.image }}
+                          style={styles.resourceImage}
+                          resizeMode="cover"
+                        />
+                      </View>
+                      <Text style={styles.resourseTile}>{item.title}</Text>
+                      <Text style={styles.modalText}>{item.description}</Text>
+                      <Text style={styles.time}>Time: {item.time_taken}</Text>
+                      <ScrollView>
+                        <View>
+                        <Text style={styles.resourceContent}>
+                          {item.note}
+                        </Text>
+                        </View>
+                      </ScrollView>
+                    </View>
+                  ))}
+                  <Pressable
+                    onPress={handleNextPage}
+                    style={styles.finishButton}
+                  >
+                    <Text style={styles.nextButton}>Next</Text>
+                  </Pressable>
                 </>
+              ) : (
+                <Text>No resources available</Text>
               )}
-              <Pressable onPress={handleNextPage}>
-                <Text>Next</Text>
-              </Pressable>
             </View>
           </ScrollView>
         )}
@@ -347,6 +355,23 @@ const styles = StyleSheet.create({
   resourseTile: {
     fontSize: 17,
     fontWeight: "bold",
-    marginBottom: 20,
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  resourceImage: {
+    width: "100%",
+    height: 200,
+  },
+  finishButton: {
+    padding: 15,
+    backgroundColor: "#c30000",
+    width: "100%",
+    borderRadius: 30,
+    marginVertical: 20,
+  },
+  nextButton: {
+    color: "white",
+    textAlign: "center",
+    fontSize: 18,
   },
 });

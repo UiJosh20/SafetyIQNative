@@ -1,25 +1,24 @@
 const User = require("../model/user.model");
 const cron = require("node-cron");
-  const bcrypt = require("bcryptjs");
-  const jwt = require("jsonwebtoken")
-  const nodemailer = require("nodemailer");
-  require("dotenv").config();
-  const https = require("https");
-  const {
-    Admin,
-    Resource,
-    Read,
-    Course,
-    readCourse,
-    ExamQuestion,
-  } = require("../model/Admin.model");
-  const CurrentTopic = require("../model/CurrentTopic.model");
-  const UserTopic = require("../model/UserTopic.model")
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+require("dotenv").config();
+const https = require("https");
+const {
+  Admin,
+  Resource,
+  Read,
+  Course,
+  readCourse,
+  ExamQuestion,
+} = require("../model/Admin.model");
+const CurrentTopic = require("../model/CurrentTopic.model");
+const UserTopic = require("../model/UserTopic.model");
 
-
-  const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
-  const EMAIL_USER = process.env.EMAIL_USER;
-  const EMAIL_PASSWORD = process.env.EMAIL_PASS;
+const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASSWORD = process.env.EMAIL_PASS;
 
 const signup = (req, res) => {
   const {
@@ -32,9 +31,6 @@ const signup = (req, res) => {
     password,
     courseName,
   } = req.body;
-
-  
-  
 
   // Check if the email already exists
   User.findOne({ email })
@@ -66,150 +62,148 @@ const signup = (req, res) => {
     });
 };
 
+const paystackInit = (req, res) => {
+  const { amount, email } = req.body;
 
-  const paystackInit = (req, res) => {
-    const { amount, email } = req.body;
+  const params = JSON.stringify({
+    email,
+    amount,
+  });
 
-    const params = JSON.stringify({
-      email,
-      amount,
+  const options = {
+    hostname: "api.paystack.co",
+    port: 443,
+    path: "/transaction/initialize",
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${SECRET_KEY}`,
+      "Content-Type": "application/json",
+    },
+  };
+
+  const reqpaystack = https.request(options, (respaystack) => {
+    let data = "";
+
+    respaystack.on("data", (chunk) => {
+      data += chunk;
     });
 
-    const options = {
-      hostname: "api.paystack.co",
-      port: 443,
-      path: "/transaction/initialize",
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${SECRET_KEY}`,
-        "Content-Type": "application/json",
+    respaystack.on("end", () => {
+      res.send(JSON.parse(data));
+    });
+  });
+
+  reqpaystack.on("error", (error) => {
+    console.error(error);
+    res.status(500).send("Error initializing payment");
+  });
+
+  reqpaystack.write(params);
+  reqpaystack.end();
+};
+
+const generateRandomNumber = () => {
+  return Math.floor(100000000000 + Math.random() * 700000000000).toString();
+};
+
+const sendUniqueNumberToEmail = (email, randomNumber) => {
+  return new Promise((resolve, reject) => {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: EMAIL_USER,
+        pass: EMAIL_PASSWORD,
       },
+    });
+
+    const mailOptions = {
+      from: EMAIL_USER,
+      to: email,
+      subject: "FRP NUMBER",
+      text: `Your FRP Number is: ${randomNumber}`,
     };
 
-    const reqpaystack = https.request(options, (respaystack) => {
-      let data = "";
-
-      respaystack.on("data", (chunk) => {
-        data += chunk;
-      });
-
-      respaystack.on("end", () => {
-        res.send(JSON.parse(data));
-      });
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(info);
+      }
     });
+  });
+};
 
-    reqpaystack.on("error", (error) => {
-      console.error(error);
-      res.status(500).send("Error initializing payment");
-    });
+const paystackVerify = (req, res) => {
+  const { reference } = req.query;
 
-    reqpaystack.write(params);
-    reqpaystack.end();
+  console.log(req.query);
+
+  const options = {
+    hostname: "api.paystack.co",
+    port: 443,
+    path: `/transaction/verify/${reference}`,
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${SECRET_KEY}`,
+    },
   };
 
-  const generateRandomNumber = () => {
-    return Math.floor(100000000000 + Math.random() * 700000000000).toString();
-  };
-
-  const sendUniqueNumberToEmail = (email, randomNumber) => {
+  const verifyTransaction = () => {
     return new Promise((resolve, reject) => {
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: EMAIL_USER,
-          pass: EMAIL_PASSWORD,
-        },
+      const reqVerify = https.request(options, (resVerify) => {
+        let data = "";
+
+        resVerify.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        resVerify.on("end", () => {
+          try {
+            const parsedData = JSON.parse(data);
+            resolve(parsedData);
+          } catch (error) {
+            reject(new Error("Error parsing JSON"));
+          }
+        });
       });
 
-      const mailOptions = {
-        from: EMAIL_USER,
-        to: email,
-        subject: "FRP NUMBER",
-        text: `Your FRP Number is: ${randomNumber}`,
-      };
-
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(info);
-        }
+      reqVerify.on("error", (error) => {
+        reject(error);
       });
+
+      reqVerify.end();
     });
   };
 
-  const paystackVerify = (req, res) => {
-    const { reference } = req.query;
+  verifyTransaction()
+    .then((parsedData) => {
+      if (parsedData) {
+        const randomNumber = generateRandomNumber();
+        const email = parsedData.data.customer.email;
 
-    console.log(req.query);
-    
-
-    const options = {
-      hostname: "api.paystack.co",
-      port: 443,
-      path: `/transaction/verify/${reference}`,
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${SECRET_KEY}`,
-      },
-    };
-
-    const verifyTransaction = () => {
-      return new Promise((resolve, reject) => {
-        const reqVerify = https.request(options, (resVerify) => {
-          let data = "";
-
-          resVerify.on("data", (chunk) => {
-            data += chunk;
-          });
-
-          resVerify.on("end", () => {
-            try {
-              const parsedData = JSON.parse(data);
-              resolve(parsedData);
-            } catch (error) {
-              reject(new Error("Error parsing JSON"));
-            }
-          });
-        });
-
-        reqVerify.on("error", (error) => {
-          reject(error);
-        });
-
-        reqVerify.end();
-      });
-    };
-
-    verifyTransaction()
-      .then((parsedData) => {
-        if (parsedData) {
-          const randomNumber = generateRandomNumber();
-          const email = parsedData.data.customer.email;
-
-          return User.findOneAndUpdate(
-            { email: email },
-            { frpnum: randomNumber },
-            { new: true }
-          ).then((updatedDocument) => {
-            if (updatedDocument) {
-              return sendUniqueNumberToEmail(email, randomNumber).then(() => {
-                res.send({
-                  message: "Payment successful",
-                  frpnum: randomNumber,
-                });
+        return User.findOneAndUpdate(
+          { email: email },
+          { frpnum: randomNumber },
+          { new: true }
+        ).then((updatedDocument) => {
+          if (updatedDocument) {
+            return sendUniqueNumberToEmail(email, randomNumber).then(() => {
+              res.send({
+                message: "Payment successful",
+                frpnum: randomNumber,
               });
-            } else {
-              res.status(404).send("User not found");
-            }
-          });
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-        res.status(500).send("Error verifying payment");
-      });
-  };
+            });
+          } else {
+            res.status(404).send("User not found");
+          }
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).send("Error verifying payment");
+    });
+};
 
 const login = (req, res) => {
   const { identifier, password } = req.body;
@@ -230,16 +224,14 @@ const login = (req, res) => {
         }
 
         // Generate a JWT
-        const token = jwt.sign(
-          { id: user._id }, 
-          process.env.JWT_SECRET, 
-          { expiresIn: "1h" } 
-        );
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+          expiresIn: "1h",
+        });
 
         // On successful login, return the token and user data
         res.status(200).send({
           message: "Login successful",
-          token, 
+          token,
           user: {
             user_id: user._id,
             firstName: user.firstName,
@@ -254,81 +246,69 @@ const login = (req, res) => {
     });
 };
 
+// const dashboard = (req, res) => {
+//   const { id } = req.body;
 
-  // const dashboard = (req, res) => {
-  //   const { id } = req.body;
+//   if (!id) {
+//     return res.status(400).send("User ID is required.");
+//   }
 
-  //   if (!id) {
-  //     return res.status(400).send("User ID is required.");
-  //   }
+//   db("safetyiq_table")
+//     .where({ user_id: id })
+//     .first()
+//     .then((user) => {
+//       if (!user) {
+//         return res.status(404).send("User not found.");
+//       }
 
-  //   db("safetyiq_table")
-  //     .where({ user_id: id })
-  //     .first()
-  //     .then((user) => {
-  //       if (!user) {
-  //         return res.status(404).send("User not found.");
-  //       }
+//       res.send({ user });
+//     })
+//     .catch((error) => {
+//       console.error("Error fetching user data:", error);
+//       res.status(500).send("An error occurred while fetching user data.");
+//     });
+// };
 
-  //       res.send({ user });
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error fetching user data:", error);
-  //       res.status(500).send("An error occurred while fetching user data.");
-  //     });
-  // };
-
-  const fetchResources = (req, res) => {
-    const { courseId } = req.query;
-
-  console.log(req.query);
-
-    if (!courseId) {
-      return res.status(400).json({ message: "Course ID is required" });
-    }
-
-    db("resources_table")
-      .where({ course_id: courseId })
-      .select("*")
-      .then((resources) => {
-        res.status(200).json(resources);
-      })
-      .catch((error) => {
-        console.error(error);
-        res.status(500).json({ message: "Internal Server Error" });
-      });
-  };
-
-  const courseFetch = (req, res) => {
-    db("courses_table")
-      .then((courses_table) => {
-        res.status(200).json(courses_table);
-      })
-      .catch((error) => {
-        console.error(error);
-        res.status(500).send("Internal Server Error");
-      });
-  };
+const fetchResources = (req, res) => {
+  const { course } = req.query;
 
 
-  const readfetch = (req, res) =>{
-      db("readcourse_table")
-        .then((courses_table) => {
-          res.status(200).json(courses_table);
-        })
-        .catch((error) => {
-          console.error(error);
-          res.status(500).send("Internal Server Error");
-        });
-  }
+   if (!course) {
+     return res.status(400).json({ message: "Course is required" });
+   }
+
+   Resource.find({ course: course })
+     .then((resources) => {
+       if (!resources.length) {
+         return res
+           .status(404)
+           .json({ message: "No resources found for this topic" });
+       }
+       res.status(200).json(resources);
+     })
+     .catch((error) => {
+       console.error("Error fetching resources:", error);
+       res.status(500).json({ message: "Internal Server Error" });
+     });
+
+};
+
+const courseFetch = (req, res) => {
+  Course.find({})
+  .then((result) => {
+    res.send(result)
+    
+  });
+};
+
 const readCourses = (req, res) => {
-  const { currentTopic } = req.query; 
+  const { currentTopic } = req.query;
 
   if (!currentTopic) {
     return res.status(400).json({ message: "Current topic is required" });
   }
 
-  Read.find({ read_course: currentTopic }) 
+  Read.find({ read_course: currentTopic })
     .then((resources) => {
       if (!resources.length) {
         return res
@@ -343,17 +323,13 @@ const readCourses = (req, res) => {
     });
 };
 
-
-  cron.schedule("0 2 * * *", () => {
-    console.log("Running cron job to update the current topic...");
-    fetchCurrentTopic();
-  });
-
-
+cron.schedule("0 2 * * *", () => {
+  console.log("Running cron job to update the current topic...");
+  fetchCurrentTopic();
+});
 
 const fetchCurrentTopic = (req, res) => {
   const { user } = req.params;
- 
 
   readCourse
     .find({})
@@ -415,18 +391,13 @@ const fetchCurrentTopic = (req, res) => {
     });
 };
 
-
-
-
-  module.exports = {
-    signup,
-    paystackInit,
-    paystackVerify,
-    login,
-    // dashboard,
-    fetchResources,
-    courseFetch,
-    readCourses,
-    readfetch,
-    fetchCurrentTopic,
-  };
+module.exports = {
+  signup,
+  paystackInit,
+  paystackVerify,
+  login,
+  fetchResources,
+  courseFetch,
+  readCourses,
+  fetchCurrentTopic,
+};

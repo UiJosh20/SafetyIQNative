@@ -6,11 +6,9 @@ router.post("/signup", signup);
 router.post("/paystackinit", paystackInit);
 router.get("/paystackverify", paystackVerify);
 router.post("/login", login);
-// router.post("/dashboard", dashboard);
 router.get("/resources", fetchResources);
 router.get("/read", readCourses);
 router.get("/courseFetch", courseFetch);
-router.get("/readFetch", readfetch);
 router.get("/currentTopic/:user", fetchCurrentTopic);
 
 

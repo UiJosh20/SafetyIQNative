@@ -174,6 +174,7 @@ const uploadResource = (req, res) => {
     }
 
     const {
+      course_name,
       title,
       description,
       time_taken,
@@ -183,6 +184,7 @@ const uploadResource = (req, res) => {
     const image = req.file ? req.file.path : null;
 
     const resourceData = {
+      course : course_name,
       title,
       description,
       time_taken,

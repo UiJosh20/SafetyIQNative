@@ -15,6 +15,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 
 const CourseReading = () => {
   const [resources, setResources] = useState([]);
@@ -68,22 +69,8 @@ const fetchResources = () => {
   };
 
   const handleKeywordPrompt = () => {
-    Alert.prompt(
-      "Enter keywords from the readings",
-      "Please enter some keywords from the readings to confirm you have read them",
-      (text) => {
-        setKeywords(text);
-        const matched = text.split(",").filter((keyword) => {
-          return resources.some((resource) => {
-            return resource.read_description
-              .toLowerCase()
-              .includes(keyword.toLowerCase());
-          });
-        });
-        setMatchedKeywords(matched);
-        console.log("Keywords:", text);
-      }
-    );
+    setShowNoteModal(false)
+    router.replace("/dashboard")
   };
 
   const handleNextPress = () => {
@@ -124,9 +111,11 @@ const fetchResources = () => {
                 {resource.read_description}
               </Text>
               <Text style={styles.resourceContent}>
-                {" "}
-                <Text style={styles.resourceContent}>{resource.read_description}</Text>
-                {resource.read_duration}
+
+                <Text style={styles.resourceContent}>
+                  Time: 
+                  {resource.read_duration}
+                </Text>
               </Text>
             </View>
           ))}
@@ -159,10 +148,7 @@ const fetchResources = () => {
                   </View>
                 ))}
               </ScrollView>
-              <Pressable
-                style={styles.finishButton}
-                onPress={handleNextPress}
-              >
+              <Pressable style={styles.finishButton} onPress={handleNextPress}>
                 <Text style={styles.finishButtonText}>Finish</Text>
               </Pressable>
             </View>

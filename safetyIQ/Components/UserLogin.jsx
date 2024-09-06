@@ -21,31 +21,28 @@ import { useFonts } from "expo-font";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const UserLogin = () => {
-  const [fontsLoaded] = useFonts({
-    "Kanit-Bold": require("./../assets/fonts/Kanit-Bold.ttf"),
-    "Kanit-Regular": require("./../assets/fonts/Kanit-Regular.ttf"),
-    "Kanit-Italic": require("./../assets/fonts/Kanit-Italic.ttf"),
-    "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
-  });
-    if (!fontsLoaded) {
-      return null;
-    }
-
-  useEffect(() => {
-    AsyncStorage.getItem("token").then((token) => {
-      if (token) {
-
-        router.replace("dashboard");
-      }
-    });
-  }, []);
-
   const backendUrl = "http://192.168.0.103:8000/login";
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSwitchOn, setIsSwitchOn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
  
+  const [fontsLoaded] = useFonts({
+    "Kanit-Bold": require("./../assets/fonts/Kanit-Bold.ttf"),
+    "Kanit-Regular": require("./../assets/fonts/Kanit-Regular.ttf"),
+    "Kanit-Italic": require("./../assets/fonts/Kanit-Italic.ttf"),
+    "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
+  });
+
+    
+  if (!fontsLoaded) {
+    return null;
+  } else {
+    console.log("load");
+  }
+  
+
+  
 
   const LoginSchema = Yup.object().shape({
     identifier: Yup.string().required("Call Up No/FRP No is required"),

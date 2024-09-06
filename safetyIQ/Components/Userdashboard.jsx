@@ -296,7 +296,7 @@ const fetchCurrentTopic = () => {
                     </View>
                   </View>
                   <View>
-                    <Text style={styles.percentage}>70%</Text>
+                    <Text style={styles.percentage}>60%</Text>
                   </View>
                 </View>
               </View>

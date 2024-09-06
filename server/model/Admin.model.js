@@ -25,6 +25,7 @@ const adminSchema = new Schema({
 
 // Define Resource schema
 const resourceSchema = new Schema({
+  course: String,
   title: String,
   description: String,
   time_taken: String,

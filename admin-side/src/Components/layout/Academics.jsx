@@ -120,7 +120,7 @@ const handleResourceSubmit = (e) => {
         setNewResource({
           title: "",
           description: "",
-          course_id: "",
+          course_name: "",
           time_taken: "",
           image: null,
           note: "",
