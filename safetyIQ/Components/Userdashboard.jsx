@@ -16,15 +16,24 @@ import axios from "axios";
 import { router } from "expo-router";
 
 const Userdashboard = () => {
-  const id = AsyncStorage.getItem("userId");
+  const [ids, setID] = useState("");
+   AsyncStorage.getItem("userId")
+   .then((result)=>{
+    let parsedID = JSON.parse(result)
+      setID(parsedID)
+      
+   }).catch((err)=>{
+    console.log(err);
+    
+   })
+   
 
-
+   const currentTopicUrl = `http://192.168.0.103:8000/currentTopic/${ids}`;
   
   // const profileUrl = `https://safetyiqnativebackend.onrender.com/profilePic`;
-  // const books = `https://safetyiqnativebackend.onrender.com/readFetch`;
-  const currentTopicUrl = `http://192.168.0.103:8000/currentTopic`;
+  const books = `http://192.168.0.103:8000/readFetch`;
   // const checkExamUrl = `https://safetyiqnativebackend.onrender.com/checkExamCompletion`;
-
+  
   const [course, setCourse] = useState("");
   const [userData, setUserData] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,33 +43,28 @@ const Userdashboard = () => {
   const [timers, setTimers] = useState({});
   // const [examTimers, setExamTimers] = useState({});
   // const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-  // const [isStudyTimerActive, setIsStudyTimerActive] = useState(false);
+  const [isStudyTimerActive, setIsStudyTimerActive] = useState(false);
+ 
 
-  // useEffect(() => {
-
-  //   fetchCurrentTopic();
-  //   fetchCourses();
-
-  //   const intervalId = setInterval(() => {
-  //     updateTimers();
-  //     checkTimeAndUpdateState();
-  //   }, 1000);
-
-  //   return () => clearInterval(intervalId);
-  // }, [id, course]);
 
   useEffect(() => {
-    fetchCurrentTopic()
     fetchUserInfo()
-  }, [])
+    fetchCurrentTopic();
+        const intervalId = setInterval(() => {
+          updateTimers();
+          checkTimeAndUpdateState();
+        }, 1000);
+
+        return () => clearInterval(intervalId);
+    
+  }, [ids])
   
 
   const fetchUserInfo = () => {
   AsyncStorage.getItem("userInfo")
   .then((info) => {
      const parsedInfo = JSON.parse(info); 
-     setUserData(parsedInfo);
-   
+     setUserData(parsedInfo);   
     
   })
    .catch((error) => {
@@ -68,17 +72,20 @@ const Userdashboard = () => {
       });
   };
 
+
+
+  
 const fetchCurrentTopic = () => {
   axios
     .get(currentTopicUrl)
     .then((response) => {
-      const topics = response.data.topics; 
-      if (topics && topics.length > 0) {
-        setCourse(topics[0].name);
+      const topics = response.data.currentTopic;
+      if (topics) {
+        setCourse(topics);
 
-        checkExamCompletion(topics); 
+        // checkExamCompletion(topics);
         const initialTimers = { ...timers };
-        initialTimers[topics[0].name] = 12 * 60 * 60; 
+        initialTimers[topics] = 12 * 60 * 60;
         setTimers(initialTimers);
         setIsStudyTimerActive(true);
       }
@@ -88,18 +95,9 @@ const fetchCurrentTopic = () => {
     });
 };
 
-  // const fetchData = () => {
-  //   axios
-  //     .post(userUrl, { id: id })
-  //     .then((response) => {
-  //       setUserData(response.data.user);
-  //       setRefreshing(false);
-  //     })
-  //     .catch((error) => {
-  //       console.log(error);
-  //       setRefreshing(false);
-  //     });
-  // };
+
+
+ 
 
   // const fetchCourses = () => {
   //   axios
@@ -145,7 +143,11 @@ const fetchCurrentTopic = () => {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchUserInfo();
+
+    setTimeout(()=>{
+      fetchUserInfo();
+      setRefreshing(false)
+    },2000)
     checkTimeAndUpdateState();
   }, []);
 
@@ -184,7 +186,7 @@ const fetchCurrentTopic = () => {
     const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
 
     if (currentHours < 18) {
-      Alert.alert("Alert", "You can only start reading after 4 PM.");
+      Alert.alert("Alert", "You can only start reading after 2 PM.");
     } else {
       router.push({
         pathname: "ReadCourse",

@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { router, useRouter } from "expo-router";
 import * as Yup from "yup";
 import { Formik } from "formik";
@@ -28,16 +28,25 @@ const UserLogin = () => {
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
 
+  useEffect(() => {
+      if (!fontsLoaded) {
+        return null;
+      }
 
-  const port = 101;
+    AsyncStorage.getItem("token").then((token) => {
+      if (token) {
+
+        router.replace("dashboard");
+      }
+    });
+  }, []);
+
   const backendUrl = "http://192.168.0.103:8000/login";
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSwitchOn, setIsSwitchOn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  if (!fontsLoaded) {
-    return null;
-  }
+ 
 
   const LoginSchema = Yup.object().shape({
     identifier: Yup.string().required("Call Up No/FRP No is required"),
@@ -57,10 +66,11 @@ const UserLogin = () => {
             const lastName = response.data.user.lastName;
             let userInfo = {firstName, lastName}
             const userId = response.data.user.user_id;
+            
             const token = response.data.token;
-            AsyncStorage.setItem("userInfo", userInfo);
+            AsyncStorage.setItem("userInfo", JSON.stringify(userInfo));
             AsyncStorage.setItem("token", token);
-            AsyncStorage.setItem("userId", userId.toString())
+            AsyncStorage.setItem("userId", JSON.stringify(userId))
               .then(() => {
                 setIsLoading(false)
               router.replace("dashboard")

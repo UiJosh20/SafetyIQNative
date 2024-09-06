@@ -11,7 +11,7 @@ router.get("/resources", fetchResources);
 router.get("/read", readCourses);
 router.get("/courseFetch", courseFetch);
 router.get("/readFetch", readfetch);
-router.get("/currentTopic", fetchCurrentTopic);
+router.get("/currentTopic/:user", fetchCurrentTopic);
 
 
 

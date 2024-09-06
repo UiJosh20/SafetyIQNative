@@ -1,4 +1,5 @@
-  const User = require("../model/user.model");
+const User = require("../model/user.model");
+const cron = require("node-cron");
   const bcrypt = require("bcryptjs");
   const jwt = require("jsonwebtoken")
   const nodemailer = require("nodemailer");
@@ -13,6 +14,8 @@
     ExamQuestion,
   } = require("../model/Admin.model");
   const CurrentTopic = require("../model/CurrentTopic.model");
+  const UserTopic = require("../model/UserTopic.model")
+
 
   const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
   const EMAIL_USER = process.env.EMAIL_USER;
@@ -338,40 +341,79 @@ const login = (req, res) => {
   };
 
 
-  cron.schedule("0 2 * * *", () => {
-    console.log("Running cron job to update the current topic...");
-    fetchCurrentTopic();
-  });
+  // cron.schedule("0 2 * * *", () => {
+  //   console.log("Running cron job to update the current topic...");
+  //   fetchCurrentTopic();
+  // });
 
 
-  const fetchCurrentTopic = (req, res) => {
+
+const fetchCurrentTopic = (req, res) => {
+  const { user } = req.params;
+ 
+
   readCourse
     .find({})
     .then((topics) => {
       if (topics.length === 0) {
-        console.error("No topics found");
-        return;
+        return res.status(404).send({ message: "No topics available" });
       }
 
+      UserTopic.find({ user })
+        .then((assignedTopics) => {
+          const assignedTopicIds = assignedTopics.map((ut) =>
+            ut.topic_id.toString()
+          );
 
-      const newCurrentTopic = topics[Math.floor(Math.random() * topics.length)];
+          const availableTopics = topics.filter(
+            (topic) => !assignedTopicIds.includes(topic._id.toString())
+          );
 
-      CurrentTopic.findOneAndUpdate(
-        {},
-        { topic: newCurrentTopic._id, date: new Date() },
-        { upsert: true, new: true }
-      )
-        .then(() => {
-          console.log(`Current topic changed to: ${newCurrentTopic.name}`);
+          if (availableTopics.length === 0) {
+            console.log("All topics have been assigned");
+            return res
+              .status(404)
+              .send({ message: "All topics have been assigned" });
+          }
+
+          const newCurrentTopic =
+            availableTopics[Math.floor(Math.random() * availableTopics.length)];
+
+          CurrentTopic.findOneAndUpdate(
+            {},
+            { topic: newCurrentTopic._id, date: new Date() },
+            { upsert: true, new: true }
+          )
+            .then(() => {
+              const userTopic = new UserTopic({
+                userId: user,
+                topic_id: newCurrentTopic._id,
+                topic_assigned: newCurrentTopic.name,
+                dateAssigned: new Date(),
+              });
+
+              return userTopic.save();
+            })
+            .then(() => {
+              res.status(200).send({ currentTopic: newCurrentTopic.name });
+            })
+            .catch((error) => {
+              res.status(500).send({ message: "Error updating current topic" });
+            });
         })
         .catch((error) => {
-          console.error("Error updating current topic:", error);
+          console.error("Error fetching assigned topics:", error);
+          res.status(500).send({ message: "Error fetching assigned topics" });
         });
     })
     .catch((error) => {
       console.error("Error fetching topics:", error);
+      res.status(500).send({ message: "Error fetching topics" });
     });
-  }
+};
+
+
+
 
   module.exports = {
     signup,
