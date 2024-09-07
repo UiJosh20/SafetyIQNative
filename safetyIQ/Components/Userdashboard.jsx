@@ -289,7 +289,7 @@ const fetchCurrentTopic = () => {
                       }}
                     >
                       <View style={styles.wrong}>
-                        <Text style={styles.correctText}>7</Text>
+                        <Text style={styles.correctText}>1</Text>
                       </View>
                       <Text style={{ fontSize: 16 }}>Wrong</Text>
                     </View> 
@@ -302,7 +302,7 @@ const fetchCurrentTopic = () => {
                       }}
                     >
                       <View style={styles.attempt}>
-                        <Text style={styles.correctText}>3</Text>
+                        <Text style={styles.correctText}>{userScore.totalQuestions}</Text>
                       </View>
                       <Text style={{ fontSize: 16 }}>Attempt</Text>
                     </View>
