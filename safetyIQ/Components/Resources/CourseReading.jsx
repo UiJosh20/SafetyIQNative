@@ -20,9 +20,11 @@ import { router } from "expo-router";
 const CourseReading = () => {
   const [resources, setResources] = useState([]);
   const [matchedKeywords, setMatchedKeywords] = useState([]);
-    const [showNoteModal, setShowNoteModal] = useState(false);
-    const [selectedResource, setSelectedResource] = useState(null);
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [selectedResource, setSelectedResource] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showKeywordModal, setShowKeywordModal] = useState(false);
+  const [inputWord, setInputWord] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [userId, setUserId] = useState(null);
   const route = useRoute();
@@ -34,8 +36,7 @@ const CourseReading = () => {
       .then((userId) => {
         if (userId) {
           setUserId(userId);
-      fetchResources();
-
+          fetchResources();
         }
       })
       .catch((error) => {
@@ -43,34 +44,47 @@ const CourseReading = () => {
       });
   }, [course]);
 
-
-
-const fetchResources = () => {
-  setLoading(true);
-  axios
-    .get(`http://192.168.0.103:8000/read`, {
-      params: { currentTopic: course }, 
-    })
-    .then((response) => {
-      setResources(response.data); 
-      setLoading(false);
-      setRefreshing(false);
-    })
-    .catch((error) => {
-      console.error("Error fetching resources:", error);
-      setLoading(false);
-      setRefreshing(false);
-    });
-};
+  const fetchResources = () => {
+    setLoading(true);
+    axios
+      .get(`http://192.168.0.103:8000/read`, {
+        params: { currentTopic: course },
+      })
+      .then((response) => {
+        setResources(response.data);
+        setLoading(false);
+        setRefreshing(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching resources:", error);
+        setLoading(false);
+        setRefreshing(false);
+      });
+  };
 
   const onRefresh = () => {
     setRefreshing(true);
     fetchResources();
   };
 
+  const handleKeywordSubmit = () => {
+    const requiredWord = "Important";
+    if (inputWord.toLowerCase() === requiredWord.toLowerCase()) {
+      setShowKeywordModal(false);
+      router.replace({
+        pathname: "/exam",
+        params:{course_name: course},
+      }); 
+    } else {
+      Alert.alert(
+        "Error",
+        "Incorrect word. Please enter 'Important' to proceed."
+      );
+    }
+  };
+
   const handleKeywordPrompt = () => {
-    setShowNoteModal(false)
-    router.replace("/dashboard")
+    setShowKeywordModal(true);
   };
 
   const handleNextPress = () => {
@@ -111,9 +125,8 @@ const fetchResources = () => {
                 {resource.read_description}
               </Text>
               <Text style={styles.resourceContent}>
-
                 <Text style={styles.resourceContent}>
-                  Time: 
+                  Time:
                   {resource.read_duration}
                 </Text>
               </Text>
@@ -151,6 +164,45 @@ const fetchResources = () => {
               <Pressable style={styles.finishButton} onPress={handleNextPress}>
                 <Text style={styles.finishButtonText}>Finish</Text>
               </Pressable>
+            </View>
+          </Modal>
+
+          <Modal
+            visible={showKeywordModal}
+            animationType="slide"
+            onRequestClose={() => setShowKeywordModal(false)}
+          >
+            <View style={styles.modalContainer1}>
+              <View
+                style={{
+                  backgroundColor: "white",
+                  width: "100%",
+                  padding: 20,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  borderRadius:20,
+                }}
+              >
+                <Text style={styles.modalTitle1}>
+                  Enter the word "Important" to proceed
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  value={inputWord}
+                  onChangeText={setInputWord}
+                  placeholder="Enter the word"
+                  autoFocus
+                />
+                <Pressable
+                  style={styles.finishButton}
+                  onPress={handleKeywordSubmit}
+                >
+                  <Text style={styles.finishButtonText}>Submit</Text>
+                </Pressable>
+                <Pressable onPress={() => setShowKeywordModal(false)}>
+                  <Text style={styles.cancelText}>Cancel</Text>
+                </Pressable>
+              </View>
             </View>
           </Modal>
         </ScrollView>
@@ -201,11 +253,26 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+
+  modalContainer1: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "rgba(0,0,0,0.7)",
+  },
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 10,
-    textAlign:"center"
+    textAlign: "center",
+  },
+
+  modalTitle1: {
+    fontSize: 15,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
   },
   modalContent: {
     fontSize: 18,
@@ -222,5 +289,14 @@ const styles = StyleSheet.create({
     color: "white",
     textAlign: "center",
     fontSize: 18,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
+    borderRadius: 5,
+    fontSize: 16,
+    marginVertical: 20,
+    width: "100%",
   },
 });

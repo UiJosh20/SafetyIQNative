@@ -43,6 +43,9 @@ const Userdashboard = () => {
   // const [examTimers, setExamTimers] = useState({});
   // const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const [isStudyTimerActive, setIsStudyTimerActive] = useState(false);
+//  const {score} = router.params
+
+ console.log(router.params);
  
 
 

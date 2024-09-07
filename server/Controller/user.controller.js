@@ -391,6 +391,75 @@ const fetchCurrentTopic = (req, res) => {
     });
 };
 
+
+const fetchExamQuestions = (req, res) =>{
+  const {course_name} = req.query
+
+
+  if (!course_name) {
+    return res.status(400).json({ error: "course_name is required" });
+  }
+
+  ExamQuestion.find({ course_name })
+    .then((questions) => {
+      if (questions.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No questions found for this course." });
+      }
+      res.status(200).json(questions);
+    })
+    .catch((error) => {
+      console.error("Error fetching exam questions:", error);
+      res.status(500).json({ error: "Server error while fetching questions." });
+    });
+  
+
+}
+
+const submitExam = (req, res) => {
+  const { selectedAnswers } = req.body; // The selected answers from the frontend
+
+  // Array to store the results (correct or incorrect for each question)
+  const result = [];
+
+  // Get the question IDs from the selectedAnswers object
+  const questionIds = Object.keys(selectedAnswers);
+
+  // Find all the questions that match the provided IDs
+  ExamQuestion.find({ _id: { $in: questionIds } })
+    .then((questions) => {
+      questions.forEach((question) => {
+        const userAnswer = selectedAnswers[question._id]; // User's selected answer for this question
+        const correctAnswer = question.correct_answer; // Correct answer from the database
+
+        // Compare the user's answer with the correct answer
+        if (userAnswer === correctAnswer) {
+          result.push({ questionId: question._id, correct: true });
+        } else {
+          result.push({ questionId: question._id, correct: false });
+        }
+      });
+
+      // You can also calculate a score or return feedback
+      const score = result.filter((r) => r.correct).length;
+      const totalQuestions = result.length;
+
+      // Return the result to the frontend
+      res.json({
+        result,
+        score,
+        totalQuestions,
+      });
+    })
+    .catch((error) => {
+      console.error("Error fetching questions for comparison:", error);
+      res
+        .status(500)
+        .json({ error: "An error occurred while processing the exam." });
+    });
+};
+
 module.exports = {
   signup,
   paystackInit,
@@ -400,4 +469,6 @@ module.exports = {
   courseFetch,
   readCourses,
   fetchCurrentTopic,
+  fetchExamQuestions,
+  submitExam,
 };
