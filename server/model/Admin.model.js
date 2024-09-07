@@ -56,12 +56,34 @@ const readCourseSchema = new Schema({
 
 // Define Exam Question schema
 const examQuestionSchema = new Schema({
-  question: String,
-  options: [String],
-  correct_answer: String,
-  course_id: Schema.Types.ObjectId,
-  admin_id: Schema.Types.ObjectId,
+  question: {
+    type: String,
+    required: true,
+  },
+  options: {
+    type: [String],
+    required: true,
+    validate: {
+      validator: (v) => v.length === 4, // Ensuring exactly 4 options
+      message: "There must be exactly 4 options.",
+    },
+  },
+  correct_answer: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function (v) {
+        return this.options.includes(v); // Ensuring correct answer is one of the options
+      },
+      message: "The correct answer must be one of the provided options.",
+    },
+  },
+  course_name: {
+    type: String,
+    required: true,
+  },
 });
+
 
 
 

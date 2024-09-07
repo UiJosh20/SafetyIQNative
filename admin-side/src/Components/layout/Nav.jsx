@@ -22,7 +22,7 @@ const Nav = () => {
             <Link to={"/admin/resources"}>Resources</Link>
           </li>
           <li>
-            <Link to="#">Exam</Link>
+            <Link to="/admin/exams">Exam</Link>
           </li>
           <li>
             <Link to={"/admin/academics"}>Settings</Link>

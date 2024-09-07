@@ -11,6 +11,7 @@ import Dashboard from './Components/layout/Dashboard'
 import Academics from './Components/layout/Academics'
 import Reading from './Components/layout/Reading'
 import Resources from './Components/layout/Resources'
+import Exam from './Components/layout/Exam'
 
 function App() {
 
@@ -27,6 +28,7 @@ function App() {
           <Route path="/admin/academics" element={<Academics />} />
           <Route path="/admin/reading" element={<Reading />} />
           <Route path="/admin/resources" element={<Resources />} />
+          <Route path="/admin/exams" element={<Exam  />} />
         </Route>
       </Routes>
     </>

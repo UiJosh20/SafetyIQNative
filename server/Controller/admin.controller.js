@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 const User = require("../model/user.model");
 const ObjectId = mongoose.Types.ObjectId;
 const nodemailer = require("nodemailer");
@@ -132,8 +132,6 @@ const getAllStudents = (req, res) => {
     });
 };
 
-
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
@@ -173,18 +171,12 @@ const uploadResource = (req, res) => {
       return res.status(400).json({ error: err });
     }
 
-    const {
-      course_name,
-      title,
-      description,
-      time_taken,
-      note,
-    } = req.body;
+    const { course_name, title, description, time_taken, note } = req.body;
 
     const image = req.file ? req.file.path : null;
 
     const resourceData = {
-      course : course_name,
+      course: course_name,
       title,
       description,
       time_taken,
@@ -259,15 +251,7 @@ const uploadRead = (req, res) => {
       return res.status(400).json({ error: err });
     }
 
-    const {
-      title,
-      description,
-      time_taken,
-      note,
-      course_name
-    } = req.body;
-
-    
+    const { title, description, time_taken, note, course_name } = req.body;
 
     const image = req.file ? req.file.path : null;
 
@@ -276,8 +260,7 @@ const uploadRead = (req, res) => {
       read_description: description,
       read_duration: time_taken,
       read_note: note,
-      read_course: course_name
-
+      read_course: course_name,
     };
 
     if (image) {
@@ -314,7 +297,6 @@ const uploadRead = (req, res) => {
   });
 };
 
-
 const courseAdd = (req, res) => {
   const { name, admin_id } = req.body;
   // const userId = Array.isArray(user_id) ? user_id[0] : user_id;
@@ -339,11 +321,8 @@ const courseAdd = (req, res) => {
     });
 };
 
-
 const readCourseAdd = (req, res) => {
   const { name, admin_id } = req.body;
-
-
 
   const newReadCourse = new readCourse({
     name,
@@ -365,37 +344,31 @@ const readCourseAdd = (req, res) => {
     });
 };
 
-
-
 const fetchCourse = (req, res) => {
-Course.find({})
-  .then((courses) => {
-    res.status(200).json(courses);
-  })
-  .catch((error) => {
-    console.error("Error fetching courses:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  });
+  Course.find({})
+    .then((courses) => {
+      res.status(200).json(courses);
+    })
+    .catch((error) => {
+      console.error("Error fetching courses:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    });
 };
 
 const fetchRead = (req, res) => {
- readCourse.find({})
-   .then((courses) => {    
-     res.status(200).json(courses);
-   })
-   .catch((error) => {
-     console.error("Error fetching courses:", error);
-     res.status(500).json({ message: "Internal Server Error" });
-   });
+  readCourse
+    .find({})
+    .then((courses) => {
+      res.status(200).json(courses);
+    })
+    .catch((error) => {
+      console.error("Error fetching courses:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    });
 };
 
-
-
 const fetchAllResources = (req, res) => {
-  Promise.all([
-    Read.find({}).lean(),         
-    Resource.find({}).lean()      
-  ])
+  Promise.all([Read.find({}).lean(), Resource.find({}).lean()])
     .then(([readResources, generalResources]) => {
       const allResources = [...readResources, ...generalResources];
 
@@ -415,99 +388,107 @@ const fetchAllResources = (req, res) => {
     });
 };
 
-
 const deleteCourse = (req, res) => {
-   const { id } = req.params;
+  const { id } = req.params;
 
-   Course
-     .deleteOne({ name: id })
-     .then((deletedResource) => {
-       if (!deletedResource) {
-         return res.status(404).json({ message: "Resource not found" });
-       }
-       res.json({ message: "Course deleted successfully" });
-     })
-     .catch((error) => {
-       console.error("Error deleting resource:", error);
-       res.status(500).json({ message: "Error deleting resource" });
-     });
+  Course.deleteOne({ name: id })
+    .then((deletedResource) => {
+      if (!deletedResource) {
+        return res.status(404).json({ message: "Resource not found" });
+      }
+      res.json({ message: "Course deleted successfully" });
+    })
+    .catch((error) => {
+      console.error("Error deleting resource:", error);
+      res.status(500).json({ message: "Error deleting resource" });
+    });
 };
 
 const deleteRead = (req, res) => {
   const { courseTopic } = req.params;
-  
 
-   readCourse
-     .deleteOne({ name: courseTopic })
-     .then((deletedResource) => {
-       if (!deletedResource) {
-         return res.status(404).json({ message: "Resource not found" });
-       }
-       res.json({ message: "Read course deleted successfully" });
-     })
-     .catch((error) => {
-       console.error("Error deleting resource:", error);
-       res.status(500).json({ message: "Error deleting resource" });
-     });
+  readCourse
+    .deleteOne({ name: courseTopic })
+    .then((deletedResource) => {
+      if (!deletedResource) {
+        return res.status(404).json({ message: "Resource not found" });
+      }
+      res.json({ message: "Read course deleted successfully" });
+    })
+    .catch((error) => {
+      console.error("Error deleting resource:", error);
+      res.status(500).json({ message: "Error deleting resource" });
+    });
 };
 
 const deleteResource = (req, res) => {
-    const { title } = req.params;
-    if (!title) {
-      return res.status(400).json({ message: "Resource title is required" });
-    }
-
-    // Delete resource by title from both Read and Resource models
-    Promise.all([
-      Read.deleteOne({ read_title: title }),
-      Resource.deleteOne({ title: title }),
-    ])
-      .then(([readResult, resourceResult]) => {
-        const totalDeleted =
-          readResult.deletedCount + resourceResult.deletedCount;
-
-        // Check if any resource was deleted
-        if (totalDeleted === 0) {
-          return res.status(404).json({ message: "Resource not found" });
-        }
-
-        res.status(200).json({ message: "Resource(s) deleted successfully" });
-      })
-      .catch((error) => {
-        console.error("Error deleting resource:", error);
-        res.status(500).json({ message: "Internal Server Error" });
-      });
-};
-
-saveExamQuestion = (req, res) => {
-  const { question, options, correct_answer, course_id, admin_id } = req.body;
-
-  // Validate input data
-  if (!question || !options || !correct_answer || !course_id || !admin_id) {
-    return res.status(400).json({ error: "All fields are required" });
+  const { title } = req.params;
+  if (!title) {
+    return res.status(400).json({ message: "Resource title is required" });
   }
 
-  // Insert the exam question into the database
-  db("exam_questions")
-    .insert({
-      question: question,
-      options: JSON.stringify(options), // Convert options to JSON string
-      correct_answer: correct_answer,
-      course_id: course_id,
-      admin_id: admin_id,
-    })
-    .returning("*")
-    .then((insertedRows) => {
-      res.status(201).json({
-        message: "Exam question saved successfully",
-        data: insertedRows[0], // Return the inserted record
-      });
+  // Delete resource by title from both Read and Resource models
+  Promise.all([
+    Read.deleteOne({ read_title: title }),
+    Resource.deleteOne({ title: title }),
+  ])
+    .then(([readResult, resourceResult]) => {
+      const totalDeleted =
+        readResult.deletedCount + resourceResult.deletedCount;
+
+      // Check if any resource was deleted
+      if (totalDeleted === 0) {
+        return res.status(404).json({ message: "Resource not found" });
+      }
+
+      res.status(200).json({ message: "Resource(s) deleted successfully" });
     })
     .catch((error) => {
-      console.error("Error saving exam question:", error);
+      console.error("Error deleting resource:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    });
+};
+
+const saveExamQuestion = (req, res) => {
+  
+  const {
+    question,
+    option1,
+    option2,
+    option3,
+    option4,
+    correctOption,
+    course_name,
+  } = req.body;
+
+  
+  const options = [option1, option2, option3, option4];
+  const correct_answer = options[correctOption - 1]; 
+
+  // Create a new exam question object
+  const newExamQuestion = new ExamQuestion({
+    question,
+    options,
+    correct_answer,
+    course_name,
+  });
+
+  // Save the question to the database
+  newExamQuestion
+    .save()
+    .then((savedQuestion) => {
+      res
+        .status(201)
+        .json({
+          message: "Exam question saved successfully",
+          data: savedQuestion,
+        });
+    })
+    .catch((err) => {
+      console.error("Error saving exam question:", err);
       res
         .status(500)
-        .json({ error: "An error occurred while saving the exam question" });
+        .json({ message: "Error saving exam question", error: err });
     });
 };
 
@@ -515,7 +496,7 @@ module.exports = {
   signupAdmin,
   loginAdmin,
   // getAdminInfo,
-getAllStudents,
+  getAllStudents,
   uploadResource,
   courseAdd,
   deleteCourse,
