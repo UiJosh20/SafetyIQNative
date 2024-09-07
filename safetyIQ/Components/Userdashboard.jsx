@@ -26,6 +26,13 @@ const Userdashboard = () => {
     console.log(err);
     
    })
+
+   AsyncStorage.getItem("score")
+   .then((result)=>{
+    let parsedScore = JSON.parse(result)
+    setUserScore(parsedScore)
+    
+   })
    
 
    const currentTopicUrl = `http://192.168.0.103:8000/currentTopic/${ids}`;
@@ -38,14 +45,15 @@ const Userdashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   // const [items, setItems] = useState([]);
+  const [userScore, setUserScore] = useState([])
   const [selectedImage, setSelectedImage] = useState(null);
   const [timers, setTimers] = useState({});
   // const [examTimers, setExamTimers] = useState({});
   // const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const [isStudyTimerActive, setIsStudyTimerActive] = useState(false);
-//  const {score} = router.params
 
- console.log(router.params);
+
+ 
  
 
 
@@ -258,6 +266,7 @@ const fetchCurrentTopic = () => {
               <View style={styles.scoreBoard}>
                 <Text style={styles.TestText}>{course}</Text>
                 <View style={styles.scoreContainer}>
+                 
                   <View>
                     <View
                       style={{
@@ -267,9 +276,9 @@ const fetchCurrentTopic = () => {
                       }}
                     >
                       <View style={styles.correct}>
-                        <Text style={styles.correctText}>13</Text>
+                        <Text style={styles.correctText}>{userScore.score}</Text>
                       </View>
-                      <Text style={{ fontSize: 16 }}>Correct</Text>
+                      <Text style={{ fontSize: 16 }}>Score</Text>
                     </View>
 
                     <View
@@ -283,7 +292,7 @@ const fetchCurrentTopic = () => {
                         <Text style={styles.correctText}>7</Text>
                       </View>
                       <Text style={{ fontSize: 16 }}>Wrong</Text>
-                    </View>
+                    </View> 
 
                     <View
                       style={{

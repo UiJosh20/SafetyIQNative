@@ -11,6 +11,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useRoute } from "@react-navigation/native";
 import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const UserExam = () => {
   const [examQuestions, setExamQuestions] = useState([]);
@@ -66,6 +67,7 @@ const UserExam = () => {
              })
              .then((response) => {
                console.log("Exam submitted successfully:", response.data);
+               let scores = response.data
                Alert.alert(
                  "Submitted successfully",
                  "You will be navigated to the dashboard to see your score"
@@ -73,8 +75,9 @@ const UserExam = () => {
                setTimeout(() => {
                 router.replace({
                   pathname:"/dashboard",
-                  params:{score:response.data}
                 })
+
+                AsyncStorage.setItem("score", JSON.stringify(scores))
                }, 2000);
              })
              .catch((error) => {
