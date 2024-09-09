@@ -15,6 +15,8 @@ const {
 } = require("../model/Admin.model");
 const CurrentTopic = require("../model/CurrentTopic.model");
 const UserTopic = require("../model/UserTopic.model");
+const ExamResult = require("../model/ExamResult.model");
+
 
 const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const EMAIL_USER = process.env.EMAIL_USER;
@@ -246,28 +248,7 @@ const login = (req, res) => {
     });
 };
 
-// const dashboard = (req, res) => {
-//   const { id } = req.body;
 
-//   if (!id) {
-//     return res.status(400).send("User ID is required.");
-//   }
-
-//   db("safetyiq_table")
-//     .where({ user_id: id })
-//     .first()
-//     .then((user) => {
-//       if (!user) {
-//         return res.status(404).send("User not found.");
-//       }
-
-//       res.send({ user });
-//     })
-//     .catch((error) => {
-//       console.error("Error fetching user data:", error);
-//       res.status(500).send("An error occurred while fetching user data.");
-//     });
-// };
 
 const fetchResources = (req, res) => {
   const { course } = req.query;
@@ -418,22 +399,17 @@ const fetchExamQuestions = (req, res) =>{
 }
 
 const submitExam = (req, res) => {
-  const { selectedAnswers } = req.body; // The selected answers from the frontend
+  const { selectedAnswers, ids, course_name } = req.body; // selectedAnswers from the frontend
 
-  // Array to store the results (correct or incorrect for each question)
   const result = [];
-
-  // Get the question IDs from the selectedAnswers object
   const questionIds = Object.keys(selectedAnswers);
 
-  // Find all the questions that match the provided IDs
   ExamQuestion.find({ _id: { $in: questionIds } })
     .then((questions) => {
       questions.forEach((question) => {
-        const userAnswer = selectedAnswers[question._id]; // User's selected answer for this question
-        const correctAnswer = question.correct_answer; // Correct answer from the database
+        const userAnswer = selectedAnswers[question._id];
+        const correctAnswer = question.correct_answer;
 
-        // Compare the user's answer with the correct answer
         if (userAnswer === correctAnswer) {
           result.push({ questionId: question._id, correct: true });
         } else {
@@ -441,16 +417,37 @@ const submitExam = (req, res) => {
         }
       });
 
-      // You can also calculate a score or return feedback
-      const score = result.filter((r) => r.correct).length;
       const totalQuestions = result.length;
+      const totalCorrect = result.filter((r) => r.correct).length;
+      const totalWrong = totalQuestions - totalCorrect;
 
-      // Return the result to the frontend
-      res.json({
-        result,
-        score,
+      // Save the result to the database
+      const newExamResult = new ExamResult({
+        user: ids, // Assuming the user ID is passed in the request
+        topic: course_name, // Assuming topic is passed in the request
         totalQuestions,
+        totalCorrect,
+        totalWrong,
       });
+
+      newExamResult
+        .save()
+        .then((response) => {
+        console.log(response);
+        
+          res.status(200).json({
+            message: "Exam submitted successfully",
+            totalQuestions,
+            totalCorrect,
+            totalWrong,
+          });
+        })
+        .catch((error) => {
+          console.error("Error saving exam result:", error);
+          res.status(500).json({
+            message: "An error occurred while saving the exam result.",
+          });
+        });
     })
     .catch((error) => {
       console.error("Error fetching questions for comparison:", error);
@@ -459,6 +456,35 @@ const submitExam = (req, res) => {
         .json({ error: "An error occurred while processing the exam." });
     });
 };
+
+
+const fetchUserResult = (req, res) => {
+  const { user } = req.params;
+  const {course} = req.query
+  
+
+  ExamResult.find({user:user, topic:course})
+
+    .then((result) => {
+      if (!result) {
+        return res
+          .status(404)
+          .json({ message: "No result found for the current topic" });
+      }
+      // Step 3: Send the result back to the client
+      res.status(200).json({
+        message: "Current topic result fetched successfully",
+        result,
+      });
+    })
+    .catch((error) => {
+      console.error("Error fetching current topic result:", error);
+      res.status(500).json({ error: "Server error" });
+    });
+};
+
+
+
 
 module.exports = {
   signup,
@@ -471,4 +497,5 @@ module.exports = {
   fetchCurrentTopic,
   fetchExamQuestions,
   submitExam,
+  fetchUserResult,
 };

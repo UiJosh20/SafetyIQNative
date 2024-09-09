@@ -4,6 +4,8 @@
     "CLOUDINARY",
     "createdate",
     "frpnum",
+    "paystackinit",
+    "paystackverify",
     "readcourse",
     "readfetch",
     "safetyiq"

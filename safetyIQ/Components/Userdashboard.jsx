@@ -1,3 +1,4 @@
+import React, { useEffect, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -9,105 +10,106 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  Pressable,
 } from "react-native";
-import React, { useEffect, useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { router } from "expo-router";
 
 const Userdashboard = () => {
   const [ids, setID] = useState("");
-   AsyncStorage.getItem("userId")
-   .then((result)=>{
-    let parsedID = JSON.parse(result)
-      setID(parsedID)
-      
-   }).catch((err)=>{
-    console.log(err);
-    
-   })
-
-   AsyncStorage.getItem("score")
-   .then((result)=>{
-    let parsedScore = JSON.parse(result)
-    setUserScore(parsedScore)
-    
-   })
-   
-
-   const currentTopicUrl = `http://192.168.0.103:8000/currentTopic/${ids}`;
-  
-  const books = `http://192.168.0.103:8000/readFetch`;
-
-  
   const [course, setCourse] = useState("");
   const [userData, setUserData] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  // const [items, setItems] = useState([]);
-  const [userScore, setUserScore] = useState([])
+  const [userScore, setUserScore] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [timers, setTimers] = useState({});
-  // const [examTimers, setExamTimers] = useState({});
-  // const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  const [examTimers, setExamTimers] = useState({});
   const [isStudyTimerActive, setIsStudyTimerActive] = useState(false);
+const [isFetching, setIsFetching] = useState(false);
 
-
- 
- 
-
+  const fetchUserID = async () => {
+    try {
+      const result = await AsyncStorage.getItem("userId");
+      let parsedID = JSON.parse(result);
+      setID(parsedID);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   useEffect(() => {
-    fetchUserInfo()
-    fetchCurrentTopic();
-        const intervalId = setInterval(() => {
-          updateTimers();
-          checkTimeAndUpdateState();
-        }, 1000);
+    fetchUserID();
+  }, []);
 
-        return () => clearInterval(intervalId);
-    
-  }, [ids])
-  
+  const currentTopicUrl = `http://192.168.0.103:8000/currentTopic/${ids}`;
+  const resultUrl = `http://192.168.0.103:8000/result/${ids}`;
+
+  useEffect(() => {
+    if (ids) {
+      fetchCurrentTopic();
+      fetchUserInfo();
+        fetchResult();
+
+      const intervalId = setInterval(() => {
+        updateTimers();
+        checkTimeAndUpdateState();
+      }, 1000);
+
+      return () => clearInterval(intervalId);
+    }
+  }, [ids]);
 
   const fetchUserInfo = () => {
-  AsyncStorage.getItem("userInfo")
-  .then((info) => {
-     const parsedInfo = JSON.parse(info); 
-     setUserData(parsedInfo);   
-    
-  })
-   .catch((error) => {
+    AsyncStorage.getItem("userInfo")
+      .then((info) => {
+        const parsedInfo = JSON.parse(info);
+        setUserData(parsedInfo);
+      })
+      .catch((error) => {
         console.log("Error fetching user ", error);
       });
   };
 
+  const fetchCurrentTopic = () => {
+    axios
+      .get(currentTopicUrl)
+      .then((response) => {
+        const topics = response.data.currentTopic;
 
+        if (topics) {
+          setCourse(topics);
+          const initialTimers = { ...timers };
+          initialTimers[topics] = 12 * 60 * 60; // Initialize study timer
+          setTimers(initialTimers);
+          setIsStudyTimerActive(true);
 
-  
-const fetchCurrentTopic = () => {
-  axios
-    .get(currentTopicUrl)
-    .then((response) => {
-      const topics = response.data.currentTopic;
-      if (topics) {
-        setCourse(topics);
+          // Fetch result after course is set
+          fetchResult(topics);
+        }
+      })
+      .catch((error) => {
+        console.log("no new course to fetch");
+      });
+  };
 
-        // checkExamCompletion(topics);
-        const initialTimers = { ...timers };
-        initialTimers[topics] = 12 * 60 * 60;
-        setTimers(initialTimers);
-        setIsStudyTimerActive(true);
-      }
-    })
-    .catch((error) => {
-      console.log("no new course to fetch");
-    });
-};
-
-
-
- 
+ const fetchResult = (courseName) => {
+   setIsFetching(true); 
+   axios
+     .get(resultUrl, {
+       params: { course: courseName }, 
+     })
+     .then((response) => {
+       setUserScore(response.data.result);
+     })
+     .catch((err) => {
+       console.log(err);
+     })
+     .finally(() => {
+       setIsFetching(false);
+     });
+ };
 
 
   const updateTimers = () => {
@@ -133,15 +135,15 @@ const fetchCurrentTopic = () => {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
+    fetchResult();
 
-    setTimeout(()=>{
+    setTimeout(() => {
       fetchUserInfo();
-      setRefreshing(false)
-    },2000)
+      fetchCurrentTopic();
+      setRefreshing(false);
+    }, 2000);
     checkTimeAndUpdateState();
   }, []);
-
-
 
   const checkTimeAndUpdateState = () => {
     const now = new Date();
@@ -149,7 +151,7 @@ const fetchCurrentTopic = () => {
 
     if (course && currentHours > 13) {
       setIsStudyTimerActive(true);
-    }else {
+    } else {
       setIsStudyTimerActive(false);
     }
   };
@@ -157,9 +159,8 @@ const fetchCurrentTopic = () => {
   const handleReadNowPress = () => {
     const now = new Date();
     const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
-    
 
-    if (currentHours < 13) {
+    if (currentHours < 2) {
       Alert.alert("Alert", "You can start reading after 2 PM.");
     } else {
       router.push({
@@ -172,12 +173,11 @@ const fetchCurrentTopic = () => {
   return (
     <View style={styles.container}>
       <ScrollView
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
-        {
-        userData ? (
+        {userData ? (
           <>
             <View style={styles.header}>
               <TouchableOpacity
@@ -260,58 +260,92 @@ const fetchCurrentTopic = () => {
             <View>
               <View style={styles.examContainer}>
                 <Text style={styles.TestText}>Latest Test result</Text>
-                <Text style={styles.seeMore}>See more</Text>
+                <TouchableOpacity onPress={fetchResult}>
+                  <Text style={styles.seeMore}>See more</Text>
+                </TouchableOpacity>
               </View>
 
-              <View style={styles.scoreBoard}>
-                <Text style={styles.TestText}>{course}</Text>
-                <View style={styles.scoreContainer}>
-                 
-                  <View>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        gap: 10,
-                        alignItems: "center",
-                      }}
-                    >
-                      <View style={styles.correct}>
-                        <Text style={styles.correctText}>{userScore.score}</Text>
-                      </View>
-                      <Text style={{ fontSize: 16 }}>Score</Text>
-                    </View>
-
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        gap: 10,
-                        alignItems: "center",
-                      }}
-                    >
-                      <View style={styles.wrong}>
-                        <Text style={styles.correctText}>1</Text>
-                      </View>
-                      <Text style={{ fontSize: 16 }}>Wrong</Text>
-                    </View> 
-
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        gap: 10,
-                        alignItems: "center",
-                      }}
-                    >
-                      <View style={styles.attempt}>
-                        <Text style={styles.correctText}>{userScore.totalQuestions}</Text>
-                      </View>
-                      <Text style={{ fontSize: 16 }}>Attempt</Text>
-                    </View>
-                  </View>
-                  <View>
-                    <Text style={styles.percentage}>60%</Text>
-                  </View>
+              {isFetching ? (
+                <View
+                  style={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: 100,
+                  }}
+                >
+                  <ActivityIndicator size="large" color="#c30000" />
                 </View>
-              </View>
+              ) : userScore.length > 0 ? (
+                userScore.map((score, index) => (
+                  <View key={index} style={styles.scoreBoard}>
+                    <Text style={styles.TestText}>{score.topic}</Text>
+                    <View style={styles.scoreContainer}>
+                      <View>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            gap: 10,
+                            alignItems: "center",
+                          }}
+                        >
+                          <View style={styles.correct}>
+                            <Text style={styles.correctText}>
+                              {score.totalCorrect}
+                            </Text>
+                          </View>
+                          <Text style={{ fontSize: 16 }}>Correct</Text>
+                        </View>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            gap: 10,
+                            alignItems: "center",
+                          }}
+                        >
+                          <View style={styles.wrong}>
+                            <Text style={styles.correctText}>
+                              {score.totalWrong}
+                            </Text>
+                          </View>
+                          <Text style={{ fontSize: 16 }}>Wrong</Text>
+                        </View>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            gap: 10,
+                            alignItems: "center",
+                          }}
+                        >
+                          <View style={styles.attempt}>
+                            <Text style={styles.correctText}>
+                              {score.totalQuestions}
+                            </Text>
+                          </View>
+                          <Text style={{ fontSize: 16 }}>Total Questions</Text>
+                        </View>
+                      </View>
+                      <View>
+                        <Text style={styles.percentage}>
+                          {Math.round(
+                            (score.totalCorrect / score.totalQuestions) * 100
+                          )}
+                          %
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                ))
+              ) : (
+                <View
+                  style={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: 100,
+                  }}
+                >
+                  <Text>No scores available</Text>
+                </View>
+              )}
             </View>
           </>
         ) : (
@@ -524,6 +558,6 @@ const styles = StyleSheet.create({
     fontSize: 40,
     color: "#53BD5E",
   },
-}); 
+});
 
 export default Userdashboard;

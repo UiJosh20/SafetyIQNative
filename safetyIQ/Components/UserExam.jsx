@@ -15,10 +15,19 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const UserExam = () => {
   const [examQuestions, setExamQuestions] = useState([]);
+   const [ids, setID] = useState("");
   const [loading, setLoading] = useState(true);
   const [selectedAnswer, setSelectedAnswer] = useState({});
   const route = useRoute();
   const { course_name } = route.params; // Get the course/topic the user just finished reading
+   AsyncStorage.getItem("userId")
+     .then((result) => {
+       let parsedID = JSON.parse(result);
+       setID(parsedID);
+     })
+     .catch((err) => {
+       console.log(err);
+     });
 
   useEffect(() => {
     fetchExamQuestions();
@@ -30,7 +39,6 @@ const UserExam = () => {
         params: { course_name },
       })
       .then((response) => {
-        console.log(response.data);
         setExamQuestions(response.data);
         setLoading(false);
       })
@@ -47,48 +55,55 @@ const UserExam = () => {
     }));
   };
 
- const handleSubmitExam = () => {
-   // Show confirmation dialog before submitting
-   Alert.alert(
-     "Submit Exam",
-     "Are you sure you want to submit your exam?",
-     [
-       {
-         text: "Cancel",
-         style: "cancel",
-       },
-       {
-         text: "Submit",
-         onPress: () => {
-           // Proceed with the exam submission
-           axios
-             .post(`http://192.168.0.103:8000/submitExam`, {
-               selectedAnswers: selectedAnswer,
-             })
-             .then((response) => {
-               console.log("Exam submitted successfully:", response.data);
-               let scores = response.data
-               Alert.alert(
-                 "Submitted successfully",
-                 "You will be navigated to the dashboard to see your score"
-               );
-               setTimeout(() => {
-                router.replace({
-                  pathname:"/dashboard",
-                })
+const handleSubmitExam = () => {
+  // Show confirmation dialog before submitting
+  Alert.alert(
+    "Submit Exam",
+    "Are you sure you want to submit your exam?",
+    [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Submit",
+        onPress: () => {
+          axios
+            .post(`http://192.168.0.103:8000/submitExam`, {
+              selectedAnswers: selectedAnswer,
+              ids,
+              course_name,
+            })
+            .then((response) => {
+              const scores = response.data; // Retrieve the score from the response
+              console.log("Exam submitted successfully:", scores);
 
-                AsyncStorage.setItem("score", JSON.stringify(scores))
-               }, 2000);
-             })
-             .catch((error) => {
-               console.error("Error submitting exam", error);
-             });
-         },
-       },
-     ],
-     { cancelable: true }
-   );
- };
+              // Show the score immediately in the alert
+              Alert.alert(
+                "Submitted successfully",
+                `You would be redirected to your dashboard for your score`
+              );
+
+              // Optionally store the score in AsyncStorage
+              AsyncStorage.setItem("score", JSON.stringify(scores));
+
+              // Optionally, navigate to the dashboard after showing the score
+              setTimeout(() => {
+                router.replace({
+                  pathname: "/dashboard",
+                });
+              }, 2000);
+            })
+            .catch((error) => {
+              console.error("Error submitting exam", error);
+            });
+        },
+      },
+    ],
+    { cancelable: true }
+  );
+};
+
 
   if (loading) {
     return <ActivityIndicator size="large" color="#c30000" />;
