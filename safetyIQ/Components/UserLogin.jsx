@@ -21,7 +21,7 @@ import { useFonts } from "expo-font";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const UserLogin = () => {
-  const backendUrl = "http://192.168.0.103:8000/login";
+  const backendUrl = "https://safetyiqnativebackend.onrender.com/login";
   const [ids, setID] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSwitchOn, setIsSwitchOn] = useState(false);

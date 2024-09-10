@@ -35,7 +35,7 @@ const UserExam = () => {
 
   const fetchExamQuestions = () => {
     axios
-      .get(`http://192.168.0.103:8000/examQuestions`, {
+      .get(`https://safetyiqnativebackend.onrender.com/examQuestions`, {
         params: { course_name },
       })
       .then((response) => {
@@ -69,7 +69,7 @@ const handleSubmitExam = () => {
         text: "Submit",
         onPress: () => {
           axios
-            .post(`http://192.168.0.103:8000/submitExam`, {
+            .post(`https://safetyiqnativebackend.onrender.com/submitExam`, {
               selectedAnswers: selectedAnswer,
               ids,
               course_name,

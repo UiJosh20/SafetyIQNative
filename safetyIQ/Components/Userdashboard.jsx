@@ -43,8 +43,8 @@ const [isFetching, setIsFetching] = useState(false);
     fetchUserID();
   }, []);
 
-  const currentTopicUrl = `http://192.168.0.103:8000/currentTopic/${ids}`;
-  const resultUrl = `http://192.168.0.103:8000/result/${ids}`;
+  const currentTopicUrl = `https://safetyiqnativebackend.onrender.com/currentTopic/${ids}`;
+  const resultUrl = `https://safetyiqnativebackend.onrender.com/result/${ids}`;
 
   useEffect(() => {
     if (ids) {

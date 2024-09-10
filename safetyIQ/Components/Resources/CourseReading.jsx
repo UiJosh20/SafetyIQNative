@@ -47,7 +47,7 @@ const CourseReading = () => {
   const fetchResources = () => {
     setLoading(true);
     axios
-      .get(`http://192.168.0.103:8000/read`, {
+      .get(`https://safetyiqnativebackend.onrender.com/read`, {
         params: { currentTopic: course },
       })
       .then((response) => {
