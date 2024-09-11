@@ -57,16 +57,16 @@ const UserRegister = () => {
       })
       .then((response) => {
         if (response.status === 201) {
-          return AsyncStorage.multiSet([
+          AsyncStorage.multiSet([
             ["firstName", values.firstName],
             ["email", values.email], // Save email to AsyncStorage
           ]);
+
+        router.push("fee");
+
         } else {
           router.push("enroll");
         }
-      })
-      .then(() => {
-        router.push("fee");
       })
       .catch((error) => {
         console.error("Failed to signup", error);

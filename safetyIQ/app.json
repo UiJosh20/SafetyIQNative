@@ -3,7 +3,7 @@
     "name": "safetyIQ",
     "slug": "safetyIQ",
     "version": "1.0.0",
-    "scheme": "safetyIQ",
+   "scheme": ["safetyiq-2468-4a5c-8a9f-4e6c-8b8b8b8b8b8b"],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
