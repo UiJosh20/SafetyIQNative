@@ -24,7 +24,7 @@ const UserRegister = () => {
     "Kanit-Italic": require("./../assets/fonts/Kanit-Italic.ttf"),
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
-  const port = 101;
+
   const backendUrl = `https://safetyiqnativebackend.onrender.com/signup`;
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);

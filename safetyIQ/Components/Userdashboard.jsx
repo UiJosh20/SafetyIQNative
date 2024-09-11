@@ -170,6 +170,10 @@ const [isFetching, setIsFetching] = useState(false);
     }
   };
 
+
+  const handleLogout = ()=>{
+    router.push("index")
+  }
   return (
     <View style={styles.container}>
       <ScrollView
@@ -365,7 +369,12 @@ const [isFetching, setIsFetching] = useState(false);
             >
               <Text style={styles.modalCloseButtonText}>Close</Text>
             </TouchableOpacity>
-            <Text>Modal Content</Text>
+            <TouchableOpacity
+              style={styles.modalLogoutButton}
+              onPress={handleLogout}
+            >
+              <Text style={styles.modalCloseButtonText}>Logout</Text>
+            </TouchableOpacity>
           </View>
         </Modal>
       </ScrollView>
@@ -401,6 +410,24 @@ const styles = StyleSheet.create({
   avatarPlaceholder: {
     color: "#fff",
     fontSize: 24,
+  },
+
+  modalCloseButton: {
+    backgroundColor: "#c30000",
+    width: "100%",
+    padding: 10,
+  },
+
+  modalLogoutButton: {
+    backgroundColor: "green",
+    width: "100%",
+    padding: 10,
+
+  },
+  modalCloseButtonText:{
+    color:"white",
+    fontSize:15,
+    fontWeight:"bold"
   },
   welcome: {
     fontFamily: "Kanit-Regular",
