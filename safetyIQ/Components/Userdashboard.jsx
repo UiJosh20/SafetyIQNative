@@ -172,7 +172,7 @@ const [isFetching, setIsFetching] = useState(false);
 
 
   const handleLogout = ()=>{
-    router.push("index")
+    router.push("login")
   }
   return (
     <View style={styles.container}>
