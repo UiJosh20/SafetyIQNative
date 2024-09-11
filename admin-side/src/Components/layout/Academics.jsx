@@ -34,7 +34,7 @@ export default function Academics() {
   const fetchCourses = () => {
     axios
       .get(
-        `http://localhost:8000/admin/fetchCourse`
+        `https://safetyiqnativebackend.onrender.com/admin/fetchCourse`
       )
       .then((response) => {
         setItems(response.data);
@@ -110,7 +110,7 @@ const handleResourceSubmit = (e) => {
 
 
   axios
-    .post("http://localhost:8000/admin/upload", formData, {
+    .post("https://safetyiqnativebackend.onrender.com/admin/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -140,7 +140,7 @@ const handleResourceSubmit = (e) => {
   const handleCourseSubmit = (e) => {
     e.preventDefault();
     axios
-      .post(`http://localhost:8000/admin/course`, {
+      .post(`https://safetyiqnativebackend.onrender.com/admin/course`, {
         name: newCourse,
         admin_id: adminId,
       })
@@ -167,7 +167,7 @@ const handleResourceSubmit = (e) => {
 
   const handleDeleteCourse = () => {
     axios
-      .delete(`http://localhost:8000/admin/course/${courseId}`)
+      .delete(`https://safetyiqnativebackend.onrender.com/admin/course/${courseId}`)
       .then((response) => {
         if (response.data.message === "Course deleted successfully") {
           toast.success("Course deleted successfully");

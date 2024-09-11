@@ -18,7 +18,7 @@ const Exam = () => {
 
   const fetchExamTopics = () => {
     axios
-      .get("http://localhost:8000/admin/fetchRead")
+      .get("https://safetyiqnativebackend.onrender.com/admin/fetchRead")
       .then((result) => {
         setTopics(result.data);
       })
@@ -49,7 +49,7 @@ const Exam = () => {
     setLoading(true);
 
     axios
-      .post("http://localhost:8000/admin/examQuestion", payload, {
+      .post("https://safetyiqnativebackend.onrender.com/admin/examQuestion", payload, {
         headers: { "Content-Type": "application/json" },
       })
       .then((response) => {

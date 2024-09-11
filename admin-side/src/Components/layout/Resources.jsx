@@ -20,7 +20,7 @@ const Resources = () => {
 
   const fetchResources = () => {
     axios
-      .get(`http://localhost:8000/admin/fetchResources`)
+      .get(`https://safetyiqnativebackend.onrender.com/admin/fetchResources`)
       .then((response) => {
         const resources = response.data;
         console.log(resources);
@@ -47,7 +47,7 @@ const Resources = () => {
 
   const handleDelete = () => {
     axios
-      .delete(`http://localhost:8000/admin/resources/${title}`)
+      .delete(`https://safetyiqnativebackend.onrender.com/admin/resources/${title}`)
       .then((response) => {
         if (response.data.message === "Resource(s) deleted successfully") {
           fetchResources();

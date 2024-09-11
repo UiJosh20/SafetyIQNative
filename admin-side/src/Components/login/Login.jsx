@@ -16,7 +16,7 @@ const Login = () => {
     setLoading(true);
 
     axios
-      .post("http://localhost:8000/admin/login", {
+      .post("https://safetyiqnativebackend.onrender.com/admin/login", {
         adminId,
         password,
       })

@@ -32,7 +32,7 @@ export default function Reading() {
 
     const fetchCourses = () => {
       axios
-        .get(`http://localhost:8000/admin/fetchRead`)
+        .get(`https://safetyiqnativebackend.onrender.com/admin/fetchRead`)
         .then((response) => {
           setItems(response.data);
           setIsLoading(false);
@@ -112,7 +112,7 @@ export default function Reading() {
 
     axios
       .post(
-        "http://localhost:8000/admin/uploadRead",
+        "https://safetyiqnativebackend.onrender.com/admin/uploadRead",
         formData,
         {
           headers: {
@@ -143,7 +143,7 @@ export default function Reading() {
   const handleCourseSubmit = (e) => {
     e.preventDefault();
     axios
-      .post(`http://localhost:8000/admin/readCourseAdd`, {
+      .post(`https://safetyiqnativebackend.onrender.com/admin/readCourseAdd`, {
         name: newCourse,
         admin_id: adminId,
       })
@@ -168,7 +168,7 @@ export default function Reading() {
   const handleDeleteCourse = () => {
     axios
       .delete(
-        `http://localhost:8000/admin/readDelete/${courseId}`
+        `https://safetyiqnativebackend.onrender.com/admin/readDelete/${courseId}`
       )
       .then((response) => {
         if (response.data.message === "Read course deleted successfully") {

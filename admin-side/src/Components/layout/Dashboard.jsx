@@ -17,7 +17,7 @@ const Dashboard = () => {
   
 const fetchTotalStudents = () => {
     axios
-      .get(`http://localhost:8000/admin/students`)
+      .get(`https://safetyiqnativebackend.onrender.com/admin/students`)
       .then((response) => {
         setTotalStudents(response.data.totalStudents);
         setData(response.data.students);

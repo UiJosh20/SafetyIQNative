@@ -39,7 +39,7 @@ const Register = () => {
   const handleSubmit = (values, { setSubmitting, resetForm }) => {
     const { confirmPassword, ...data } = values; // Exclude confirmPassword before sending data
     axios
-      .post("http://localhost:8000/admin/signup", data) // Make sure this URL is correct
+      .post("https://safetyiqnativebackend.onrender.com/admin/signup", data) // Make sure this URL is correct
       .then((response) => {
         console.log("Admin registered:", response.data);
         setSubmitting(false);
