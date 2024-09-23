@@ -21,10 +21,13 @@ const CourseReading = () => {
   const [resources, setResources] = useState([]);
   const [matchedKeywords, setMatchedKeywords] = useState([]);
   const [showNoteModal, setShowNoteModal] = useState(false);
+  const [showExamModal, setShowExamModal] = useState(false); // New state for the exam modal
   const [selectedResource, setSelectedResource] = useState(null);
+  const [examMessage, setExamMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [showKeywordModal, setShowKeywordModal] = useState(false);
   const [inputWord, setInputWord] = useState("");
+
   const [refreshing, setRefreshing] = useState(false);
   const [userId, setUserId] = useState(null);
   const route = useRoute();
@@ -73,8 +76,8 @@ const CourseReading = () => {
       setShowKeywordModal(false);
       router.replace({
         pathname: "/exam",
-        params:{course_name: course},
-      }); 
+        params: { course_name: course },
+      });
     } else {
       Alert.alert(
         "Error",
@@ -88,13 +91,17 @@ const CourseReading = () => {
   };
 
   const handleNextPress = () => {
-    Alert.alert("Confirm", "Are you sure you have read the resources?", [
+    Alert.alert("Confirm", "Are you sure you have read the topic?", [
       {
-        text: "Yes, I have read them",
-        onPress: handleKeywordPrompt,
+        text: "Yes, I have",
+        onPress: () => {
+          // Close note modal and show exam availability
+          setShowNoteModal(false);
+          showExamAvailability();
+        },
       },
       {
-        text: "No, I haven't read them",
+        text: "No, I haven't",
         style: "cancel",
       },
     ]);
@@ -102,6 +109,23 @@ const CourseReading = () => {
   const handleShowNoteModal = (resource) => {
     setSelectedResource(resource);
     setShowNoteModal(true);
+  };
+
+  const showExamAvailability = () => {
+    const examStartHour = 15; // Assuming test starts at 3 PM
+    const currentHour = new Date().getHours();
+    const remainingHours = examStartHour - currentHour;
+
+    if (remainingHours > 0) {
+      setShowExamModal(true);
+      setExamMessage(
+        `The test for this topic will start in ${remainingHours} hour${
+          remainingHours > 1 ? "s" : ""
+        }.`
+      );
+    } else {
+      setExamMessage("The test for this topic is already available.");
+    }
   };
 
   return (
@@ -152,7 +176,7 @@ const CourseReading = () => {
                 </View>
               ))}
 
-              <ScrollView>
+              <ScrollView showsVerticalScrollIndicator={false}>
                 {resources.map((resource, index) => (
                   <View key={index}>
                     <Text style={styles.resourceContent}>
@@ -168,9 +192,9 @@ const CourseReading = () => {
           </Modal>
 
           <Modal
-            visible={showKeywordModal}
+            visible={showExamModal}
             animationType="slide"
-            onRequestClose={() => setShowKeywordModal(false)}
+            onRequestClose={() => setShowExamModal(false)}
           >
             <View style={styles.modalContainer1}>
               <View
@@ -180,27 +204,12 @@ const CourseReading = () => {
                   padding: 20,
                   justifyContent: "center",
                   alignItems: "center",
-                  borderRadius:20,
+                  borderRadius: 20,
                 }}
               >
-                <Text style={styles.modalTitle1}>
-                  Enter the word "Important" to proceed
-                </Text>
-                <TextInput
-                  style={styles.input}
-                  value={inputWord}
-                  onChangeText={setInputWord}
-                  placeholder="Enter the word"
-                  autoFocus
-                />
-                <Pressable
-                  style={styles.finishButton}
-                  onPress={handleKeywordSubmit}
-                >
-                  <Text style={styles.finishButtonText}>Submit</Text>
-                </Pressable>
-                <Pressable onPress={() => setShowKeywordModal(false)}>
-                  <Text style={styles.cancelText}>Cancel</Text>
+                <Text style={styles.modalTitle1}>{examMessage}</Text>
+                <Pressable onPress={() => {setShowExamModal(false); router.repla }} style={styles.finishButton}>
+                  <Text style={styles.finishButtonText}>Close</Text>
                 </Pressable>
               </View>
             </View>
@@ -290,6 +299,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 18,
   },
+
   input: {
     borderWidth: 1,
     borderColor: "#ccc",

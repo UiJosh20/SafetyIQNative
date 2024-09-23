@@ -15,6 +15,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { router } from "expo-router";
+import * as Notifications from "expo-notifications";
 
 const Userdashboard = () => {
   const [ids, setID] = useState("");
@@ -27,7 +28,8 @@ const Userdashboard = () => {
   const [timers, setTimers] = useState({});
   const [examTimers, setExamTimers] = useState({});
   const [isStudyTimerActive, setIsStudyTimerActive] = useState(false);
-const [isFetching, setIsFetching] = useState(false);
+  const [isTestTimerActive, setIsTestTimerActive] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
 
   const fetchUserID = async () => {
     try {
@@ -47,10 +49,29 @@ const [isFetching, setIsFetching] = useState(false);
   const resultUrl = `https://safetyiqnativebackend.onrender.com/result/${ids}`;
 
   useEffect(() => {
+    const now = new Date();
+    const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
+
+    if (currentHours >= 2 && currentHours < 14) {
+      setIsStudyTimerActive(true);
+      const initialTimers = { ...timers };
+      initialTimers["default"] = (14 - currentHours) * 60 * 60; // Time left till 2 PM
+      setTimers(initialTimers);
+    }
+
+    const intervalId = setInterval(() => {
+      updateTimers();
+      checkTimeAndUpdateState();
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
     if (ids) {
       fetchCurrentTopic();
       fetchUserInfo();
-        fetchResult();
+      fetchResult();
 
       const intervalId = setInterval(() => {
         updateTimers();
@@ -60,6 +81,17 @@ const [isFetching, setIsFetching] = useState(false);
       return () => clearInterval(intervalId);
     }
   }, [ids]);
+
+  useEffect(() => {
+    const requestPermissions = async () => {
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status !== "granted") {
+        await Notifications.requestPermissionsAsync();
+      }
+    };
+
+    requestPermissions();
+  }, []);
 
   const fetchUserInfo = () => {
     AsyncStorage.getItem("userInfo")
@@ -77,16 +109,12 @@ const [isFetching, setIsFetching] = useState(false);
       .get(currentTopicUrl)
       .then((response) => {
         const topics = response.data.currentTopic;
-
         if (topics) {
           setCourse(topics);
           const initialTimers = { ...timers };
-          initialTimers[topics] = 12 * 60 * 60; // Initialize study timer
+          initialTimers[topics] = (14 - new Date().getUTCHours() - 1) * 60 * 60;
           setTimers(initialTimers);
           setIsStudyTimerActive(true);
-
-          // Fetch result after course is set
-          fetchResult(topics);
         }
       })
       .catch((error) => {
@@ -94,35 +122,64 @@ const [isFetching, setIsFetching] = useState(false);
       });
   };
 
- const fetchResult = (courseName) => {
-   setIsFetching(true); 
-   axios
-     .get(resultUrl, {
-       params: { course: courseName }, 
-     })
-     .then((response) => {
-       setUserScore(response.data.result);
-     })
-     .catch((err) => {
-       console.log(err);
-     })
-     .finally(() => {
-       setIsFetching(false);
-     });
- };
-
+  const fetchResult = (courseName) => {
+    setIsFetching(true);
+    axios
+      .get(resultUrl, { params: { course: courseName } })
+      .then((response) => {
+        setUserScore(response.data.result);
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+      .finally(() => {
+        setIsFetching(false);
+      });
+  };
 
   const updateTimers = () => {
-    setTimers((prevTimers) => {
-      const updatedTimers = { ...prevTimers };
+  setTimers((prevTimers) => {
+    const updatedTimers = { ...prevTimers };
+    Object.keys(updatedTimers).forEach((key) => {
+      if (isStudyTimerActive) {
+        updatedTimers[key] = Math.max(updatedTimers[key] - 1, 0); // Prevent going below zero
+      }
+    });
+    return updatedTimers;
+  });
+
+   if (isTestTimerActive) {
+    setExamTimers((prevExamTimers) => {
+      const updatedTimers = { ...prevExamTimers };
       Object.keys(updatedTimers).forEach((key) => {
-        if (updatedTimers[key] > 0 && isStudyTimerActive) {
-          updatedTimers[key] -= 1;
-        }
+        updatedTimers[key] = Math.max(updatedTimers[key] - 1, 0); // Prevent going below zero
       });
       return updatedTimers;
     });
-  };
+  }
+};
+
+
+
+
+ const checkTimeAndUpdateState = () => {
+   const now = new Date();
+   const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
+
+   // Study timer ends at 2 PM (14:00)
+   if (currentHours >= 14) {
+     setIsStudyTimerActive(false);
+     timers[course] = 0; // Ensure study timer stays at 0
+
+     // Test timer starts at 3 PM (15:00)
+     if (currentHours > 14 && !isTestTimerActive) {
+       setIsTestTimerActive(true);
+       const initialExamTimers = { ...examTimers };
+       initialExamTimers[course] = 3 * 60 * 60; // 3 hours test due timer
+       setExamTimers(initialExamTimers);
+     }
+   }
+ };
 
   const formatTime = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
@@ -131,6 +188,20 @@ const [isFetching, setIsFetching] = useState(false);
     return `${hrs.toString().padStart(2, "0")}:${mins
       .toString()
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleReadNowPress = () => {
+    const now = new Date();
+    const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
+
+    if (currentHours < 2) {
+      Alert.alert("Alert", "You can start reading after 2 AM.");
+    } else {
+      router.push({
+        pathname: "ReadCourse",
+        params: { course: course },
+      });
+    }
   };
 
   const onRefresh = useCallback(() => {
@@ -145,35 +216,10 @@ const [isFetching, setIsFetching] = useState(false);
     checkTimeAndUpdateState();
   }, []);
 
-  const checkTimeAndUpdateState = () => {
-    const now = new Date();
-    const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
-
-    if (course && currentHours > 13) {
-      setIsStudyTimerActive(true);
-    } else {
-      setIsStudyTimerActive(false);
-    }
+  const handleLogout = () => {
+    router.push("login");
   };
 
-  const handleReadNowPress = () => {
-    const now = new Date();
-    const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
-
-    if (currentHours < 2) {
-      Alert.alert("Alert", "You can start reading after 2 PM.");
-    } else {
-      router.push({
-        pathname: "ReadCourse",
-        params: { course: course },
-      });
-    }
-  };
-
-
-  const handleLogout = ()=>{
-    router.push("login")
-  }
   return (
     <View style={styles.container}>
       <ScrollView
@@ -231,7 +277,7 @@ const [isFetching, setIsFetching] = useState(false);
                       Study Time Left:{" "}
                     </Text>
                     <Text style={styles.timer}>
-                      {formatTime(timers[course])}
+                      {formatTime(timers[course] || timers["default"])}
                     </Text>
                   </View>
                   <View>
@@ -281,106 +327,49 @@ const [isFetching, setIsFetching] = useState(false);
                 </View>
               ) : userScore.length > 0 ? (
                 userScore.map((score, index) => (
-                  <View key={index} style={styles.scoreBoard}>
-                    <Text style={styles.TestText}>{score.topic}</Text>
-                    <View style={styles.scoreContainer}>
-                      <View>
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            gap: 10,
-                            alignItems: "center",
-                          }}
-                        >
-                          <View style={styles.correct}>
-                            <Text style={styles.correctText}>
-                              {score.totalCorrect}
-                            </Text>
-                          </View>
-                          <Text style={{ fontSize: 16 }}>Correct</Text>
-                        </View>
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            gap: 10,
-                            alignItems: "center",
-                          }}
-                        >
-                          <View style={styles.wrong}>
-                            <Text style={styles.correctText}>
-                              {score.totalWrong}
-                            </Text>
-                          </View>
-                          <Text style={{ fontSize: 16 }}>Wrong</Text>
-                        </View>
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            gap: 10,
-                            alignItems: "center",
-                          }}
-                        >
-                          <View style={styles.attempt}>
-                            <Text style={styles.correctText}>
-                              {score.totalQuestions}
-                            </Text>
-                          </View>
-                          <Text style={{ fontSize: 16 }}>Total Questions</Text>
-                        </View>
-                      </View>
-                      <View>
-                        <Text style={styles.percentage}>
-                          {Math.round(
-                            (score.totalCorrect / score.totalQuestions) * 100
-                          )}
-                          %
-                        </Text>
-                      </View>
+                  <View key={index} style={styles.TestBox}>
+                    <View style={styles.TestView}>
+                      <Text>{score.course}</Text>
+                      <Text>{score.score}%</Text>
                     </View>
+                    <Text style={styles.time}>
+                      Date: {new Date(score.date).toLocaleDateString()}
+                    </Text>
                   </View>
                 ))
               ) : (
-                <View
-                  style={{
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: 100,
-                  }}
-                >
-                  <Text>No scores available</Text>
-                </View>
+                <Text style={styles.time}>No test result available</Text>
               )}
             </View>
           </>
         ) : (
           <ActivityIndicator size="large" color="#c30000" />
         )}
-
-        <Modal
-          visible={modalVisible}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.modalContainer}>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.modalCloseButtonText}>Close</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalLogoutButton}
-              onPress={handleLogout}
-            >
-              <Text style={styles.modalCloseButtonText}>Logout</Text>
-            </TouchableOpacity>
-          </View>
-        </Modal>
       </ScrollView>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(!modalVisible)}
+      >
+        <View style={styles.modalBackground}>
+          <Pressable
+            style={styles.modalView}
+            onPress={() => setModalVisible(false)}
+          >
+            <Text style={styles.modalText}>Log Out</Text>
+            <TouchableOpacity onPress={handleLogout}>
+              <Text style={styles.logoutText}>Yes, log me out</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </View>
+      </Modal>
     </View>
   );
 };
+
+export default Userdashboard;
 
 const styles = StyleSheet.create({
   container: {
@@ -422,12 +411,11 @@ const styles = StyleSheet.create({
     backgroundColor: "green",
     width: "100%",
     padding: 10,
-
   },
-  modalCloseButtonText:{
-    color:"white",
-    fontSize:15,
-    fontWeight:"bold"
+  modalCloseButtonText: {
+    color: "white",
+    fontSize: 15,
+    fontWeight: "bold",
   },
   welcome: {
     fontFamily: "Kanit-Regular",
@@ -458,13 +446,14 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
   },
   whiteBox: {
-    width: 250,
+    width: "fit-content",
     height: 36,
     backgroundColor: "#fff",
     borderRadius: 10,
     position: "absolute",
-    top: -2,
-    left: 40,
+    top: -10,
+    left: 50,
+    marginHorizontal: 20,
     paddingHorizontal: 10,
 
     shadowColor: "#000",
@@ -472,6 +461,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  time: {
+    color: "#808080",
+    fontSize: 12,
+    textAlign: "center",
+    marginVertical: 20,
   },
   whiteBoxText: {
     fontFamily: "Kanit-Light",
@@ -586,5 +581,3 @@ const styles = StyleSheet.create({
     color: "#53BD5E",
   },
 });
-
-export default Userdashboard;

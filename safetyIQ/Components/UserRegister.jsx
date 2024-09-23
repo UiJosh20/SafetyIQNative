@@ -26,6 +26,7 @@ const UserRegister = () => {
   });
 
   const backendUrl = `https://safetyiqnativebackend.onrender.com/signup`;
+  const [isLoading, setIsLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
@@ -273,7 +274,11 @@ const UserRegister = () => {
                 style={{ marginVertical: 10, marginBottom: 100, width: "100%" }}
                 onPress={handleSubmit}
               >
-                <Text style={styles.signupbtn}>Submit</Text>
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.signupbtn}>Submit</Text>
+                )}
               </TouchableOpacity>
             </>
           )}
