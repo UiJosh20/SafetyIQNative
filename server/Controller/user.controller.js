@@ -15,7 +15,7 @@ const {
 } = require("../model/Admin.model");
 const CurrentTopic = require("../model/CurrentTopic.model");
 const UserTopic = require("../model/UserTopic.model");
-const ExamResult = require("../model/ExamResult.model");
+const CompletedCourse = require("../model/CompletedCourse.model");
 
 
 const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
@@ -457,6 +457,49 @@ const submitExam = (req, res) => {
     });
 };
 
+const completedCourse = async (req, res) => {
+  const { userId, courseName } = req.body; // Assuming these are passed from the frontend
+
+  try {
+    // Check if the course is already marked as completed for this user
+    let existingCourse = await CompletedCourse.findOne({ userId, courseId });
+
+    if (existingCourse) {
+      return res
+        .status(400)
+        .json({ message: "Course already marked as completed" });
+    }
+
+    // Create a new completed course record
+    const newCompletedCourse = new CompletedCourse({
+      userId,
+      courseId,
+      courseName,
+      examAttempts: 0, // Default to 0, exam not taken yet
+      highestScore: null, // No score yet
+      latestScore: null, // No score yet
+      scoreHistory: [], // Empty score history
+    });
+
+    // Save the new completed course record
+    await newCompletedCourse.save();
+
+    res
+      .status(201)
+      .json({ message: "Course marked as completed successfully" });
+  } catch (error) {
+    console.error("Error saving completed course:", error);
+    res
+      .status(500)
+      .json({
+        message: "An error occurred while saving the completed course",
+        error: error.message,
+      });
+  }
+};
+
+
+
 
 const fetchUserResult = (req, res) => {
   const { user } = req.params;
@@ -498,4 +541,5 @@ module.exports = {
   fetchExamQuestions,
   submitExam,
   fetchUserResult,
+  completedCourse,
 };

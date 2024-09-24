@@ -94,10 +94,31 @@ const CourseReading = () => {
     Alert.alert("Confirm", "Are you sure you have read the topic?", [
       {
         text: "Yes, I have",
-        onPress: () => {
-          // Close note modal and show exam availability
-          setShowNoteModal(false);
-          showExamAvailability();
+        onPress: async () => {
+          try {
+            // Close note modal and show exam availability
+            setShowNoteModal(false);
+
+            // Send the completed course data to the backend
+            const response = await axios.post(
+              "https://safetyiqnativebackend.onrender.com/completeCourse",
+              {
+                userId: userId, // Assuming you have userId stored in state
+                courseName: course, // Send the course details
+              }
+            );
+
+            // Show success message or log response
+            if (response.status === 200) {
+              console.log("Course marked as completed successfully.");
+            }
+
+            // Show exam availability modal
+            showExamAvailability();
+          } catch (error) {
+            console.error("Error saving completed course:", error);
+            Alert.alert("Error", "Failed to mark the course as completed.");
+          }
         },
       },
       {
@@ -106,6 +127,7 @@ const CourseReading = () => {
       },
     ]);
   };
+
   const handleShowNoteModal = (resource) => {
     setSelectedResource(resource);
     setShowNoteModal(true);
@@ -208,7 +230,7 @@ const CourseReading = () => {
                 }}
               >
                 <Text style={styles.modalTitle1}>{examMessage}</Text>
-                <Pressable onPress={() => {setShowExamModal(false); router.repla }} style={styles.finishButton}>
+                <Pressable onPress={() => {setShowExamModal(false); router.replace("dashboard") }} style={styles.finishButton}>
                   <Text style={styles.finishButtonText}>Close</Text>
                 </Pressable>
               </View>
