@@ -473,7 +473,6 @@ const completedCourse = async (req, res) => {
     // Create a new completed course record
     const newCompletedCourse = new CompletedCourse({
       userId,
-      courseId,
       courseName,
       examAttempts: 0, // Default to 0, exam not taken yet
       highestScore: null, // No score yet

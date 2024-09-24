@@ -111,6 +111,8 @@ const CourseReading = () => {
             // Show success message or log response
             if (response.status === 200) {
               console.log("Course marked as completed successfully.");
+              console.log(response.data);
+              
             }
 
             // Show exam availability modal
