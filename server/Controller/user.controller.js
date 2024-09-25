@@ -459,10 +459,10 @@ const submitExam = (req, res) => {
 
 const completedCourse = async (req, res) => {
   const { userId, courseName } = req.body; // Assuming these are passed from the frontend
-
+ 
   try {
     // Check if the course is already marked as completed for this user
-    let existingCourse = await CompletedCourse.findOne({ userId, courseId });
+    let existingCourse = await CompletedCourse.findOne({ userId, courseName});
 
     if (existingCourse) {
       return res
@@ -498,7 +498,27 @@ const completedCourse = async (req, res) => {
 };
 
 
+const getCompletedTopic = (req, res) => {
+  const { user } = req.params;
+  
 
+  CompletedCourse.find({ userId: user })
+    .then((completedCourses) => {
+      if (!completedCourses.length) {
+        return res
+          .status(404)
+          .json({ message: "No completed topics found for this user" });
+      }
+      res.status(200).json({
+        message: "Completed topics fetched successfully",
+        completedCourses: completedCourses,
+      });
+    })
+    .catch((error) => {
+      console.error("Error fetching completed topics:", error);
+      res.status(500).json({ message: "Server error" });
+    });
+};
 
 const fetchUserResult = (req, res) => {
   const { user } = req.params;
@@ -541,4 +561,6 @@ module.exports = {
   submitExam,
   fetchUserResult,
   completedCourse,
+  getCompletedTopic,
+
 };

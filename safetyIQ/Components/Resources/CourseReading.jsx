@@ -30,21 +30,24 @@ const CourseReading = () => {
 
   const [refreshing, setRefreshing] = useState(false);
   const [userId, setUserId] = useState(null);
+
   const route = useRoute();
   const { course } = route.params;
   const [keywords, setKeywords] = useState("");
 
+  const fetchUserID = async () => {
+    try {
+      const result = await AsyncStorage.getItem("userId");
+      let parsedID = JSON.parse(result);
+      setUserId(parsedID);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   useEffect(() => {
-    AsyncStorage.getItem("userId")
-      .then((userId) => {
-        if (userId) {
-          setUserId(userId);
-          fetchResources();
-        }
-      })
-      .catch((error) => {
-        console.log("Error fetching user ID: ", error);
-      });
+    fetchUserID();
+    fetchResources();
   }, [course]);
 
   const fetchResources = () => {
@@ -94,33 +97,30 @@ const CourseReading = () => {
     Alert.alert("Confirm", "Are you sure you have read the topic?", [
       {
         text: "Yes, I have",
-        onPress: async () => {
-          try {
-            // Close note modal and show exam availability
-            setShowNoteModal(false);
+        onPress: () => {
+          // Close note modal and show exam availability
+          setShowNoteModal(false);
 
-            // Send the completed course data to the backend
-            const response = await axios.post(
-              "https://safetyiqnativebackend.onrender.com/completeCourse",
-              {
-                userId: userId, // Assuming you have userId stored in state
-                courseName: course, // Send the course details
+          // Send the completed course data to the backend
+          axios
+            .post("http://192.168.10.92:8000/completeCourse", {
+              userId: userId, // Assuming you have userId stored in state
+              courseName: course, // Send the course details
+            })
+            .then((response) => {
+              // Show success message or log response
+              if (response.status === 201) {
+                console.log("Course marked as completed successfully.");
+                console.log(response.data);
               }
-            );
 
-            // Show success message or log response
-            if (response.status === 200) {
-              console.log("Course marked as completed successfully.");
-              console.log(response.data);
-              
-            }
-
-            // Show exam availability modal
-            showExamAvailability();
-          } catch (error) {
-            console.error("Error saving completed course:", error);
-            Alert.alert("Error", "Failed to mark the course as completed.");
-          }
+              // Show exam availability modal
+              showExamAvailability();
+            })
+            .catch((error) => {
+              console.error("Error saving completed course:", error);
+              Alert.alert("Error", "Failed to mark the course as completed.");
+            });
         },
       },
       {
@@ -143,12 +143,12 @@ const CourseReading = () => {
     if (remainingHours > 0) {
       setShowExamModal(true);
       setExamMessage(
-        `The test for this topic will start in ${remainingHours} hour${
+        `Your will start in ${remainingHours} hour${
           remainingHours > 1 ? "s" : ""
         }.`
       );
     } else {
-      setExamMessage("The test for this topic is already available.");
+      setExamMessage("Your test is already available.");
     }
   };
 
@@ -225,6 +225,7 @@ const CourseReading = () => {
                 style={{
                   backgroundColor: "white",
                   width: "100%",
+                  height: "70%",
                   padding: 20,
                   justifyContent: "center",
                   alignItems: "center",
@@ -232,7 +233,13 @@ const CourseReading = () => {
                 }}
               >
                 <Text style={styles.modalTitle1}>{examMessage}</Text>
-                <Pressable onPress={() => {setShowExamModal(false); router.replace("dashboard") }} style={styles.finishButton}>
+                <Pressable
+                  onPress={() => {
+                    setShowExamModal(false);
+                    router.replace("dashboard");
+                  }}
+                  style={styles.finishButton1}
+                >
                   <Text style={styles.finishButtonText}>Close</Text>
                 </Pressable>
               </View>
@@ -302,7 +309,7 @@ const styles = StyleSheet.create({
   },
 
   modalTitle1: {
-    fontSize: 15,
+    fontSize: 25,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
@@ -317,6 +324,16 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: 30,
     marginVertical: 20,
+  },
+
+  finishButton1: {
+    padding: 15,
+    backgroundColor: "#c30000",
+    width: "60%",
+    borderRadius: 30,
+    marginVertical: 20,
+    position: "relative",
+    top: 100,
   },
   finishButtonText: {
     color: "white",

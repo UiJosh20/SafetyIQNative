@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -18,24 +18,42 @@ import { router } from "expo-router";
 import * as Notifications from "expo-notifications";
 
 const Userdashboard = () => {
-  const [ids, setID] = useState("");
-  const [course, setCourse] = useState("");
-  const [userData, setUserData] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [userScore, setUserScore] = useState([]);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [timers, setTimers] = useState({});
-  const [examTimers, setExamTimers] = useState({});
-  const [isStudyTimerActive, setIsStudyTimerActive] = useState(false);
-  const [isTestTimerActive, setIsTestTimerActive] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
+  const [state, setState] = useState({
+    ids: "",
+    course: "",
+    userData: null,
+    refreshing: false,
+    modalVisible: false,
+    userScore: [],
+    selectedImage: null,
+    timers: {},
+    examTimers: {},
+    isStudyTimerActive: false,
+    isTestTimerActive: false,
+    isFetching: false,
+    completedTopics: [],
+    isReadNowDisabled: false,
+  });
+
+const {
+  refreshing,
+  course,
+  timers,
+  examTimers,
+  userData,
+  modalVisible,
+  selectedImage,
+  userScore,
+  isFetching,
+  isReadNowDisabled,
+} = state;
+
 
   const fetchUserID = async () => {
     try {
       const result = await AsyncStorage.getItem("userId");
       let parsedID = JSON.parse(result);
-      setID(parsedID);
+      setState((prev) => ({ ...prev, ids: parsedID }));
     } catch (err) {
       console.log(err);
     }
@@ -43,333 +61,404 @@ const Userdashboard = () => {
 
   useEffect(() => {
     fetchUserID();
+    requestNotificationPermissions();
+
   }, []);
 
-  const currentTopicUrl = `https://safetyiqnativebackend.onrender.com/currentTopic/${ids}`;
-  const resultUrl = `https://safetyiqnativebackend.onrender.com/result/${ids}`;
+  const currentTopicUrl = useMemo(
+    () => `https://safetyiqnativebackend.onrender.com/currentTopic/${state.ids}`,
+    [state.ids]
+  );
+  const resultUrl = useMemo(
+    () => `https://safetyiqnativebackend.onrender.com/result/${state.ids}`,
+    [state.ids]
+  );
+
+  const getCompletedCourse = useMemo(
+    () => `http://192.168.0.102:8000/getcomplete/${state.ids}`,
+    [state.ids]
+  );
+
+  useEffect(() => {
+    if (state.ids) {
+      fetchCurrentTopic();
+      fetchUserInfo();
+      fetchCompletedTopics();
+      
+    }
+  }, [state.ids]);
 
   useEffect(() => {
     const now = new Date();
-    const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
+    const currentHours = now.getUTCHours() + 1;
 
     if (currentHours >= 2 && currentHours < 14) {
-      setIsStudyTimerActive(true);
-      const initialTimers = { ...timers };
-      initialTimers["default"] = (14 - currentHours) * 60 * 60; // Time left till 2 PM
-      setTimers(initialTimers);
+      setState((prev) => ({
+        ...prev,
+        isStudyTimerActive: true,
+        timers: { default: (14 - currentHours) * 60 * 60 },
+      }));
     }
 
     const intervalId = setInterval(() => {
       updateTimers();
       checkTimeAndUpdateState();
-    }, 1000);
+    }, 1000); 
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [state.timers, state.examTimers, state.isStudyTimerActive, state.isTestTimerActive]);
 
-  useEffect(() => {
-    if (ids) {
-      fetchCurrentTopic();
-      fetchUserInfo();
-      fetchResult();
-
-      const intervalId = setInterval(() => {
-        updateTimers();
-        checkTimeAndUpdateState();
-      }, 1000);
-
-      return () => clearInterval(intervalId);
+  const fetchUserInfo = useCallback(async () => {
+    try {
+      const info = await AsyncStorage.getItem("userInfo");
+      const parsedInfo = JSON.parse(info);
+      setState((prev) => ({ ...prev, userData: parsedInfo }));
+    } catch (error) {
+      console.log("Error fetching user info: ", error);
     }
-  }, [ids]);
-
-  useEffect(() => {
-    const requestPermissions = async () => {
-      const { status } = await Notifications.getPermissionsAsync();
-      if (status !== "granted") {
-        await Notifications.requestPermissionsAsync();
-      }
-    };
-
-    requestPermissions();
   }, []);
 
-  const fetchUserInfo = () => {
-    AsyncStorage.getItem("userInfo")
-      .then((info) => {
-        const parsedInfo = JSON.parse(info);
-        setUserData(parsedInfo);
-      })
-      .catch((error) => {
-        console.log("Error fetching user ", error);
-      });
-  };
 
-  const fetchCurrentTopic = () => {
+  const requestNotificationPermissions = async () => {
+  const { status } = await Notifications.getPermissionsAsync();
+  if (status !== 'granted') {
+    await Notifications.requestPermissionsAsync();
+  }
+};
+
+
+  const fetchCompletedTopics = useCallback(() => {
     axios
-      .get(currentTopicUrl)
+      .get(getCompletedCourse)
       .then((response) => {
-        const topics = response.data.currentTopic;
-        if (topics) {
-          setCourse(topics);
-          const initialTimers = { ...timers };
-          initialTimers[topics] = (14 - new Date().getUTCHours() - 1) * 60 * 60;
-          setTimers(initialTimers);
-          setIsStudyTimerActive(true);
-        }
+        setState((prev) => ({
+          ...prev,
+          completedTopics: response.data.completedCourses[0].courseName,
+        }));
       })
       .catch((error) => {
-        console.log("no new course to fetch");
+        console.error(error.message);
       });
+  }, [getCompletedCourse]);
+
+const fetchCurrentTopic = useCallback(() => {
+  axios
+    .get(currentTopicUrl)
+    .then((response) => {
+      const topics = response.data.currentTopic;
+      if (topics) {
+        setState((prev) => ({
+          ...prev,
+          course: topics,
+          timers: {
+            ...prev.timers,
+            [topics]: (14 - new Date().getUTCHours() - 1) * 60 * 60,
+          },
+          isStudyTimerActive: true,
+        }));
+        checkIfTopicIsCompleted(topics);
+        checkTimeAndUpdateState();
+      }
+    })
+    .catch(() => {
+      console.log("No new course to fetch");
+    });
+}, [currentTopicUrl]);
+
+
+  const checkIfTopicIsCompleted = (currentTopic) => {
+    setState((prev) => ({
+      ...prev,
+      isReadNowDisabled: prev.completedTopics.includes(currentTopic),
+    }));
   };
 
   const fetchResult = (courseName) => {
-    setIsFetching(true);
+    setState((prev) => ({ ...prev, isFetching: true }));
     axios
       .get(resultUrl, { params: { course: courseName } })
       .then((response) => {
-        setUserScore(response.data.result);
+        setState((prev) => ({
+          ...prev,
+          userScore: response.data.result,
+          isFetching: false,
+        }));
       })
       .catch((err) => {
         console.log(err);
-      })
-      .finally(() => {
-        setIsFetching(false);
+        setState((prev) => ({ ...prev, isFetching: false }));
       });
   };
 
-  const updateTimers = () => {
-  setTimers((prevTimers) => {
-    const updatedTimers = { ...prevTimers };
-    Object.keys(updatedTimers).forEach((key) => {
-      if (isStudyTimerActive) {
-        updatedTimers[key] = Math.max(updatedTimers[key] - 1, 0); // Prevent going below zero
-      }
-    });
-    return updatedTimers;
-  });
+ const updateTimers = () => {
+   setState((prev) => {
+     const updatedTimers = { ...prev.timers };
 
-   if (isTestTimerActive) {
-    setExamTimers((prevExamTimers) => {
-      const updatedTimers = { ...prevExamTimers };
-      Object.keys(updatedTimers).forEach((key) => {
-        updatedTimers[key] = Math.max(updatedTimers[key] - 1, 0); // Prevent going below zero
-      });
-      return updatedTimers;
+     // Update study timers if active
+     if (prev.isStudyTimerActive) {
+       Object.keys(updatedTimers).forEach((key) => {
+         updatedTimers[key] = Math.max(updatedTimers[key] - 1, 0); // Decrease study time
+       });
+     }
+
+     // Update exam timers if active
+     const updatedExamTimers = { ...prev.examTimers };
+     if (prev.isTestTimerActive) {
+       Object.keys(updatedExamTimers).forEach((key) => {
+         updatedExamTimers[key] = Math.max(updatedExamTimers[key] - 1, 0); // Decrease exam time
+       });
+     }
+
+     return { ...prev, timers: updatedTimers, examTimers: updatedExamTimers };
+   });
+ };
+
+
+  const sendExamStartNotification = async () => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Exam Started",
+        body: "Your exam has started. You have 3 hours to complete it.",
+      },
+      trigger: null, // Send it immediately
     });
+  };
+
+
+const checkTimeAndUpdateState = () => {
+  const now = new Date();
+  const currentHours = now.getUTCHours() + 1;
+
+  if (currentHours >= 14) {
+    setState((prev) => ({
+      ...prev,
+      isStudyTimerActive: false,
+      timers: { ...prev.timers, [state.course]: 0 },
+    }));
+
+    if (!state.isTestTimerActive) {
+      setState((prev) => ({
+        ...prev,
+        isStudyTimerActive: false,
+        isTestTimerActive: true,
+        examTimers: { ...prev.examTimers, [state.course]: 3 * 60 * 60 }, // 3 hours for the exam
+      }));
+
+      sendExamStartNotification(); // Ensure notification is only sent once
+    }
   }
 };
 
 
 
-
- const checkTimeAndUpdateState = () => {
-   const now = new Date();
-   const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
-
-   // Study timer ends at 2 PM (14:00)
-   if (currentHours >= 14) {
-     setIsStudyTimerActive(false);
-     timers[course] = 0; // Ensure study timer stays at 0
-
-     // Test timer starts at 3 PM (15:00)
-     if (currentHours > 14 && !isTestTimerActive) {
-       setIsTestTimerActive(true);
-       const initialExamTimers = { ...examTimers };
-       initialExamTimers[course] = 3 * 60 * 60; // 3 hours test due timer
-       setExamTimers(initialExamTimers);
-     }
-   }
- };
-
-  const formatTime = (seconds) => {
+  const formatTime = useCallback((seconds) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
     return `${hrs.toString().padStart(2, "0")}:${mins
       .toString()
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
+  }, []);
 
   const handleReadNowPress = () => {
     const now = new Date();
-    const currentHours = now.getUTCHours() + 1; // WAT is UTC+1
+    const currentHours = now.getUTCHours() + 1;
 
     if (currentHours < 2) {
       Alert.alert("Alert", "You can start reading after 2 AM.");
     } else {
       router.push({
         pathname: "ReadCourse",
-        params: { course: course },
+        params: { course: state.course },
       });
     }
   };
 
   const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchResult();
+    setState((prev) => ({ ...prev, refreshing: true }));
+    fetchResult(state.course);
 
     setTimeout(() => {
       fetchUserInfo();
       fetchCurrentTopic();
-      setRefreshing(false);
+      setState((prev) => ({ ...prev, refreshing: false }));
     }, 2000);
     checkTimeAndUpdateState();
-  }, []);
+  }, [state.course]);
 
   const handleLogout = () => {
     router.push("login");
   };
 
-  return (
-    <View style={styles.container}>
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {userData ? (
-          <>
-            <View style={styles.header}>
-              <TouchableOpacity
-                style={styles.circle}
-                onPress={() => setModalVisible(true)}
-              >
-                {selectedImage ? (
-                  <Image
-                    source={{ uri: selectedImage }}
-                    style={styles.avatar}
-                  />
-                ) : (
-                  <Text style={styles.avatarPlaceholder}>
-                    {userData.firstName[0]}
-                  </Text>
-                )}
-              </TouchableOpacity>
-              <View>
-                <Text style={styles.welcome}>Welcome</Text>
-                <Text style={styles.username}>
-                  {userData.firstName} {userData.lastName}
-                </Text>
-              </View>
-            </View>
+   return (
+     <View style={styles.container}>
+       <ScrollView
+         refreshControl={
+           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+         }
+       >
+         {userData ? (
+           <>
+             <View style={styles.header}>
+               <TouchableOpacity
+                 style={styles.circle}
+                 onPress={() => setModalVisible(true)}
+               >
+                 {selectedImage ? (
+                   <Image
+                     source={{ uri: selectedImage }}
+                     style={styles.avatar}
+                   />
+                 ) : (
+                   <Text style={styles.avatarPlaceholder}>
+                     {userData.firstName[0]}
+                   </Text>
+                 )}
+               </TouchableOpacity>
+               <View>
+                 <Text style={styles.welcome}>Welcome</Text>
+                 <Text style={styles.username}>
+                   {userData.firstName} {userData.lastName}
+                 </Text>
+               </View>
+             </View>
 
-            <View style={styles.redBox1}>
-              <View style={styles.redBox}>
-                <View style={styles.whiteBox}>
-                  <View style={styles.whiteBoxText}>
-                    <Text style={{ textAlign: "center" }}>
-                      Current Topic | {course === "" ? "--" : course}
-                    </Text>
-                  </View>
-                </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    width: "100%",
-                    paddingHorizontal: 20,
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <View>
-                    <Text
-                      style={{ color: "white", marginTop: 20, marginBottom: 5 }}
-                    >
-                      Study Time Left:{" "}
-                    </Text>
-                    <Text style={styles.timer}>
-                      {formatTime(timers[course] || timers["default"])}
-                    </Text>
-                  </View>
-                  <View>
-                    <Text
-                      style={{ color: "white", marginTop: 20, marginBottom: 5 }}
-                    >
-                      Test due:{" "}
-                    </Text>
-                    <Text style={styles.timer}>
-                      {timers[course] === 0
-                        ? formatTime(examTimers[course])
-                        : formatTime(3 * 60 * 60)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: "white",
-                  padding: 10,
-                  borderRadius: 5,
-                  marginTop: -25,
-                }}
-                onPress={handleReadNowPress}
-              >
-                <Text style={{ textAlign: "center" }}>Read Now</Text>
-              </TouchableOpacity>
-            </View>
+             <View style={styles.redBox1}>
+               <View style={styles.redBox}>
+                 <View style={styles.whiteBox}>
+                   <View style={styles.whiteBoxText}>
+                     <Text style={{ textAlign: "center" }}>
+                       Current Topic | {course === "" ? "--" : course}
+                     </Text>
+                   </View>
+                 </View>
+                 <View
+                   style={{
+                     flexDirection: "row",
+                     width: "100%",
+                     paddingHorizontal: 20,
+                     justifyContent: "space-between",
+                   }}
+                 >
+                   <View>
+                     <Text
+                       style={{
+                         color: "white",
+                         marginTop: 20,
+                         marginBottom: 5,
+                       }}
+                     >
+                       Study Time Left:{" "}
+                     </Text>
+                     <Text style={styles.timer}>
+                       {formatTime(timers[course] ?? timers["default"] ?? 0)}
+                     </Text>
+                   </View>
+                   <View>
+                     <Text
+                       style={{
+                         color: "white",
+                         marginTop: 20,
+                         marginBottom: 5,
+                       }}
+                     >
+                       Test due:{" "}
+                     </Text>
+                     <Text style={styles.timer}>
+                       {timers[course] === 0
+                         ? formatTime(examTimers[course] ?? 3 * 60 * 60)
+                         : formatTime(timers[course])}
+                     </Text>
+                   </View>
+                 </View>
+               </View>
+               <TouchableOpacity
+                 style={{
+                   backgroundColor: isReadNowDisabled ? "black" : "white", // Disable button if topic is completed
+                   padding: 10,
+                   borderRadius: 5,
+                   marginTop: -25,
+                 }}
+                 onPress={handleReadNowPress}
+                 disabled={isReadNowDisabled} // Disable button if topic is completed
+               >
+                 <Text
+                   style={{
+                     textAlign: "center",
+                     color: isReadNowDisabled ? "white" : "black",
+                   }}
+                 >
+                   {isReadNowDisabled ? "Completed" : "Read Now"}
+                 </Text>
+               </TouchableOpacity>
+             </View>
 
-            <View>
-              <View style={styles.examContainer}>
-                <Text style={styles.TestText}>Latest Test result</Text>
-                <TouchableOpacity onPress={fetchResult}>
-                  <Text style={styles.seeMore}>See more</Text>
-                </TouchableOpacity>
-              </View>
+             <View>
+               <View style={styles.examContainer}>
+                 <Text style={styles.TestText}>Latest Test result</Text>
+                 <TouchableOpacity onPress={fetchResult}>
+                   <Text style={styles.seeMore}>See more</Text>
+                 </TouchableOpacity>
+               </View>
 
-              {isFetching ? (
-                <View
-                  style={{
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: 100,
-                  }}
-                >
-                  <ActivityIndicator size="large" color="#c30000" />
-                </View>
-              ) : userScore.length > 0 ? (
-                userScore.map((score, index) => (
-                  <View key={index} style={styles.TestBox}>
-                    <View style={styles.TestView}>
-                      <Text>{score.course}</Text>
-                      <Text>{score.score}%</Text>
-                    </View>
-                    <Text style={styles.time}>
-                      Date: {new Date(score.date).toLocaleDateString()}
-                    </Text>
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.time}>No test result available</Text>
-              )}
-            </View>
-          </>
-        ) : (
-          <ActivityIndicator size="large" color="#c30000" />
-        )}
-      </ScrollView>
+               {isFetching ? (
+                 <View
+                   style={{
+                     justifyContent: "center",
+                     alignItems: "center",
+                     height: 100,
+                   }}
+                 >
+                   <ActivityIndicator size="large" color="#c30000" />
+                 </View>
+               ) : userScore.length > 0 ? (
+                 userScore.map((score, index) => (
+                   <View key={index} style={styles.TestBox}>
+                     <View style={styles.TestView}>
+                       <Text>{score.course}</Text>
+                       <Text>{score.score}%</Text>
+                     </View>
+                     <Text style={styles.time}>
+                       Date: {new Date(score.date).toLocaleDateString()}
+                     </Text>
+                   </View>
+                 ))
+               ) : (
+                 <Text style={styles.time}>No test result available</Text>
+               )}
+             </View>
+           </>
+         ) : (
+           <ActivityIndicator size="large" color="#c30000" />
+         )}
+       </ScrollView>
 
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(!modalVisible)}
-      >
-        <View style={styles.modalBackground}>
-          <Pressable
-            style={styles.modalView}
-            onPress={() => setModalVisible(false)}
-          >
-            <Text style={styles.modalText}>Log Out</Text>
-            <TouchableOpacity onPress={handleLogout}>
-              <Text style={styles.logoutText}>Yes, log me out</Text>
-            </TouchableOpacity>
-          </Pressable>
-        </View>
-      </Modal>
-    </View>
-  );
+       <Modal
+         animationType="fade"
+         transparent={true}
+         visible={modalVisible}
+         onRequestClose={() => setModalVisible(!modalVisible)}
+       >
+         <View style={styles.modalBackground}>
+           <Pressable
+             style={styles.modalView}
+             onPress={() => setModalVisible(false)}
+           >
+             <Text style={styles.modalText}>Log Out</Text>
+             <TouchableOpacity onPress={handleLogout}>
+               <Text style={styles.logoutText}>Yes, log me out</Text>
+             </TouchableOpacity>
+           </Pressable>
+         </View>
+       </Modal>
+     </View>
+   );
 };
 
 export default Userdashboard;
+
+
+
 
 const styles = StyleSheet.create({
   container: {

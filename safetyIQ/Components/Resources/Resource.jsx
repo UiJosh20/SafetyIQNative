@@ -139,7 +139,7 @@ const Resource = () => {
           textAlign: "center",
         }}
       >
-        First Aid
+        First Aid Tips
       </Text>
       <View
         style={{
