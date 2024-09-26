@@ -26,7 +26,7 @@ const Userdashboard = () => {
     modalVisible: false,
     userScore: [],
     selectedImage: null,
-    timers: {},
+    timers: { default: 0 },
     examTimers: {},
     isStudyTimerActive: false,
     isTestTimerActive: false,
@@ -365,9 +365,9 @@ const checkTimeAndUpdateState = () => {
                        Test due:{" "}
                      </Text>
                      <Text style={styles.timer}>
-                       {timers[course] === 0
-                         ? formatTime(examTimers[course] ?? 3 * 60 * 60)
-                         : formatTime(timers[course])}
+                       {timers[course] !== undefined && timers[course] > 0
+                         ? formatTime(timers[course])
+                         : formatTime(examTimers[course] ?? 3 * 60 * 60)}
                      </Text>
                    </View>
                  </View>

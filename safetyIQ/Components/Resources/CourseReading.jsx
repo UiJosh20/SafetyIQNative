@@ -8,10 +8,9 @@ import {
   Image,
   Pressable,
   Alert,
-  TextInput,
   Modal,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -19,137 +18,95 @@ import { router } from "expo-router";
 
 const CourseReading = () => {
   const [resources, setResources] = useState([]);
-  const [matchedKeywords, setMatchedKeywords] = useState([]);
-  const [showNoteModal, setShowNoteModal] = useState(false);
-  const [showExamModal, setShowExamModal] = useState(false); // New state for the exam modal
-  const [selectedResource, setSelectedResource] = useState(null);
-  const [examMessage, setExamMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const [showKeywordModal, setShowKeywordModal] = useState(false);
-  const [inputWord, setInputWord] = useState("");
-
   const [refreshing, setRefreshing] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [showExamModal, setShowExamModal] = useState(false);
+  const [examMessage, setExamMessage] = useState("");
+  const { course } = useRoute().params;
 
-  const route = useRoute();
-  const { course } = route.params;
-  const [keywords, setKeywords] = useState("");
-
-  const fetchUserID = async () => {
-    try {
-      const result = await AsyncStorage.getItem("userId");
-      let parsedID = JSON.parse(result);
-      setUserId(parsedID);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
+  // Fetch user ID once
   useEffect(() => {
+    const fetchUserID = async () => {
+      try {
+        const result = await AsyncStorage.getItem("userId");
+        setUserId(JSON.parse(result));
+      } catch (err) {
+        console.log(err);
+      }
+    };
     fetchUserID();
-    fetchResources();
+  }, []);
+
+  // Fetch course resources
+  const fetchResources = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `https://safetyiqnativebackend.onrender.com/read`,
+        {
+          params: { currentTopic: course },
+        }
+      );
+      setResources(response.data);
+    } catch (error) {
+      console.error("Error fetching resources:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, [course]);
 
-  const fetchResources = () => {
-    setLoading(true);
-    axios
-      .get(`https://safetyiqnativebackend.onrender.com/read`, {
-        params: { currentTopic: course },
-      })
-      .then((response) => {
-        setResources(response.data);
-        setLoading(false);
-        setRefreshing(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching resources:", error);
-        setLoading(false);
-        setRefreshing(false);
-      });
-  };
+  useEffect(() => {
+    fetchResources();
+  }, [fetchResources]);
 
   const onRefresh = () => {
     setRefreshing(true);
     fetchResources();
   };
 
-  const handleKeywordSubmit = () => {
-    const requiredWord = "Important";
-    if (inputWord.toLowerCase() === requiredWord.toLowerCase()) {
-      setShowKeywordModal(false);
-      router.replace({
-        pathname: "/exam",
-        params: { course_name: course },
-      });
-    } else {
-      Alert.alert(
-        "Error",
-        "Incorrect word. Please enter 'Important' to proceed."
-      );
-    }
-  };
-
-  const handleKeywordPrompt = () => {
-    setShowKeywordModal(true);
-  };
-
-  const handleNextPress = () => {
+  const handleNextPress = async () => {
     Alert.alert("Confirm", "Are you sure you have read the topic?", [
       {
         text: "Yes, I have",
-        onPress: () => {
-          // Close note modal and show exam availability
+        onPress: async () => {
           setShowNoteModal(false);
-
-          // Send the completed course data to the backend
-          axios
-            .post("http://192.168.10.92:8000/completeCourse", {
-              userId: userId, // Assuming you have userId stored in state
-              courseName: course, // Send the course details
-            })
-            .then((response) => {
-              // Show success message or log response
-              if (response.status === 201) {
-                console.log("Course marked as completed successfully.");
-                console.log(response.data);
+          try {
+            const response = await axios.post(
+              "http://192.168.10.92:8000/completeCourse",
+              {
+                userId,
+                courseName: course,
               }
-
-              // Show exam availability modal
-              showExamAvailability();
-            })
-            .catch((error) => {
-              console.error("Error saving completed course:", error);
-              Alert.alert("Error", "Failed to mark the course as completed.");
-            });
+            );
+            if (response.status === 201) {
+              console.log("Course marked as completed successfully.");
+            }
+            showExamAvailability();
+          } catch (error) {
+            console.error("Error saving completed course:", error);
+            Alert.alert("Error", "Failed to mark the course as completed.");
+          }
         },
       },
-      {
-        text: "No, I haven't",
-        style: "cancel",
-      },
+      { text: "No, I haven't", style: "cancel" },
     ]);
   };
 
-  const handleShowNoteModal = (resource) => {
-    setSelectedResource(resource);
-    setShowNoteModal(true);
-  };
-
   const showExamAvailability = () => {
-    const examStartHour = 15; // Assuming test starts at 3 PM
+    const examStartHour = 15;
     const currentHour = new Date().getHours();
     const remainingHours = examStartHour - currentHour;
-
-    if (remainingHours > 0) {
-      setShowExamModal(true);
-      setExamMessage(
-        `Your will start in ${remainingHours} hour${
-          remainingHours > 1 ? "s" : ""
-        }.`
-      );
-    } else {
-      setExamMessage("Your test is already available.");
-    }
+    setExamMessage(
+      remainingHours > 0
+        ? `Your test will start in ${remainingHours} hour${
+            remainingHours > 1 ? "s" : ""
+          }.`
+        : "Your test is already available."
+    );
+    setShowExamModal(true);
   };
 
   return (
@@ -173,80 +130,55 @@ const CourseReading = () => {
                 {resource.read_description}
               </Text>
               <Text style={styles.resourceContent}>
-                <Text style={styles.resourceContent}>
-                  Time:
-                  {resource.read_duration}
-                </Text>
+                Time: {resource.read_duration}
               </Text>
             </View>
           ))}
-          <Pressable style={styles.nextbtn} onPress={handleShowNoteModal}>
+          <Pressable
+            style={styles.nextbtn}
+            onPress={() => setShowNoteModal(true)}
+          >
             <Text style={styles.nextbtntext}>Read</Text>
           </Pressable>
-          {matchedKeywords.length > 0 && (
-            <Text style={styles.resourceContent}>
-              Matched keywords: {matchedKeywords.join(", ")}
-            </Text>
-          )}
-          <Modal
-            visible={showNoteModal}
-            animationType="slide"
-            onRequestClose={() => setShowNoteModal(false)}
-          >
-            <View style={styles.modalContainer}>
-              {resources.map((resource, index) => (
-                <View key={index}>
-                  <Text style={styles.modalTitle}>{resource.read_title}</Text>
-                </View>
-              ))}
-
-              <ScrollView showsVerticalScrollIndicator={false}>
-                {resources.map((resource, index) => (
-                  <View key={index}>
-                    <Text style={styles.resourceContent}>
-                      {resource.read_note}
-                    </Text>
-                  </View>
-                ))}
-              </ScrollView>
-              <Pressable style={styles.finishButton} onPress={handleNextPress}>
-                <Text style={styles.finishButtonText}>Finish</Text>
-              </Pressable>
-            </View>
-          </Modal>
-
-          <Modal
-            visible={showExamModal}
-            animationType="slide"
-            onRequestClose={() => setShowExamModal(false)}
-          >
-            <View style={styles.modalContainer1}>
-              <View
-                style={{
-                  backgroundColor: "white",
-                  width: "100%",
-                  height: "70%",
-                  padding: 20,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderRadius: 20,
-                }}
-              >
-                <Text style={styles.modalTitle1}>{examMessage}</Text>
-                <Pressable
-                  onPress={() => {
-                    setShowExamModal(false);
-                    router.replace("dashboard");
-                  }}
-                  style={styles.finishButton1}
-                >
-                  <Text style={styles.finishButtonText}>Close</Text>
-                </Pressable>
-              </View>
-            </View>
-          </Modal>
         </ScrollView>
       )}
+
+      <Modal
+        visible={showNoteModal}
+        animationType="slide"
+        onRequestClose={() => setShowNoteModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          {resources.map((resource, index) => (
+            <View key={index}>
+              <Text style={styles.modalTitle}>{resource.read_title}</Text>
+              <Text style={styles.resourceContent}>{resource.read_note}</Text>
+            </View>
+          ))}
+          <Pressable style={styles.finishButton} onPress={handleNextPress}>
+            <Text style={styles.finishButtonText}>Finish</Text>
+          </Pressable>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showExamModal}
+        animationType="slide"
+        onRequestClose={() => setShowExamModal(false)}
+      >
+        <View style={styles.modalContainer1}>
+          <Text style={styles.modalTitle1}>{examMessage}</Text>
+          <Pressable
+            onPress={() => {
+              setShowExamModal(false);
+              router.replace("dashboard");
+            }}
+            style={styles.finishButton1}
+          >
+            <Text style={styles.finishButtonText}>Close</Text>
+          </Pressable>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -257,7 +189,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 10,
-    width: "100%",
   },
   resourceContainer: {
     marginBottom: 16,
@@ -275,7 +206,6 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: 200,
-    paddingVertical: 100,
   },
   nextbtn: {
     padding: 15,
@@ -293,30 +223,17 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-
-  modalContainer1: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "rgba(0,0,0,0.7)",
-  },
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
   },
-
   modalTitle1: {
     fontSize: 25,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
-  },
-  modalContent: {
-    fontSize: 18,
-    lineHeight: 24,
   },
   finishButton: {
     padding: 15,
@@ -325,29 +242,16 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     marginVertical: 20,
   },
-
   finishButton1: {
     padding: 15,
     backgroundColor: "#c30000",
     width: "60%",
     borderRadius: 30,
     marginVertical: 20,
-    position: "relative",
-    top: 100,
   },
   finishButtonText: {
     color: "white",
     textAlign: "center",
     fontSize: 18,
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    borderRadius: 5,
-    fontSize: 16,
-    marginVertical: 20,
-    width: "100%",
   },
 });

@@ -16,20 +16,9 @@ export default function Index() {
   const router = useRouter();
 
   useEffect(() => {
-    const checkLoginStatus = async () => {
-      const userId = await AsyncStorage.getItem("userId");
-      if (userId) {
-        // User is logged in, navigate to the dashboard
-        router.replace("/dashboard"); // Update the path to your dashboard route
-      } else {
-        // User is not logged in, show login
-        setIsSplash(false);
-      }
-    };
-
     setIsSplash(true);
     setTimeout(() => {
-      checkLoginStatus();
+     setIsSplash(false)
     }, 3500);
   }, []);
 

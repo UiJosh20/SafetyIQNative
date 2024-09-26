@@ -27,7 +27,6 @@ const UserLogin = () => {
   const [isSwitchOn, setIsSwitchOn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
- 
   const [fontsLoaded] = useFonts({
     "Kanit-Bold": require("./../assets/fonts/Kanit-Bold.ttf"),
     "Kanit-Regular": require("./../assets/fonts/Kanit-Regular.ttf"),
@@ -35,16 +34,9 @@ const UserLogin = () => {
     "Kanit-Light": require("./../assets/fonts/Kanit-Light.ttf"),
   });
 
-    
   if (!fontsLoaded) {
-    return null;
-  } else {
-    console.log("load");
+     return <ActivityIndicator size="large" color="#c30000" />;
   }
-  
-
-  
-  
 
   const LoginSchema = Yup.object().shape({
     identifier: Yup.string().required("Call Up No/FRP No is required"),
@@ -62,23 +54,21 @@ const UserLogin = () => {
           if (response.data.message === "Login successful") {
             const firstName = response.data.user.firstName;
             const lastName = response.data.user.lastName;
-            let userInfo = {firstName, lastName}
+            let userInfo = { firstName, lastName };
             const userId = response.data.user.user_id;
-            
+
             const token = response.data.token;
             AsyncStorage.setItem("userInfo", JSON.stringify(userInfo));
             AsyncStorage.setItem("token", token);
             AsyncStorage.setItem("userId", JSON.stringify(userId))
               .then(() => {
-                setIsLoading(false)
-              router.replace("dashboard")
+                setIsLoading(false);
+                router.replace("dashboard");
               })
               .catch((error) => {
                 console.log("Failed to store user ID", error);
                 setIsLoading(false);
               });
-           
-            
           } else {
             setIsLoading(false);
             router.push("index");
@@ -88,8 +78,8 @@ const UserLogin = () => {
           if (error.message == "Request failed with status code 401") {
             Alert.alert("Invalid Login details, please check your details");
           }
-          
-            setIsLoading(false);
+
+          setIsLoading(false);
         });
     }, 2000);
   };
