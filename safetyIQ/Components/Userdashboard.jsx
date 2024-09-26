@@ -35,19 +35,18 @@ const Userdashboard = () => {
     isReadNowDisabled: false,
   });
 
-const {
-  refreshing,
-  course,
-  timers,
-  examTimers,
-  userData,
-  modalVisible,
-  selectedImage,
-  userScore,
-  isFetching,
-  isReadNowDisabled,
-} = state;
-
+  const {
+    refreshing,
+    course,
+    timers,
+    examTimers,
+    userData,
+    modalVisible,
+    selectedImage,
+    userScore,
+    isFetching,
+    isReadNowDisabled,
+  } = state;
 
   const fetchUserID = async () => {
     try {
@@ -62,11 +61,11 @@ const {
   useEffect(() => {
     fetchUserID();
     requestNotificationPermissions();
-
   }, []);
 
   const currentTopicUrl = useMemo(
-    () => `https://safetyiqnativebackend.onrender.com/currentTopic/${state.ids}`,
+    () =>
+      `https://safetyiqnativebackend.onrender.com/currentTopic/${state.ids}`,
     [state.ids]
   );
   const resultUrl = useMemo(
@@ -84,29 +83,53 @@ const {
       fetchCurrentTopic();
       fetchUserInfo();
       fetchCompletedTopics();
-      
     }
   }, [state.ids]);
 
-  useEffect(() => {
-    const now = new Date();
-    const currentHours = now.getUTCHours() + 1;
+useEffect(() => {
+  // Study Timer Logic
+  const now = new Date();
+  const currentHours = now.getUTCHours() + 1;
 
-    if (currentHours >= 2 && currentHours < 14) {
-      setState((prev) => ({
-        ...prev,
-        isStudyTimerActive: true,
-        timers: { default: (14 - currentHours) * 60 * 60 },
-      }));
+  if (currentHours >= 2 && currentHours < 14 && !state.isStudyTimerActive) {
+    setState((prev) => ({
+      ...prev,
+      isStudyTimerActive: true,
+      timers: { default: (14 - currentHours) * 60 * 60 },
+    }));
+  }
+
+  const studyTimerId = setInterval(() => {
+    if (state.isStudyTimerActive) {
+      setState((prev) => {
+        const updatedTimers = { ...prev.timers };
+        Object.keys(updatedTimers).forEach((key) => {
+          updatedTimers[key] = Math.max(updatedTimers[key] - 1, 0);
+        });
+        return { ...prev, timers: updatedTimers };
+      });
     }
+  }, 1000);
 
-    const intervalId = setInterval(() => {
-      updateTimers();
-      checkTimeAndUpdateState();
-    }, 1000); 
+  return () => clearInterval(studyTimerId);
+}, [state.isStudyTimerActive]);
 
-    return () => clearInterval(intervalId);
-  }, [state.timers, state.examTimers, state.isStudyTimerActive, state.isTestTimerActive]);
+useEffect(() => {
+  // Exam Timer Logic
+  const examTimerId = setInterval(() => {
+    if (state.isTestTimerActive) {
+      setState((prev) => {
+        const updatedExamTimers = { ...prev.examTimers };
+        Object.keys(updatedExamTimers).forEach((key) => {
+          updatedExamTimers[key] = Math.max(updatedExamTimers[key] - 1, 0);
+        });
+        return { ...prev, examTimers: updatedExamTimers };
+      });
+    }
+  }, 1000);
+
+  return () => clearInterval(examTimerId);
+}, [state.isTestTimerActive]);
 
   const fetchUserInfo = useCallback(async () => {
     try {
@@ -118,53 +141,60 @@ const {
     }
   }, []);
 
-
   const requestNotificationPermissions = async () => {
-  const { status } = await Notifications.getPermissionsAsync();
-  if (status !== 'granted') {
-    await Notifications.requestPermissionsAsync();
-  }
-};
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== "granted") {
+      await Notifications.requestPermissionsAsync();
+    }
+  };
 
-
-  const fetchCompletedTopics = useCallback(() => {
-    axios
-      .get(getCompletedCourse)
-      .then((response) => {
-        setState((prev) => ({
-          ...prev,
-          completedTopics: response.data.completedCourses[0].courseName,
-        }));
-      })
-      .catch((error) => {
-        console.error(error.message);
-      });
-  }, [getCompletedCourse]);
-
-const fetchCurrentTopic = useCallback(() => {
+const fetchCompletedTopics = useCallback(() => {
   axios
-    .get(currentTopicUrl)
+    .get(getCompletedCourse)
     .then((response) => {
-      const topics = response.data.currentTopic;
-      if (topics) {
-        setState((prev) => ({
-          ...prev,
-          course: topics,
-          timers: {
-            ...prev.timers,
-            [topics]: (14 - new Date().getUTCHours() - 1) * 60 * 60,
-          },
-          isStudyTimerActive: true,
-        }));
-        checkIfTopicIsCompleted(topics);
-        checkTimeAndUpdateState();
-      }
+      setState((prev) => ({
+        ...prev,
+        completedTopics: response.data.completedCourses[0].courseName,
+      }));
     })
-    .catch(() => {
-      console.log("No new course to fetch");
+    .catch((error) => {
+      if (error.response) {
+        // Server responded with a status other than 200 range
+        console.log("Response Error:", error.response.data);
+      } else if (error.request) {
+        // Request was made but no response was received
+        console.log("Request Error:", error.request);
+      } else {
+        // Something else happened while setting up the request
+        console.log("Axios Error:", error.message);
+      }
     });
-}, [currentTopicUrl]);
+}, [getCompletedCourse]);
 
+
+  const fetchCurrentTopic = useCallback(() => {
+    axios
+      .get(currentTopicUrl)
+      .then((response) => {
+        const topics = response.data.currentTopic;
+        if (topics) {
+          setState((prev) => ({
+            ...prev,
+            course: topics,
+            timers: {
+              ...prev.timers,
+              [topics]: (14 - new Date().getUTCHours() - 1) * 60 * 60,
+            },
+            isStudyTimerActive: true,
+          }));
+          checkIfTopicIsCompleted(topics);
+          checkTimeAndUpdateState();
+        }
+      })
+      .catch(() => {
+        console.log("No new course to fetch");
+      });
+  }, [currentTopicUrl]);
 
   const checkIfTopicIsCompleted = (currentTopic) => {
     setState((prev) => ({
@@ -190,30 +220,7 @@ const fetchCurrentTopic = useCallback(() => {
       });
   };
 
- const updateTimers = () => {
-   setState((prev) => {
-     const updatedTimers = { ...prev.timers };
-
-     // Update study timers if active
-     if (prev.isStudyTimerActive) {
-       Object.keys(updatedTimers).forEach((key) => {
-         updatedTimers[key] = Math.max(updatedTimers[key] - 1, 0); // Decrease study time
-       });
-     }
-
-     // Update exam timers if active
-     const updatedExamTimers = { ...prev.examTimers };
-     if (prev.isTestTimerActive) {
-       Object.keys(updatedExamTimers).forEach((key) => {
-         updatedExamTimers[key] = Math.max(updatedExamTimers[key] - 1, 0); // Decrease exam time
-       });
-     }
-
-     return { ...prev, timers: updatedTimers, examTimers: updatedExamTimers };
-   });
- };
-
-
+  
   const sendExamStartNotification = async () => {
     await Notifications.scheduleNotificationAsync({
       content: {
@@ -224,28 +231,28 @@ const fetchCurrentTopic = useCallback(() => {
     });
   };
 
-
 const checkTimeAndUpdateState = () => {
   const now = new Date();
-  const currentHours = now.getUTCHours() + 1;
+  const currentHours = now.getUTCHours() + 1; // Adjust for UTC offset if needed
 
-  if (currentHours >= 14) {
-    setState((prev) => ({
-      ...prev,
-      isStudyTimerActive: false,
-      timers: { ...prev.timers, [state.course]: 0 },
-    }));
-
+  // Check if current time is past 3 PM
+  if (currentHours >= 15) {
     if (!state.isTestTimerActive) {
       setState((prev) => ({
         ...prev,
-        isStudyTimerActive: false,
         isTestTimerActive: true,
         examTimers: { ...prev.examTimers, [state.course]: 3 * 60 * 60 }, // 3 hours for the exam
       }));
 
       sendExamStartNotification(); // Ensure notification is only sent once
     }
+  } else {
+    // Reset the exam timer if it's before 3 PM
+    setState((prev) => ({
+      ...prev,
+      isTestTimerActive: false,
+      examTimers: { ...prev.examTimers, [state.course]: 0 },
+    }));
   }
 };
 
@@ -290,169 +297,170 @@ const checkTimeAndUpdateState = () => {
     router.push("login");
   };
 
-   return (
-     <View style={styles.container}>
-       <ScrollView
-         refreshControl={
-           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-         }
-       >
-         {userData ? (
-           <>
-             <View style={styles.header}>
-               <TouchableOpacity
-                 style={styles.circle}
-                 onPress={() => setModalVisible(true)}
-               >
-                 {selectedImage ? (
-                   <Image
-                     source={{ uri: selectedImage }}
-                     style={styles.avatar}
-                   />
-                 ) : (
-                   <Text style={styles.avatarPlaceholder}>
-                     {userData.firstName[0]}
-                   </Text>
-                 )}
-               </TouchableOpacity>
-               <View>
-                 <Text style={styles.welcome}>Welcome</Text>
-                 <Text style={styles.username}>
-                   {userData.firstName} {userData.lastName}
-                 </Text>
-               </View>
-             </View>
+  return (
+    <View style={styles.container}>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {userData ? (
+          <>
+            <View style={styles.header}>
+              <TouchableOpacity
+                style={styles.circle}
+                onPress={() => setModalVisible(true)}
+              >
+                {selectedImage ? (
+                  <Image
+                    source={{ uri: selectedImage }}
+                    style={styles.avatar}
+                  />
+                ) : (
+                  <Text style={styles.avatarPlaceholder}>
+                    {userData.firstName[0]}
+                  </Text>
+                )}
+              </TouchableOpacity>
+              <View>
+                <Text style={styles.welcome}>Welcome</Text>
+                <Text style={styles.username}>
+                  {userData.firstName} {userData.lastName}
+                </Text>
+              </View>
+            </View>
 
-             <View style={styles.redBox1}>
-               <View style={styles.redBox}>
-                 <View style={styles.whiteBox}>
-                   <View style={styles.whiteBoxText}>
-                     <Text style={{ textAlign: "center" }}>
-                       Current Topic | {course === "" ? "--" : course}
-                     </Text>
-                   </View>
-                 </View>
-                 <View
-                   style={{
-                     flexDirection: "row",
-                     width: "100%",
-                     paddingHorizontal: 20,
-                     justifyContent: "space-between",
-                   }}
-                 >
-                   <View>
-                     <Text
-                       style={{
-                         color: "white",
-                         marginTop: 20,
-                         marginBottom: 5,
-                       }}
-                     >
-                       Study Time Left:{" "}
-                     </Text>
-                     <Text style={styles.timer}>
-                       {formatTime(timers[course] ?? timers["default"] ?? 0)}
-                     </Text>
-                   </View>
-                   <View>
-                     <Text
-                       style={{
-                         color: "white",
-                         marginTop: 20,
-                         marginBottom: 5,
-                       }}
-                     >
-                       Test due:{" "}
-                     </Text>
-                     <Text style={styles.timer}>
-                       {timers[course] !== undefined && timers[course] > 0
-                         ? formatTime(timers[course])
-                         : formatTime(examTimers[course] ?? 3 * 60 * 60)}
-                     </Text>
-                   </View>
-                 </View>
-               </View>
-               <TouchableOpacity
-                 style={{
-                   backgroundColor: isReadNowDisabled ? "black" : "white", // Disable button if topic is completed
-                   padding: 10,
-                   borderRadius: 5,
-                   marginTop: -25,
-                 }}
-                 onPress={handleReadNowPress}
-                 disabled={isReadNowDisabled} // Disable button if topic is completed
-               >
-                 <Text
-                   style={{
-                     textAlign: "center",
-                     color: isReadNowDisabled ? "white" : "black",
-                   }}
-                 >
-                   {isReadNowDisabled ? "Completed" : "Read Now"}
-                 </Text>
-               </TouchableOpacity>
-             </View>
+            <View style={styles.redBox1}>
+              <View style={styles.redBox}>
+                <View style={styles.whiteBox}>
+                  <View style={styles.whiteBoxText}>
+                    <Text style={{ textAlign: "center" }}>
+                      Current Topic | {course === "" ? "--" : course}
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    width: "100%",
+                    paddingHorizontal: 20,
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View>
+                    <Text
+                      style={{
+                        color: "white",
+                        marginTop: 20,
+                        marginBottom: 5,
+                      }}
+                    >
+                      Study Time Left:{" "}
+                    </Text>
+                    <Text style={styles.timer}>
+                      {formatTime(timers[course] ?? timers["default"] ?? 0)}
+                    </Text>
+                  </View>
+                  <View>
+                    <Text
+                      style={{
+                        color: "white",
+                        marginTop: 20,
+                        marginBottom: 5,
+                      }}
+                    >
+                      Test due:{" "}
+                    </Text>
+                    <Text style={styles.timer}>
+                      {state.isTestTimerActive && examTimers[course] > 0
+                        ? formatTime(examTimers[course]) // Correctly close the formatTime function
+                        : formatTime(3* 60 * 60)}{" "}
+                    
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: isReadNowDisabled ? "black" : "white", // Disable button if topic is completed
+                  padding: 10,
+                  borderRadius: 5,
+                  marginTop: -25,
+                }}
+                onPress={handleReadNowPress}
+                disabled={isReadNowDisabled} // Disable button if topic is completed
+              >
+                <Text
+                  style={{
+                    textAlign: "center",
+                    color: isReadNowDisabled ? "white" : "black",
+                  }}
+                >
+                  {isReadNowDisabled ? "Completed" : "Read Now"}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-             <View>
-               <View style={styles.examContainer}>
-                 <Text style={styles.TestText}>Latest Test result</Text>
-                 <TouchableOpacity onPress={fetchResult}>
-                   <Text style={styles.seeMore}>See more</Text>
-                 </TouchableOpacity>
-               </View>
+            <View>
+              <View style={styles.examContainer}>
+                <Text style={styles.TestText}>Latest Test result</Text>
+                <TouchableOpacity onPress={fetchResult}>
+                  <Text style={styles.seeMore}>See more</Text>
+                </TouchableOpacity>
+              </View>
 
-               {isFetching ? (
-                 <View
-                   style={{
-                     justifyContent: "center",
-                     alignItems: "center",
-                     height: 100,
-                   }}
-                 >
-                   <ActivityIndicator size="large" color="#c30000" />
-                 </View>
-               ) : userScore.length > 0 ? (
-                 userScore.map((score, index) => (
-                   <View key={index} style={styles.TestBox}>
-                     <View style={styles.TestView}>
-                       <Text>{score.course}</Text>
-                       <Text>{score.score}%</Text>
-                     </View>
-                     <Text style={styles.time}>
-                       Date: {new Date(score.date).toLocaleDateString()}
-                     </Text>
-                   </View>
-                 ))
-               ) : (
-                 <Text style={styles.time}>No test result available</Text>
-               )}
-             </View>
-           </>
-         ) : (
-           <ActivityIndicator size="large" color="#c30000" />
-         )}
-       </ScrollView>
+              {isFetching ? (
+                <View
+                  style={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: 100,
+                  }}
+                >
+                  <ActivityIndicator size="large" color="#c30000" />
+                </View>
+              ) : userScore.length > 0 ? (
+                userScore.map((score, index) => (
+                  <View key={index} style={styles.TestBox}>
+                    <View style={styles.TestView}>
+                      <Text>{score.course}</Text>
+                      <Text>{score.score}%</Text>
+                    </View>
+                    <Text style={styles.time}>
+                      Date: {new Date(score.date).toLocaleDateString()}
+                    </Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.time}>No test result available</Text>
+              )}
+            </View>
+          </>
+        ) : (
+          <ActivityIndicator size="large" color="#c30000" />
+        )}
+      </ScrollView>
 
-       <Modal
-         animationType="fade"
-         transparent={true}
-         visible={modalVisible}
-         onRequestClose={() => setModalVisible(!modalVisible)}
-       >
-         <View style={styles.modalBackground}>
-           <Pressable
-             style={styles.modalView}
-             onPress={() => setModalVisible(false)}
-           >
-             <Text style={styles.modalText}>Log Out</Text>
-             <TouchableOpacity onPress={handleLogout}>
-               <Text style={styles.logoutText}>Yes, log me out</Text>
-             </TouchableOpacity>
-           </Pressable>
-         </View>
-       </Modal>
-     </View>
-   );
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(!modalVisible)}
+      >
+        <View style={styles.modalBackground}>
+          <Pressable
+            style={styles.modalView}
+            onPress={() => setModalVisible(false)}
+          >
+            <Text style={styles.modalText}>Log Out</Text>
+            <TouchableOpacity onPress={handleLogout}>
+              <Text style={styles.logoutText}>Yes, log me out</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </View>
+      </Modal>
+    </View>
+  );
 };
 
 export default Userdashboard;

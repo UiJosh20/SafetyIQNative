@@ -35,7 +35,7 @@ const UserLogin = () => {
   });
 
   if (!fontsLoaded) {
-     return <ActivityIndicator size="large" color="#c30000" />;
+    return null;
   }
 
   const LoginSchema = Yup.object().shape({
