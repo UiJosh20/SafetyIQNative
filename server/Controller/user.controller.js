@@ -1,7 +1,9 @@
 const User = require("../model/user.model");
+const cron = require("node-cron");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+require("dotenv").config();
 const https = require("https");
 const {
   Admin,
@@ -14,20 +16,13 @@ const {
 const CurrentTopic = require("../model/CurrentTopic.model");
 const UserTopic = require("../model/UserTopic.model");
 const CompletedCourse = require("../model/CompletedCourse.model");
-const ExamResult = require("../model/ExamResult.model");
+
 
 const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASSWORD = process.env.EMAIL_PASS;
 
-// Helper function for error handling
-const handleError = (res, error, message = "Internal Server Error") => {
-  console.error(error);
-  res.status(500).json({ message });
-};
-
-// Signup user with memory and performance optimization
-const signup = async (req, res) => {
+const signup = (req, res) => {
   const {
     callUpNo,
     firstName,
@@ -38,33 +33,45 @@ const signup = async (req, res) => {
     password,
     courseName,
   } = req.body;
-  try {
-    const existingUser = await User.findOne({ email }).lean();
-    if (existingUser)
-      return res.status(400).json({ message: "Email already used" });
 
-    const newUser = new User({
-      callupNum: callUpNo,
-      firstName,
-      lastName,
-      middleName,
-      tel: telephoneNo,
-      email,
-      password,
-      courseName,
+  // Check if the email already exists
+  User.findOne({ email })
+    .then((existingUser) => {
+      if (existingUser) {
+        throw new Error("Email already used");
+      }
+
+      // Insert the new user into the users collection
+      const newUser = new User({
+        callupNum: callUpNo,
+        firstName,
+        lastName,
+        middleName,
+        tel: telephoneNo,
+        email,
+        password, // This will be hashed in the pre-save middleware
+        courseName,
+      });
+
+      return newUser.save();
+    })
+    .then(() => {
+      res.status(201).send("User registered successfully");
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send("Internal Server Error");
     });
-
-    await newUser.save();
-    res.status(201).send("User registered successfully");
-  } catch (error) {
-    handleError(res, error);
-  }
 };
 
-// Initialize Paystack payment
 const paystackInit = (req, res) => {
   const { amount, email } = req.body;
-  const params = JSON.stringify({ email, amount });
+
+  const params = JSON.stringify({
+    email,
+    amount,
+  });
+
   const options = {
     hostname: "api.paystack.co",
     port: 443,
@@ -78,240 +85,384 @@ const paystackInit = (req, res) => {
 
   const reqpaystack = https.request(options, (respaystack) => {
     let data = "";
+
     respaystack.on("data", (chunk) => {
       data += chunk;
     });
+
     respaystack.on("end", () => {
-      res.json(JSON.parse(data));
+      res.send(JSON.parse(data));
     });
   });
 
-  reqpaystack.on("error", (error) =>
-    handleError(res, error, "Error initializing payment")
-  );
+  reqpaystack.on("error", (error) => {
+    console.error(error);
+    res.status(500).send("Error initializing payment");
+  });
+
   reqpaystack.write(params);
   reqpaystack.end();
 };
 
-// Verify Paystack payment
-const paystackVerify = async (req, res) => {
+const generateRandomNumber = () => {
+  return Math.floor(100000000000 + Math.random() * 700000000000).toString();
+};
+
+const sendUniqueNumberToEmail = (email, randomNumber) => {
+  return new Promise((resolve, reject) => {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: EMAIL_USER,
+        pass: EMAIL_PASSWORD,
+      },
+    });
+
+    const mailOptions = {
+      from: EMAIL_USER,
+      to: email,
+      subject: "FRP NUMBER",
+      text: `Your FRP Number is: ${randomNumber}`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(info);
+      }
+    });
+  });
+};
+
+const paystackVerify = (req, res) => {
   const { reference } = req.query;
+
+  console.log(req.query);
+
   const options = {
     hostname: "api.paystack.co",
     port: 443,
     path: `/transaction/verify/${reference}`,
     method: "GET",
-    headers: { Authorization: `Bearer ${SECRET_KEY}` },
+    headers: {
+      Authorization: `Bearer ${SECRET_KEY}`,
+    },
   };
 
   const verifyTransaction = () => {
     return new Promise((resolve, reject) => {
       const reqVerify = https.request(options, (resVerify) => {
         let data = "";
+
         resVerify.on("data", (chunk) => {
           data += chunk;
         });
+
         resVerify.on("end", () => {
           try {
-            resolve(JSON.parse(data));
+            const parsedData = JSON.parse(data);
+            resolve(parsedData);
           } catch (error) {
             reject(new Error("Error parsing JSON"));
           }
         });
       });
-      reqVerify.on("error", (error) => reject(error));
+
+      reqVerify.on("error", (error) => {
+        reject(error);
+      });
+
       reqVerify.end();
     });
   };
 
-  try {
-    const parsedData = await verifyTransaction();
-    const { email } = parsedData.data.customer;
-    const randomNumber = generateRandomNumber();
+  verifyTransaction()
+    .then((parsedData) => {
+      if (parsedData) {
+        const randomNumber = generateRandomNumber();
+        const email = parsedData.data.customer.email;
 
-    const updatedUser = await User.findOneAndUpdate(
-      { email },
-      { frpnum: randomNumber },
-      { new: true }
-    ).lean();
-
-    if (!updatedUser) return res.status(404).send("User not found");
-
-    await sendUniqueNumberToEmail(email, randomNumber);
-    res.json({ message: "Payment successful", frpnum: randomNumber });
-  } catch (error) {
-    handleError(res, error, "Error verifying payment");
-  }
-};
-
-// Login user
-const login = async (req, res) => {
-  const { identifier, password } = req.body;
-  try {
-    const user = await User.findOne({
-      $or: [{ callupNum: identifier }, { frpNum: identifier }],
+        return User.findOneAndUpdate(
+          { email: email },
+          { frpnum: randomNumber },
+          { new: true }
+        ).then((updatedDocument) => {
+          if (updatedDocument) {
+            return sendUniqueNumberToEmail(email, randomNumber).then(() => {
+              res.send({
+                message: "Payment successful",
+                frpnum: randomNumber,
+              });
+            });
+          } else {
+            res.status(404).send("User not found");
+          }
+        });
+      }
     })
-      .select("+password")
-      .lean();
-
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(401).json({ message: "Incorrect password" });
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+    .catch((err) => {
+      console.log(err);
+      res.status(500).send("Error verifying payment");
     });
-    res.json({
-      message: "Login successful",
-      token,
-      user: {
-        user_id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-      },
-    });
-  } catch (error) {
-    handleError(res, error);
-  }
 };
 
-// Fetch resources with memory optimization
-const fetchResources = async (req, res) => {
+const login = (req, res) => {
+  const { identifier, password } = req.body;
+
+  // Find the user by callupNum or frpNum (identifier)
+  User.findOne({
+    $or: [{ callupNum: identifier }, { frpNum: identifier }],
+  })
+    .then((user) => {
+      if (!user) {
+        return res.status(404).send("User not found");
+      }
+
+      // Compare the provided password with the stored hashed password
+      bcrypt.compare(password, user.password).then((isMatch) => {
+        if (!isMatch) {
+          return res.status(401).send("Incorrect password");
+        }
+
+        // Generate a JWT
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+          expiresIn: "1h",
+        });
+
+        // On successful login, return the token and user data
+        res.status(200).send({
+          message: "Login successful",
+          token,
+          user: {
+            user_id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+          },
+        });
+      });
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send("Internal Server Error");
+    });
+};
+
+
+
+const fetchResources = (req, res) => {
   const { course } = req.query;
-  if (!course) return res.status(400).json({ message: "Course is required" });
 
-  try {
-    const resources = await Resource.find({ course }).lean();
-    if (!resources.length)
-      return res
-        .status(404)
-        .json({ message: "No resources found for this topic" });
-    res.json(resources);
-  } catch (error) {
-    handleError(res, error, "Error fetching resources");
-  }
+
+   if (!course) {
+     return res.status(400).json({ message: "Course is required" });
+   }
+
+   Resource.find({ course: course })
+     .then((resources) => {
+       if (!resources.length) {
+         return res
+           .status(404)
+           .json({ message: "No resources found for this topic" });
+       }
+       res.status(200).json(resources);
+     })
+     .catch((error) => {
+       console.error("Error fetching resources:", error);
+       res.status(500).json({ message: "Internal Server Error" });
+     });
+
 };
 
-// Fetch courses
-const courseFetch = async (req, res) => {
-  try {
-    const result = await Course.find({}).lean();
-    res.json(result);
-  } catch (error) {
-    handleError(res, error);
-  }
+const courseFetch = (req, res) => {
+  Course.find({})
+  .then((result) => {
+    res.send(result)
+    
+  });
 };
 
-// Read courses
-const readCourses = async (req, res) => {
+const readCourses = (req, res) => {
   const { currentTopic } = req.query;
-  if (!currentTopic)
+
+  if (!currentTopic) {
     return res.status(400).json({ message: "Current topic is required" });
-
-  try {
-    const resources = await Read.find({ read_course: currentTopic }).lean();
-    if (!resources.length)
-      return res
-        .status(404)
-        .json({ message: "No resources found for this topic" });
-    res.json(resources);
-  } catch (error) {
-    handleError(res, error, "Error fetching resources");
   }
+
+  Read.find({ read_course: currentTopic })
+    .then((resources) => {
+      if (!resources.length) {
+        return res
+          .status(404)
+          .json({ message: "No resources found for this topic" });
+      }
+      res.status(200).json(resources);
+    })
+    .catch((error) => {
+      console.error("Error fetching resources:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    });
 };
 
-// Fetch current topic and assign it to user
-const fetchCurrentTopic = async (req, res) => {
+cron.schedule("0 2 * * *", () => {
+  console.log("Running cron job to update the current topic...");
+  fetchCurrentTopic();
+});
+
+const fetchCurrentTopic = (req, res) => {
   const { user } = req.params;
-  try {
-    const topics = await readCourse.find({}).lean();
-    if (!topics.length)
-      return res.status(404).json({ message: "No topics available" });
 
-    const assignedTopics = await UserTopic.find({ user }).lean();
-    const assignedTopicIds = assignedTopics.map((ut) => ut.topic_id.toString());
-    const availableTopics = topics.filter(
-      (topic) => !assignedTopicIds.includes(topic._id.toString())
-    );
+  readCourse
+    .find({})
+    .then((topics) => {
+      if (topics.length === 0) {
+        return res.status(404).send({ message: "No topics available" });
+      }
 
-    if (!availableTopics.length)
-      return res.status(404).json({ message: "All topics have been assigned" });
+      UserTopic.find({ user })
+        .then((assignedTopics) => {
+          const assignedTopicIds = assignedTopics.map((ut) =>
+            ut.topic_id.toString()
+          );
 
-    const newCurrentTopic =
-      availableTopics[Math.floor(Math.random() * availableTopics.length)];
+          const availableTopics = topics.filter(
+            (topic) => !assignedTopicIds.includes(topic._id.toString())
+          );
 
-    await CurrentTopic.findOneAndUpdate(
-      {},
-      { topic: newCurrentTopic._id, date: new Date() },
-      { upsert: true, new: true }
-    );
+          if (availableTopics.length === 0) {
+            console.log("All topics have been assigned");
+            return res
+              .status(404)
+              .send({ message: "All topics have been assigned" });
+          }
 
-    const userTopic = new UserTopic({
-      userId: user,
-      topic_id: newCurrentTopic._id,
-      topic_assigned: newCurrentTopic.name,
-      dateAssigned: new Date(),
+          const newCurrentTopic =
+            availableTopics[Math.floor(Math.random() * availableTopics.length)];
+
+          CurrentTopic.findOneAndUpdate(
+            {},
+            { topic: newCurrentTopic._id, date: new Date() },
+            { upsert: true, new: true }
+          )
+            .then(() => {
+              const userTopic = new UserTopic({
+                userId: user,
+                topic_id: newCurrentTopic._id,
+                topic_assigned: newCurrentTopic.name,
+                dateAssigned: new Date(),
+              });
+
+              return userTopic.save();
+            })
+            .then(() => {
+              res.status(200).send({ currentTopic: newCurrentTopic.name });
+            })
+            .catch((error) => {
+              res.status(500).send({ message: "Error updating current topic" });
+            });
+        })
+        .catch((error) => {
+          console.error("Error fetching assigned topics:", error);
+          res.status(500).send({ message: "Error fetching assigned topics" });
+        });
+    })
+    .catch((error) => {
+      console.error("Error fetching topics:", error);
+      res.status(500).send({ message: "Error fetching topics" });
     });
-
-    await userTopic.save();
-    res.json({ currentTopic: newCurrentTopic.name });
-  } catch (error) {
-    handleError(res, error, "Error updating current topic");
-  }
 };
 
-// Fetch exam questions
-const fetchExamQuestions = async (req, res) => {
-  const { course_name } = req.query;
-  if (!course_name)
+
+const fetchExamQuestions = (req, res) =>{
+  const {course_name} = req.query
+
+
+  if (!course_name) {
     return res.status(400).json({ error: "course_name is required" });
-
-  try {
-    const questions = await ExamQuestion.find({ course_name }).lean();
-    if (!questions.length)
-      return res
-        .status(404)
-        .json({ message: "No questions found for this course." });
-    res.json(questions);
-  } catch (error) {
-    handleError(res, error, "Error fetching exam questions");
   }
-};
 
-// Submit exam
-const submitExam = async (req, res) => {
-  const { selectedAnswers, ids, course_name } = req.body;
-  if (!selectedAnswers || !ids || !course_name)
-    return res.status(400).json({ message: "Missing exam details" });
-
-  try {
-    const examResults = await ExamQuestion.find({
-      _id: { $in: ids },
-      course_name,
-    }).lean();
-
-    if (!examResults.length)
-      return res.status(404).json({ message: "No exam questions found" });
-
-    let score = 0;
-    examResults.forEach((question, index) => {
-      if (selectedAnswers[index] === question.answer) score++;
+  ExamQuestion.find({ course_name })
+    .then((questions) => {
+      if (questions.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No questions found for this course." });
+      }
+      res.status(200).json(questions);
+    })
+    .catch((error) => {
+      console.error("Error fetching exam questions:", error);
+      res.status(500).json({ error: "Server error while fetching questions." });
     });
+  
 
-    res.json({ message: "Exam submitted successfully", score });
-  } catch (error) {
-    handleError(res, error, "Error submitting exam");
-  }
+}
+
+const submitExam = (req, res) => {
+  const { selectedAnswers, ids, course_name } = req.body; // selectedAnswers from the frontend
+
+  const result = [];
+  const questionIds = Object.keys(selectedAnswers);
+
+  ExamQuestion.find({ _id: { $in: questionIds } })
+    .then((questions) => {
+      questions.forEach((question) => {
+        const userAnswer = selectedAnswers[question._id];
+        const correctAnswer = question.correct_answer;
+
+        if (userAnswer === correctAnswer) {
+          result.push({ questionId: question._id, correct: true });
+        } else {
+          result.push({ questionId: question._id, correct: false });
+        }
+      });
+
+      const totalQuestions = result.length;
+      const totalCorrect = result.filter((r) => r.correct).length;
+      const totalWrong = totalQuestions - totalCorrect;
+
+      // Save the result to the database
+      const newExamResult = new ExamResult({
+        user: ids, // Assuming the user ID is passed in the request
+        topic: course_name, // Assuming topic is passed in the request
+        totalQuestions,
+        totalCorrect,
+        totalWrong,
+      });
+
+      newExamResult
+        .save()
+        .then((response) => {
+        console.log(response);
+        
+          res.status(200).json({
+            message: "Exam submitted successfully",
+            totalQuestions,
+            totalCorrect,
+            totalWrong,
+          });
+        })
+        .catch((error) => {
+          console.error("Error saving exam result:", error);
+          res.status(500).json({
+            message: "An error occurred while saving the exam result.",
+          });
+        });
+    })
+    .catch((error) => {
+      console.error("Error fetching questions for comparison:", error);
+      res
+        .status(500)
+        .json({ error: "An error occurred while processing the exam." });
+    });
 };
 
 const completedCourse = async (req, res) => {
   const { userId, courseName } = req.body; // Assuming these are passed from the frontend
-
+ 
   try {
     // Check if the course is already marked as completed for this user
-    let existingCourse = await CompletedCourse.findOne({ userId, courseName });
+    let existingCourse = await CompletedCourse.findOne({ userId, courseName});
 
     if (existingCourse) {
       return res
@@ -337,15 +488,19 @@ const completedCourse = async (req, res) => {
       .json({ message: "Course marked as completed successfully" });
   } catch (error) {
     console.error("Error saving completed course:", error);
-    res.status(500).json({
-      message: "An error occurred while saving the completed course",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({
+        message: "An error occurred while saving the completed course",
+        error: error.message,
+      });
   }
 };
 
+
 const getCompletedTopic = (req, res) => {
   const { user } = req.params;
+  
 
   CompletedCourse.find({ userId: user })
     .then((completedCourses) => {
@@ -367,9 +522,10 @@ const getCompletedTopic = (req, res) => {
 
 const fetchUserResult = (req, res) => {
   const { user } = req.params;
-  const { course } = req.query;
+  const {course} = req.query
+  
 
-  ExamResult.find({ user: user, topic: course })
+  ExamResult.find({user:user, topic:course})
 
     .then((result) => {
       if (!result) {
@@ -389,6 +545,9 @@ const fetchUserResult = (req, res) => {
     });
 };
 
+
+
+
 module.exports = {
   signup,
   paystackInit,
@@ -403,4 +562,5 @@ module.exports = {
   fetchUserResult,
   completedCourse,
   getCompletedTopic,
+
 };
