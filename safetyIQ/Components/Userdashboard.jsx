@@ -74,7 +74,7 @@ const Userdashboard = () => {
   );
 
   const getCompletedCourse = useMemo(
-    () => `http://192.168.0.102:8000/getcomplete/${state.ids}`,
+    () => `http://192.168.0.103:8000/getcomplete/${state.ids}`,
     [state.ids]
   );
 
@@ -204,8 +204,9 @@ const fetchCompletedTopics = useCallback(() => {
   };
 
   const fetchResult = (courseName) => {
+    router.navigate("resource")
     setState((prev) => ({ ...prev, isFetching: true }));
-    axios
+    axios                                                                                                                                                                                                               
       .get(resultUrl, { params: { course: courseName } })
       .then((response) => {
         setState((prev) => ({
@@ -405,7 +406,7 @@ const checkTimeAndUpdateState = () => {
               <View style={styles.examContainer}>
                 <Text style={styles.TestText}>Latest Test result</Text>
                 <TouchableOpacity onPress={fetchResult}>
-                  <Text style={styles.seeMore}>See more</Text>
+                  <Text style={styles.seeMore}>See all</Text>
                 </TouchableOpacity>
               </View>
 

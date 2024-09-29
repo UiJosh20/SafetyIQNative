@@ -31,7 +31,7 @@ const CompletedCourse = () => {
   };
 
   const fetchCompletedTopics = useCallback(() => {
-    const getCompletedCourse = `http://192.168.0.102:8000/getcomplete/${ids}`;
+    const getCompletedCourse = `http://192.168.0.103:8000/getcomplete/${ids}`;
     setState((prev) => ({ ...prev, loading: true })); // Set loading to true when fetching
     axios
       .get(getCompletedCourse)
