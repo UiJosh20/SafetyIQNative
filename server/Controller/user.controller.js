@@ -118,12 +118,34 @@ const sendUniqueNumberToEmail = (email, randomNumber) => {
       },
     });
 
-    const mailOptions = {
-      from: EMAIL_USER,
-      to: email,
-      subject: "FRP NUMBER",
-      text: `Your FRP Number is: ${randomNumber}`,
-    };
+ const mailOptions = {
+   from: EMAIL_USER,
+   to: email,
+   subject: "FRP NUMBER",
+   html: `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+        <h2 style="color: #333; text-align: center;">FRP Number Notification</h2>
+        <p style="font-size: 16px; color: #333;">
+          Dear user,
+        </p>
+        <p style="font-size: 16px; color: #333;">
+          We have generated an FRP number for you. Please find your FRP Number below:
+        </p>
+        <div style="text-align: center; margin: 20px 0;">
+          <p style="font-size: 24px; font-weight: bold; color: #c30000;">${randomNumber}</p>
+        </div>
+        <p style="font-size: 16px; color: #333;">
+          Please keep this number secure for future reference.
+        </p>
+        <p style="font-size: 16px; color: #333;">
+          Best regards,<br />
+          The Team
+        </p>
+      </div>
+    </div>
+  `,
+ };
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
