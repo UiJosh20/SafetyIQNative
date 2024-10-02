@@ -24,8 +24,8 @@ export default function Academics() {
     description: "",
     time_taken: "",
     image: null,
+    course_name:"",
     note: "",
-    course_name:""
   });
   const [newCourse, setNewCourse] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -87,10 +87,10 @@ export default function Academics() {
     setShowDeleteModal(!showDeleteModal);
   };
 
-  const handleInputChange = (e) => {
-    const { name, value, files } = e.target;
-    setNewResource((prev) => ({ ...prev, [name]: files ? files[0] : value }));
-  };
+const handleInputChange = (e) => {
+  const { name, value, files } = e.target;
+  setNewResource((prev) => ({ ...prev, [name]: files ? files[0] : value }));
+};
 
   const handleCourseChange = (e) => {
     setNewCourse(e.target.value);
@@ -105,12 +105,13 @@ const handleResourceSubmit = (e) => {
   formData.append("description", newResource.description);
   formData.append("time_taken", newResource.time_taken);
   formData.append("image", newResource.image);
-  formData.append("note", newResource.note);
   formData.append("course_name", newResource.course_name);
-
+  formData.append("note", newResource.note);
+  
+  // https://safetyiqnativebackend.onrender.com
 
   axios
-    .post("https://safetyiqnativebackend.onrender.com/admin/upload", formData, {
+    .post("http://localhost:8000/admin/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -233,7 +234,6 @@ const handleResourceSubmit = (e) => {
                     key={item.course_id}
                     className="flex justify-between border-b py-5"
                   >
-            
                     <td className="py-2 px-4">{item.name}</td>
                     <td className="py-2 px-4 flex gap-2">
                       <button
@@ -409,6 +409,7 @@ const handleResourceSubmit = (e) => {
                     id="image"
                     name="image"
                     type="file"
+                    accept="image/*,video/*"
                     onChange={handleInputChange}
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     required
@@ -434,7 +435,6 @@ const handleResourceSubmit = (e) => {
                   ></textarea>
                 </div>
 
-                    
                 <div className="mb-4" hidden>
                   <label
                     className="block text-gray-700 text-sm font-bold mb-2"

@@ -134,7 +134,7 @@ const getAllStudents = (req, res) => {
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    cb(null, "uploads/first_aid");
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
@@ -164,7 +164,8 @@ const upload = multer({
 
 const uploadResource = (req, res) => {
   // Handle file upload with multer
-  upload(req, res, (err) => {
+  
+  upload(req, res, (err) => {   
     if (err instanceof multer.MulterError) {
       return res.status(400).json({ error: err.message });
     } else if (err) {
@@ -174,6 +175,8 @@ const uploadResource = (req, res) => {
     const { course_name, title, description, time_taken, note } = req.body;
 
     const image = req.file ? req.file.path : null;
+
+ 
 
     const resourceData = {
       course: course_name,
@@ -202,7 +205,9 @@ const uploadResource = (req, res) => {
       const newResource = new Resource(resourceData);
       newResource
         .save()
-        .then(() => {
+        .then((er) => {
+          console.log(er);
+          
           res.status(201).json({ message: "Resource uploaded successfully" });
         })
         .catch((error) => {
@@ -215,7 +220,7 @@ const uploadResource = (req, res) => {
 
 const libStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    cb(null, "uploads/readings");
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);

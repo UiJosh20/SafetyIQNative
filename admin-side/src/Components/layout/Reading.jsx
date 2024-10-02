@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function Reading() {
   const adminId = JSON.parse(localStorage.getItem("id"));          
-  const userId = JSON.parse(localStorage.getItem("userIds"))[0];
+  // const userId = JSON.parse(localStorage.getItem("userIds"))[0];
   const [searchTerm, setSearchTerm] = useState("");
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
@@ -44,14 +44,20 @@ export default function Reading() {
     };
 
 
-   useEffect(() => {
-     fetchCourses();
+ useEffect(() => {
+   fetchCourses();
+ }, []);
+
+ useEffect(() => {
+   if (items.length > 0) {
      setFilteredItems(
        items.filter((item) =>
          item.name.toLowerCase().includes(searchTerm.toLowerCase())
        )
      );
-   }, [searchTerm, items]);
+   }
+ }, [searchTerm, items]);
+
 
 
 

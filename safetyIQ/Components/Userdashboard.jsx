@@ -16,6 +16,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { router } from "expo-router";
 import * as Notifications from "expo-notifications";
+import Ionicons from "react-native-vector-icons/Ionicons";
+
 
 const Userdashboard = () => {
   const [state, setState] = useState({
@@ -28,6 +30,7 @@ const Userdashboard = () => {
     selectedImage: null,
     timers: { default: 0 },
     examTimers: {},
+    notificationVisible: false, // For notification modal
     isStudyTimerActive: false,
     isTestTimerActive: false,
     isFetching: false,
@@ -42,6 +45,7 @@ const Userdashboard = () => {
     examTimers,
     userData,
     modalVisible,
+    notificationVisible,
     selectedImage,
     userScore,
     isFetching,
@@ -86,50 +90,59 @@ const Userdashboard = () => {
     }
   }, [state.ids]);
 
-useEffect(() => {
-  // Study Timer Logic
-  const now = new Date();
-  const currentHours = now.getUTCHours() + 1;
 
-  if (currentHours >= 2 && currentHours < 14 && !state.isStudyTimerActive) {
+  // Function to toggle notification modal visibility
+  const toggleNotificationModal = () => {
     setState((prev) => ({
       ...prev,
-      isStudyTimerActive: true,
-      timers: { default: (14 - currentHours) * 60 * 60 },
+      notificationVisible: !prev.notificationVisible, // Use the correct key from state
     }));
-  }
+  };
 
-  const studyTimerId = setInterval(() => {
-    if (state.isStudyTimerActive) {
-      setState((prev) => {
-        const updatedTimers = { ...prev.timers };
-        Object.keys(updatedTimers).forEach((key) => {
-          updatedTimers[key] = Math.max(updatedTimers[key] - 1, 0);
-        });
-        return { ...prev, timers: updatedTimers };
-      });
+  useEffect(() => {
+    // Study Timer Logic
+    const now = new Date();
+    const currentHours = now.getUTCHours() + 1;
+
+    if (currentHours >= 2 && currentHours < 14 && !state.isStudyTimerActive) {
+      setState((prev) => ({
+        ...prev,
+        isStudyTimerActive: true,
+        timers: { default: (14 - currentHours) * 60 * 60 },
+      }));
     }
-  }, 1000);
 
-  return () => clearInterval(studyTimerId);
-}, [state.isStudyTimerActive]);
-
-useEffect(() => {
-  // Exam Timer Logic
-  const examTimerId = setInterval(() => {
-    if (state.isTestTimerActive) {
-      setState((prev) => {
-        const updatedExamTimers = { ...prev.examTimers };
-        Object.keys(updatedExamTimers).forEach((key) => {
-          updatedExamTimers[key] = Math.max(updatedExamTimers[key] - 1, 0);
+    const studyTimerId = setInterval(() => {
+      if (state.isStudyTimerActive) {
+        setState((prev) => {
+          const updatedTimers = { ...prev.timers };
+          Object.keys(updatedTimers).forEach((key) => {
+            updatedTimers[key] = Math.max(updatedTimers[key] - 1, 0);
+          });
+          return { ...prev, timers: updatedTimers };
         });
-        return { ...prev, examTimers: updatedExamTimers };
-      });
-    }
-  }, 1000);
+      }
+    }, 1000);
 
-  return () => clearInterval(examTimerId);
-}, [state.isTestTimerActive]);
+    return () => clearInterval(studyTimerId);
+  }, [state.isStudyTimerActive]);
+
+  useEffect(() => {
+    // Exam Timer Logic
+    const examTimerId = setInterval(() => {
+      if (state.isTestTimerActive) {
+        setState((prev) => {
+          const updatedExamTimers = { ...prev.examTimers };
+          Object.keys(updatedExamTimers).forEach((key) => {
+            updatedExamTimers[key] = Math.max(updatedExamTimers[key] - 1, 0);
+          });
+          return { ...prev, examTimers: updatedExamTimers };
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(examTimerId);
+  }, [state.isTestTimerActive]);
 
   const fetchUserInfo = useCallback(async () => {
     try {
@@ -148,29 +161,28 @@ useEffect(() => {
     }
   };
 
-const fetchCompletedTopics = useCallback(() => {
-  axios
-    .get(getCompletedCourse)
-    .then((response) => {
-      setState((prev) => ({
-        ...prev,
-        completedTopics: response.data.completedCourses[0].courseName,
-      }));
-    })
-    .catch((error) => {
-      if (error.response) {
-        // Server responded with a status other than 200 range
-        console.log("Response Error:", error.response.data);
-      } else if (error.request) {
-        // Request was made but no response was received
-        console.log("Request Error:", error.request);
-      } else {
-        // Something else happened while setting up the request
-        console.log("Axios Error:", error.message);
-      }
-    });
-}, [getCompletedCourse]);
-
+  const fetchCompletedTopics = useCallback(() => {
+    axios
+      .get(getCompletedCourse)
+      .then((response) => {
+        setState((prev) => ({
+          ...prev,
+          completedTopics: response.data.completedCourses[0].courseName,
+        }));
+      })
+      .catch((error) => {
+        if (error.response) {
+          // Server responded with a status other than 200 range
+          console.log("Response Error:", error.response.data);
+        } else if (error.request) {
+          // Request was made but no response was received
+          console.log("Request Error:", error.request);
+        } else {
+          // Something else happened while setting up the request
+          console.log("Axios Error:", error.message);
+        }
+      });
+  }, [getCompletedCourse]);
 
   const fetchCurrentTopic = useCallback(() => {
     axios
@@ -204,9 +216,9 @@ const fetchCompletedTopics = useCallback(() => {
   };
 
   const fetchResult = (courseName) => {
-    router.navigate("resource")
+    router.navigate("resource");
     setState((prev) => ({ ...prev, isFetching: true }));
-    axios                                                                                                                                                                                                               
+    axios
       .get(resultUrl, { params: { course: courseName } })
       .then((response) => {
         setState((prev) => ({
@@ -221,7 +233,6 @@ const fetchCompletedTopics = useCallback(() => {
       });
   };
 
-  
   const sendExamStartNotification = async () => {
     await Notifications.scheduleNotificationAsync({
       content: {
@@ -232,32 +243,30 @@ const fetchCompletedTopics = useCallback(() => {
     });
   };
 
-const checkTimeAndUpdateState = () => {
-  const now = new Date();
-  const currentHours = now.getUTCHours() + 1; // Adjust for UTC offset if needed
+  const checkTimeAndUpdateState = () => {
+    const now = new Date();
+    const currentHours = now.getUTCHours() + 1; // Adjust for UTC offset if needed
 
-  // Check if current time is past 3 PM
-  if (currentHours >= 15) {
-    if (!state.isTestTimerActive) {
+    // Check if current time is past 3 PM
+    if (currentHours >= 15) {
+      if (!state.isTestTimerActive) {
+        setState((prev) => ({
+          ...prev,
+          isTestTimerActive: true,
+          examTimers: { ...prev.examTimers, [state.course]: 3 * 60 * 60 }, // 3 hours for the exam
+        }));
+
+        sendExamStartNotification(); // Ensure notification is only sent once
+      }
+    } else {
+      // Reset the exam timer if it's before 3 PM
       setState((prev) => ({
         ...prev,
-        isTestTimerActive: true,
-        examTimers: { ...prev.examTimers, [state.course]: 3 * 60 * 60 }, // 3 hours for the exam
+        isTestTimerActive: false,
+        examTimers: { ...prev.examTimers, [state.course]: 0 },
       }));
-
-      sendExamStartNotification(); // Ensure notification is only sent once
     }
-  } else {
-    // Reset the exam timer if it's before 3 PM
-    setState((prev) => ({
-      ...prev,
-      isTestTimerActive: false,
-      examTimers: { ...prev.examTimers, [state.course]: 0 },
-    }));
-  }
-};
-
-
+  };
 
   const formatTime = useCallback((seconds) => {
     const hrs = Math.floor(seconds / 3600);
@@ -308,9 +317,12 @@ const checkTimeAndUpdateState = () => {
         {userData ? (
           <>
             <View style={styles.header}>
+              {/* Profile Picture */}
               <TouchableOpacity
                 style={styles.circle}
-                onPress={() => setModalVisible(true)}
+                onPress={() =>
+                  setState((prev) => ({ ...prev, modalVisible: true }))
+                }
               >
                 {selectedImage ? (
                   <Image
@@ -323,11 +335,18 @@ const checkTimeAndUpdateState = () => {
                   </Text>
                 )}
               </TouchableOpacity>
-              <View>
-                <Text style={styles.welcome}>Welcome</Text>
-                <Text style={styles.username}>
-                  {userData.firstName} {userData.lastName}
-                </Text>
+
+              {/* Notification Icon with Red Badge */}
+              <View style={styles.notificationIconWrapper}>
+                <TouchableOpacity onPress={toggleNotificationModal}>
+                  <Ionicons
+                    name="notifications-outline"
+                    size={30}
+                    color="black"
+                  />
+                  {/* Red badge if an exam is available */}
+                  {state.isTestTimerActive && <View style={styles.badge} />}
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -375,8 +394,7 @@ const checkTimeAndUpdateState = () => {
                     <Text style={styles.timer}>
                       {state.isTestTimerActive && examTimers[course] > 0
                         ? formatTime(examTimers[course]) // Correctly close the formatTime function
-                        : formatTime(3* 60 * 60)}{" "}
-                    
+                        : formatTime(3 * 60 * 60)}{" "}
                     </Text>
                   </View>
                 </View>
@@ -436,30 +454,55 @@ const checkTimeAndUpdateState = () => {
                 <Text style={styles.time}>No test result available</Text>
               )}
             </View>
+
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={modalVisible}
+              onRequestClose={() =>
+                setState((prev) => ({ ...prev, modalVisible: false }))
+              }
+            >
+              <View style={styles.modalBackground}>
+                <Pressable
+                  style={styles.modalView}
+                  onPress={() =>
+                    setState((prev) => ({ ...prev, modalVisible: false }))
+                  }
+                >
+                  <Text style={styles.modalText}>Log Out</Text>
+                  <TouchableOpacity onPress={handleLogout}>
+                    <Text style={styles.logoutText}>Yes, log me out</Text>
+                  </TouchableOpacity>
+                </Pressable>
+              </View>
+            </Modal>
+
+            {/* Notification Modal */}
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={notificationVisible} // Use notificationVisible here
+              onRequestClose={toggleNotificationModal}
+            >
+              <View style={styles.notificationModalBackground}>
+                <Pressable
+                  style={styles.notificationModalView}
+                  onPress={toggleNotificationModal}
+                >
+                  <Text style={styles.modalText}>Notifications</Text>
+                  {/* List notifications here */}
+                  <Text style={styles.notificationItem}>
+                    You have an exam scheduled.
+                  </Text>
+                </Pressable>
+              </View>
+            </Modal>
           </>
         ) : (
           <ActivityIndicator size="large" color="#c30000" />
         )}
       </ScrollView>
-
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(!modalVisible)}
-      >
-        <View style={styles.modalBackground}>
-          <Pressable
-            style={styles.modalView}
-            onPress={() => setModalVisible(false)}
-          >
-            <Text style={styles.modalText}>Log Out</Text>
-            <TouchableOpacity onPress={handleLogout}>
-              <Text style={styles.logoutText}>Yes, log me out</Text>
-            </TouchableOpacity>
-          </Pressable>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -478,8 +521,8 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: 15,
   },
   circle: {
     width: 50,
@@ -677,5 +720,59 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 40,
     color: "#53BD5E",
+  },
+  avatarPlaceholder: {
+    color: "#fff",
+    fontSize: 24,
+  },
+  notificationIconWrapper: {
+    position: "relative",
+  },
+  badge: {
+    position: "absolute",
+    right: -3,
+    top: -3,
+    backgroundColor: "red",
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalView: {
+    width: 300,
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 20,
+  },
+  logoutText: {
+    color: "red",
+    fontSize: 16,
+  },
+  notificationModalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.7)", // Blurred background
+  },
+  notificationModalView: {
+    width: 300,
+    padding: 10,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  notificationItem: {
+    fontSize: 16,
+    marginBottom: 10,
   },
 });

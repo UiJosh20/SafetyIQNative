@@ -183,6 +183,7 @@ const Resource = () => {
           data={filteredItems}
           keyExtractor={(item) => item._id}
           renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
