@@ -220,7 +220,7 @@ const uploadResource = (req, res) => {
 
 const libStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/readings");
+    cb(null, "uploads/readings/");
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);

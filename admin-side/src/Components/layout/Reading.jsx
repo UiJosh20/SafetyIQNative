@@ -115,7 +115,7 @@ export default function Reading() {
     formData.append("image", newResource.image);
     formData.append("note", newResource.note);
     formData.append("course_name", newResource.course_name);
-
+    // 
     axios
       .post(
         "https://safetyiqnativebackend.onrender.com/admin/uploadRead",

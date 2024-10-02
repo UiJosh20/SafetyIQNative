@@ -107,11 +107,11 @@ const handleResourceSubmit = (e) => {
   formData.append("image", newResource.image);
   formData.append("course_name", newResource.course_name);
   formData.append("note", newResource.note);
-  
+
   // https://safetyiqnativebackend.onrender.com
 
   axios
-    .post("http://localhost:8000/admin/upload", formData, {
+    .post("https://safetyiqnativebackend.onrender.com/admin/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
