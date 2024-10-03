@@ -3,6 +3,7 @@ const cron = require("node-cron");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const twilio = require("twilio")
 require("dotenv").config();
 const https = require("https");
 const {
@@ -568,6 +569,166 @@ const fetchUserResult = (req, res) => {
 };
 
 
+const checkExam = (req, res) => {
+  const { course_name } = req.params;
+  
+
+  // Check if course_name is provided
+  if (!course_name) {
+    return res.status(400).json({ error: "course_name is required" });
+  }
+
+  // Query the database to check if there are exam questions for the given course
+  ExamQuestion.find({ course_name })
+    .then((questions) => {
+      if (questions.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No exam available for this course." });
+      }
+      // If exam questions are found
+      res.status(200).json({
+        message: "Exam is available for this course.",
+        questions,
+      });
+    })
+    .catch((error) => {
+      console.error("Error checking exam availability:", error);
+      res
+        .status(500)
+        .json({ error: "Server error while checking exam availability." });
+    });
+};
+
+
+
+const examOTP = (req, res) => {
+  const { phoneNumber } = req.body;
+
+  // Phone number validation (simple example, adjust as needed)
+  const phoneRegex = /^[0-9]{11}$/;
+
+  if (!phoneRegex.test(phoneNumber)) {
+    return res.status(400).json({ message: "Invalid phone number format" });
+  }
+
+  // Check if the user exists in the database
+  User.findOne({ tel: phoneNumber })
+    .then((user) => {
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Generate a random 4-digit OTP
+      const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+      // Set OTP expiration time (10 minutes from now)
+      const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+      // Set up Nodemailer transporter with Gmail
+      const transporter = nodemailer.createTransport({
+        service: "gmail", // Use Gmail as the email service
+        auth: {
+          user: process.env.EMAIL_USER, // Your Gmail address
+          pass: process.env.EMAIL_PASS, // Your Gmail app-specific password
+        },
+      });
+
+      // Prepare a sophisticated HTML email template
+      const mailOptions = {
+        from: `"SafetyIQ" <${process.env.EMAIL_USER}>`, // Sender address
+        to: user.email, // Recipient email
+        subject: "Your OTP Code for SafetyIQ",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #c30000;">SafetyIQ Exam OTP</h2>
+            <p>Dear ${user.firstName},</p>
+            <p>You requested a One-Time Password (OTP) to access your exam. Please use the code below to continue:</p>
+            <div style="font-size: 24px; font-weight: bold; margin: 20px 0; color: #000;">
+              ${otp}
+            </div>
+            <p>This OTP is valid for the next 10 minutes. Do not share this code with anyone.</p>
+            <p>If you did not request this OTP, please ignore this email or contact our support team.</p>
+            <p>Thank you for using SafetyIQ!</p>
+            <footer style="margin-top: 20px; font-size: 12px; color: #888;">
+              <p>SafetyIQ Support Team</p>
+              <p>Contact us: support@safetyiq.com</p>
+            </footer>
+          </div>
+        `,
+      };
+
+      // Send the OTP via email
+      return transporter
+        .sendMail(mailOptions)
+        .then((info) => {
+          console.log("Email sent:", info.response);
+
+          // Save the OTP and expiration time to the user
+          user.otp = otp;
+          user.otpExpiresAt = otpExpiresAt;
+
+          return user.save();
+        })
+        .then(() => {
+          return res.status(200).json({ message: "OTP sent successfully!" });
+        })
+        .catch((error) => {
+          console.error("Error sending OTP:", error);
+          if (!res.headersSent) {
+            return res
+              .status(500)
+              .json({ message: "Error sending OTP, please try again." });
+          }
+        });
+    })
+    .catch((error) => {
+      console.error("Error checking user:", error);
+      if (!res.headersSent) {
+        return res.status(500).json({ message: "Internal server error." });
+      }
+    });
+};
+
+
+const verifyOtp = (req, res) => {
+  const { phoneNumber, otp } = req.body; // Extracting phoneNumber and OTP from the request body
+
+  // Check if both fields are provided
+  if (!phoneNumber || !otp) {
+    return res
+      .status(400)
+      .json({ message: "Phone number and OTP are required." });
+  }
+
+  // Find the user by phone number
+  User.findOne({ phoneNumber })
+    .then((user) => {
+      // If user not found
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
+
+      // Compare the OTP
+      if (user.otp === otp) {
+        // If OTP matches, verify success
+        return res.status(200).json({ message: "OTP verified successfully!" });
+      } else {
+        // If OTP doesn't match
+        return res.status(400).json({ message: "Invalid OTP." });
+      }
+    })
+    .catch((error) => {
+      // In case of any server error
+      console.error("Error verifying OTP:", error);
+      return res
+        .status(500)
+        .json({ message: "Server error. Please try again later." });
+    });
+};
+
+
+
 
 
 module.exports = {
@@ -584,5 +745,7 @@ module.exports = {
   fetchUserResult,
   completedCourse,
   getCompletedTopic,
-
+  checkExam,
+  examOTP,
+  verifyOtp,
 };

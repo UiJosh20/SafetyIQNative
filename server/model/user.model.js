@@ -14,7 +14,6 @@ mongoose
     console.log("There is an error in the database");
   });
 
-
 const userSchema = new mongoose.Schema({
   callupNum: {
     type: String,
@@ -54,8 +53,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null, // Setting frpNum to null by default
   },
+  otp: {
+    type: String, // Store the OTP as a string
+    default: null, // OTP is null by default
+  },
+  otpExpiresAt: {
+    type: Date, // Store OTP expiration time
+    default: null,
+  },
 });
-
 
 userSchema.pre("save", function (next) {
   bcrypt.hash(this.password, 10, (err, hash) => {

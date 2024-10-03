@@ -1,9 +1,12 @@
 {
   "cSpell.words": [
+    "AUTHTOKEN",
     "callup",
     "CLOUDINARY",
     "createdate",
+    "examotp",
     "frpnum",
+    "getcomplete",
     "paystackinit",
     "paystackverify",
     "readcourse",

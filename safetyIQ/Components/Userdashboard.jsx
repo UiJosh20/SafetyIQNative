@@ -20,6 +20,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 
 
 const Userdashboard = () => {
+  const [notifyMsg, setNotifyMsg] = useState("");
   const [state, setState] = useState({
     ids: "",
     course: "",
@@ -78,8 +79,12 @@ const Userdashboard = () => {
   );
 
   const getCompletedCourse = useMemo(
-    () => `http://192.168.0.103:8000/getcomplete/${state.ids}`,
+    () => `https://safetyiqnativebackend.onrender.com/getcomplete/${state.ids}`,
     [state.ids]
+  );
+  const checkExamURl = useMemo(
+    () => `http://192.168.10.92:8000/checkExam/${state.course}`,
+    [state.course]
   );
 
   useEffect(() => {
@@ -89,7 +94,6 @@ const Userdashboard = () => {
       fetchCompletedTopics();
     }
   }, [state.ids]);
-
 
   // Function to toggle notification modal visibility
   const toggleNotificationModal = () => {
@@ -165,10 +169,16 @@ const Userdashboard = () => {
     axios
       .get(getCompletedCourse)
       .then((response) => {
+        const completedCourses = response.data.completedCourses[0].courseName;
         setState((prev) => ({
           ...prev,
-          completedTopics: response.data.completedCourses[0].courseName,
+          completedTopics: completedCourses,
         }));
+
+        // Check if the current course is completed before checking for exam availability
+        if (completedCourses.includes(state.course)) {
+          checkExam(); // Only check exam if the course is completed
+        }
       })
       .catch((error) => {
         if (error.response) {
@@ -182,7 +192,7 @@ const Userdashboard = () => {
           console.log("Axios Error:", error.message);
         }
       });
-  }, [getCompletedCourse]);
+  }, [getCompletedCourse, state.course]); // Include state.course in the dependency array
 
   const fetchCurrentTopic = useCallback(() => {
     axios
@@ -190,6 +200,7 @@ const Userdashboard = () => {
       .then((response) => {
         const topics = response.data.currentTopic;
         if (topics) {
+          checkIfTopicIsCompleted(topics);
           setState((prev) => ({
             ...prev,
             course: topics,
@@ -199,7 +210,6 @@ const Userdashboard = () => {
             },
             isStudyTimerActive: true,
           }));
-          checkIfTopicIsCompleted(topics);
           checkTimeAndUpdateState();
         }
       })
@@ -292,6 +302,7 @@ const Userdashboard = () => {
   };
 
   const onRefresh = useCallback(() => {
+    checkTimeAndUpdateState();
     setState((prev) => ({ ...prev, refreshing: true }));
     fetchResult(state.course);
 
@@ -300,11 +311,38 @@ const Userdashboard = () => {
       fetchCurrentTopic();
       setState((prev) => ({ ...prev, refreshing: false }));
     }, 2000);
-    checkTimeAndUpdateState();
   }, [state.course]);
 
   const handleLogout = () => {
     router.push("login");
+  };
+
+  const checkExam = () => {
+    axios
+      .get(checkExamURl)
+      .then((result) => {
+        if (result.status === 200) {
+          setNotifyMsg(result.data.questions[0].course_name);
+
+          // Send a notification to the user that the test is available
+          Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Exam Available",
+              body: "An exam for your course is now available. Please check it out.",
+            },
+            trigger: null,
+          });
+
+          // Enable the red badge on the notification icon
+          setState((prev) => ({
+            ...prev,
+            isTestTimerActive: true,
+          }));
+        }
+      })
+      .catch((error) => {
+        console.log("Error checking exam availability:", error);
+      });
   };
 
   return (
@@ -331,7 +369,7 @@ const Userdashboard = () => {
                   />
                 ) : (
                   <Text style={styles.avatarPlaceholder}>
-                    {userData.firstName[0]}
+                    {userData?.firstName ? userData.firstName[0] : ""}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -480,22 +518,45 @@ const Userdashboard = () => {
 
             {/* Notification Modal */}
             <Modal
-              animationType="fade"
+              animationType="slide" // Changed to 'slide' for a smoother transition
               transparent={true}
-              visible={notificationVisible} // Use notificationVisible here
+              visible={notificationVisible}
               onRequestClose={toggleNotificationModal}
             >
-              <View style={styles.notificationModalBackground}>
-                <Pressable
-                  style={styles.notificationModalView}
-                  onPress={toggleNotificationModal}
-                >
-                  <Text style={styles.modalText}>Notifications</Text>
-                  {/* List notifications here */}
-                  <Text style={styles.notificationItem}>
-                    You have an exam scheduled.
-                  </Text>
-                </Pressable>
+              <View style={styles.modalOverlay}>
+                <View style={styles.notificationModal}>
+                  {/* Modal Header */}
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>Notifications</Text>
+                    <Pressable
+                      onPress={toggleNotificationModal}
+                      style={styles.closeButton}
+                    >
+                      <Ionicons
+                        style={styles.closeButtonText}
+                        name="close"
+                        size={30}
+                        color="black"
+                      />
+                      {/* Close icon */}
+                    </Pressable>
+                  </View>
+
+                  {/* Notification Items */}
+                  <View style={styles.notificationContent}>
+                    <Pressable
+                      style={styles.notificationCard}
+                      onPress={() => router.replace("exam")}
+                    >
+                      <Text style={styles.notificationMessage}>
+                        {notifyMsg ? notifyMsg : "NO"} TEST AVAILABLE
+                      </Text>
+                      <Text style={styles.notificationTimestamp}>
+                        {new Date().toLocaleTimeString()}
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
               </View>
             </Modal>
           </>
@@ -737,42 +798,69 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
   },
-  modalBackground: {
+  modalOverlay: {
     flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
   },
-  modalView: {
-    width: 300,
+  notificationModal: {
+    width: "90%",
+    backgroundColor: "white",
+    borderRadius: 10,
     padding: 20,
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5, // Elevation for Android shadow effect
+    height: 500,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-  },
-  modalText: {
-    fontSize: 18,
-    marginBottom: 20,
-  },
-  logoutText: {
-    color: "red",
-    fontSize: 16,
-  },
-  notificationModalBackground: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.7)", // Blurred background
-  },
-  notificationModalView: {
-    width: 300,
-    padding: 10,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  notificationItem: {
-    fontSize: 16,
     marginBottom: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    borderBottomColor: "#c30000", // Accent underline
+    borderBottomWidth: 2,
+    paddingBottom: 5,
+  },
+  closeButton: {
+    padding: 5,
+    borderRadius: 5,
+    backgroundColor: "#ccc", // Background for the close button
+  },
+  closeButtonText: {
+    fontSize: 18,
+    color: "#333",
+  },
+  notificationContent: {
+    marginTop: 10,
+  },
+  notificationCard: {
+    backgroundColor: "#f8f8f8",
+    borderRadius: 8,
+    padding: 15,
+    marginVertical: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  
+  },
+  notificationMessage: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#333",
+  },
+  notificationTimestamp: {
+    fontSize: 12,
+    color: "#888",
+    marginTop: 5,
   },
 });
