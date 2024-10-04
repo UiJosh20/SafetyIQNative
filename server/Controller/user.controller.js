@@ -692,8 +692,9 @@ const examOTP = (req, res) => {
 
 
 const verifyOtp = (req, res) => {
-  const { phoneNumber, otp } = req.body; // Extracting phoneNumber and OTP from the request body
-
+  const {otp, phoneNumber } = req.body;
+  console.log(req.body);
+  
   // Check if both fields are provided
   if (!phoneNumber || !otp) {
     return res
@@ -702,7 +703,7 @@ const verifyOtp = (req, res) => {
   }
 
   // Find the user by phone number
-  User.findOne({ phoneNumber })
+  User.findOne({ tel: phoneNumber })
     .then((user) => {
       // If user not found
       if (!user) {
